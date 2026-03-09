@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Heritage Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="page-bg"></div>
+<header class="topbar">
+    <div>
+        <h1>Community Heritage Hub</h1>
+        <p>Submit, review, publish, and archive local culture resources.</p>
+    </div>
+    <div class="session-box">
+        <div id="sessionText">Not logged in</div>
+        <button id="logoutBtn" class="btn ghost" type="button">Logout</button>
+    </div>
+</header>
+
+<main class="grid">
+    <section class="panel">
+        <h2>Login</h2>
+        <form id="loginForm" class="stack">
+            <label>User Name<input name="userName" required></label>
+            <label>Password<input name="password" type="password" required></label>
+            <button class="btn">Login</button>
+        </form>
+        <hr>
+        <h2>Register</h2>
+        <form id="registerForm" class="stack">
+            <label>User Name<input name="userName" required></label>
+            <label>Email<input name="email" type="email" required></label>
+            <label>Password<input name="password" type="password" required></label>
+            <label>Role
+                <select name="role">
+                    <option value="REGISTERED_VIEWER">Registered Viewer</option>
+                    <option value="CONTRIBUTOR">Contributor</option>
+                </select>
+            </label>
+            <button class="btn">Create Account</button>
+        </form>
+        <small>Default admin: <code>admin / admin123</code></small>
+    </section>
+
+    <section class="panel wide">
+        <div class="panel-head">
+            <h2>Public Browse</h2>
+            <button id="publicSearchBtn" type="button" class="btn">Search</button>
+        </div>
+        <form id="publicFilterForm" class="inline-form">
+            <label>Keyword<input name="keyword" placeholder="title/topic/place"></label>
+            <label>Category<select name="categoryId" id="publicCategory"></select></label>
+            <label>Place<input name="place" placeholder="city/place"></label>
+            <label>Tag<select name="tag" id="publicTag"></select></label>
+        </form>
+        <div id="publicList" class="card-list"></div>
+    </section>
+
+    <section class="panel wide contributor-only">
+        <div class="panel-head">
+            <h2>Contributor Studio</h2>
+            <button id="reloadMineBtn" type="button" class="btn ghost">Reload My Resources</button>
+        </div>
+        <form id="resourceForm" class="inline-form two-cols">
+            <label>Title<input name="title" required></label>
+            <label>Topic<input name="topic" required></label>
+            <label>Place<input name="placeName" required></label>
+            <label>Category<select name="categoryId" id="resourceCategory" required></select></label>
+            <label>Tags (comma separated)<input name="tags" placeholder="History, Story"></label>
+            <label>File URL<input name="fileUrl" placeholder="https://..."></label>
+            <label>External Link<input name="externalLink" placeholder="https://..."></label>
+            <label>Copyright Declaration<input name="copyrightDeclaration" required></label>
+            <label class="span-2">Description<textarea name="description" required rows="4"></textarea></label>
+            <div class="row span-2">
+                <button class="btn" name="action" value="draft">Create Draft</button>
+                <button class="btn secondary" name="action" value="submit">Create And Submit</button>
+            </div>
+        </form>
+        <div id="mineList" class="card-list"></div>
+    </section>
+
+    <section class="panel wide admin-only">
+        <div class="panel-head">
+            <h2>Reviewer Desk</h2>
+            <button id="reloadAdminBtn" type="button" class="btn ghost">Reload Queue</button>
+        </div>
+
+        <div class="split">
+            <div>
+                <h3>Pending Contributors</h3>
+                <div id="pendingContributorList" class="card-list compact"></div>
+            </div>
+            <div>
+                <h3>Master Data</h3>
+                <form id="categoryForm" class="stack">
+                    <label>Category Name<input name="name" required></label>
+                    <label>Description<input name="description"></label>
+                    <button class="btn ghost">Add Category</button>
+                </form>
+                <form id="tagForm" class="stack">
+                    <label>Tag Name<input name="name" required></label>
+                    <button class="btn ghost">Add Tag</button>
+                </form>
+            </div>
+        </div>
+
+        <h3>Pending Resource Reviews</h3>
+        <div id="pendingResourceList" class="card-list"></div>
+    </section>
+</main>
+
+<div id="toast" class="toast hidden"></div>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+package com.cpt202_1.taskmanager.controllers;
+
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.cpt202_1.taskmanager.dto.request.CommentRequest;
+import com.cpt202_1.taskmanager.dto.response.CommentView;
+import com.cpt202_1.taskmanager.dto.response.ResourceDetail;
+import com.cpt202_1.taskmanager.dto.response.ResourceSummary;
+import com.cpt202_1.taskmanager.service.PlatformService;
+
+@RestController
+@RequestMapping("/api/public/resources")
+public class PublicResourceController {
+    private final PlatformService platformService;
+
+    public PublicResourceController(PlatformService platformService) {
+        this.platformService = platformService;
+    }
+
+    @GetMapping
+    public List<ResourceSummary> search(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String place,
+            @RequestParam(required = false) String tag) {
+        return platformService.searchApproved(keyword, categoryId, place, tag);
+    }
+
+    @GetMapping("/{resourceId}")
+    public ResourceDetail detail(@PathVariable Long resourceId) {
+        return platformService.getApprovedDetail(resourceId);
+    }
+
+    @GetMapping("/{resourceId}/comments")
+    public List<CommentView> comments(@PathVariable Long resourceId) {
+        return platformService.listComments(resourceId);
+    }
+
+    @PostMapping("/{resourceId}/comments")
+    public CommentView comment(
+            @RequestParam Long actorId,
+            @PathVariable Long resourceId,
+            @RequestBody CommentRequest request) {
+        return platformService.addComment(actorId, resourceId, request);
+    }
+}

@@ -22,7 +22,7 @@ public class taskController {
     public Map<String, Object> pingDatabase() {
         Integer result = jdbcTemplate.queryForObject("SELECT 1", Integer.class);
         return Map.of(
-                "status", "okk",
+                "status", "ok",
                 "database", "CPT202_Project_DB",
                 "result", result);
     }
