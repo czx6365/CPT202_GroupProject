@@ -257,8 +257,8 @@ spring.datasource.password=${DB_PASSWORD:}
 ## 5. 运行方式（Windows PowerShell）
 
 ```powershell
-cd C:\Users\16973\Desktop\大三下\CPT202\project\taskmanager
-$env:JAVA_HOME="C:\Users\16973\.vscode\extensions\redhat.java-1.53.0-win32-x64\jre\21.0.10-win32-x86_64"
+cd 你电脑中的CPT202路径
+$env:JAVA_HOME="Java路径（在控制台输入which java/which javac后的结果）"
 $env:Path="$env:JAVA_HOME\bin;$env:Path"
 $env:DB_PASSWORD="你的MySQL密码"
 .\mvnw.cmd spring-boot:run "-Dmaven.test.skip=true"
