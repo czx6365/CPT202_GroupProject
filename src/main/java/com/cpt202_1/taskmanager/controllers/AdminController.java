@@ -20,25 +20,25 @@ import com.cpt202_1.taskmanager.pojo.Category;
 import com.cpt202_1.taskmanager.pojo.Tag;
 import com.cpt202_1.taskmanager.service.PlatformService;
 
-@RestController
-@RequestMapping("/api/admin")
+@RestController  //接收 HTTP 请求  返回 JSON 数据
+@RequestMapping("/api/admin")  //这个 Controller 的所有接口都以这个路径开头
 public class AdminController {
     private final PlatformService platformService;
-
+    //调用 Service 层 platformService
     public AdminController(PlatformService platformService) {
         this.platformService = platformService;
     }
-
+    //审批 Contributor
     @PutMapping("/contributors/{userId}/approve")
     public UserSummary approveContributor(@RequestParam Long actorId, @PathVariable Long userId) {
         return platformService.approveContributor(actorId, userId);
     }
-
+    //查看待审批用户
     @GetMapping("/contributors/pending")
     public List<UserSummary> listPendingContributors(@RequestParam Long actorId) {
         return platformService.listPendingContributors(actorId);
     }
-
+    
     @PostMapping("/categories")
     public Category createCategory(@RequestParam Long actorId, @RequestBody CreateCategoryRequest request) {
         return platformService.createCategory(actorId, request);
