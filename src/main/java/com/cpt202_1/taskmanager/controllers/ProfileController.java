@@ -1,5 +1,7 @@
 package com.cpt202_1.taskmanager.controllers;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -9,6 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cpt202_1.taskmanager.dto.request.UpdateProfileRequest;
 import com.cpt202_1.taskmanager.dto.response.UserSummary;
+import com.cpt202_1.taskmanager.exception.ApiException;
+import com.cpt202_1.taskmanager.pojo.enums.UserRole;
+import com.cpt202_1.taskmanager.security.AuthenticatedUser;
 import com.cpt202_1.taskmanager.service.PlatformService;
 
 @RestController
@@ -21,12 +26,27 @@ public class ProfileController {
     }
 
     @GetMapping("/{userId}")
-    public UserSummary getProfile(@PathVariable Long userId) {
+    public UserSummary getProfile(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @PathVariable Long userId) {
+        requireSelfOrAdmin(currentUser, userId);
         return platformService.getProfile(userId);
     }
 
     @PutMapping("/{userId}")
-    public UserSummary updateProfile(@PathVariable Long userId, @RequestBody UpdateProfileRequest request) {
+    public UserSummary updateProfile(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @PathVariable Long userId,
+            @RequestBody UpdateProfileRequest request) {
+        requireSelfOrAdmin(currentUser, userId);
         return platformService.updateProfile(userId, request);
+    }
+
+    private void requireSelfOrAdmin(AuthenticatedUser currentUser, Long targetUserId) {
+        boolean isSelf = currentUser.getUserId().equals(targetUserId);
+        boolean isAdmin = currentUser.getRole() == UserRole.ADMIN_REVIEWER;
+        if (!isSelf && !isAdmin) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "You can only access your own profile");
+        }
     }
 }

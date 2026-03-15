@@ -53,12 +53,36 @@
             <button id="publicSearchBtn" type="button" class="btn">Search</button>
         </div>
         <form id="publicFilterForm" class="inline-form">
-            <label>Keyword<input name="keyword" placeholder="title/topic/place"></label>
+            <label>Keyword<input name="keyword" placeholder="title/description"></label>
             <label>Category<select name="categoryId" id="publicCategory"></select></label>
             <label>Place<input name="place" placeholder="city/place"></label>
             <label>Tag<select name="tag" id="publicTag"></select></label>
+            <label>Sort By
+                <select name="sortBy">
+                    <option value="updatedTime">Updated Time</option>
+                    <option value="createTime">Create Time</option>
+                </select>
+            </label>
+            <label>Sort Direction
+                <select name="sortDir">
+                    <option value="desc">DESC</option>
+                    <option value="asc">ASC</option>
+                </select>
+            </label>
+            <label>Page Size
+                <select name="size">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                </select>
+            </label>
         </form>
         <div id="publicList" class="card-list"></div>
+        <div class="row pager">
+            <button id="publicPrevBtn" class="btn ghost" type="button">Prev</button>
+            <span id="publicPageInfo" class="chip">Page 1 / 1</span>
+            <button id="publicNextBtn" class="btn ghost" type="button">Next</button>
+        </div>
     </section>
 
     <section class="panel wide contributor-only">
@@ -110,7 +134,49 @@
         </div>
 
         <h3>Pending Resource Reviews</h3>
+        <form id="pendingFilterForm" class="inline-form">
+            <label>Keyword<input name="keyword" placeholder="title/description"></label>
+            <label>Category<select name="categoryId" id="adminPendingCategory"></select></label>
+            <label>Place<input name="place" placeholder="city/place"></label>
+            <label>Tag<select name="tag" id="adminPendingTag"></select></label>
+            <label>Status
+                <select name="status">
+                    <option value="PENDING_REVIEW" selected>PENDING_REVIEW</option>
+                    <option value="DRAFT">DRAFT</option>
+                    <option value="APPROVED">APPROVED</option>
+                    <option value="REJECTED">REJECTED</option>
+                    <option value="ARCHIVED">ARCHIVED</option>
+                </select>
+            </label>
+            <label>Sort By
+                <select name="sortBy">
+                    <option value="updatedTime">Updated Time</option>
+                    <option value="createTime">Create Time</option>
+                </select>
+            </label>
+            <label>Sort Direction
+                <select name="sortDir">
+                    <option value="desc">DESC</option>
+                    <option value="asc">ASC</option>
+                </select>
+            </label>
+            <label>Page Size
+                <select name="size">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                </select>
+            </label>
+            <div class="row">
+                <button id="pendingSearchBtn" class="btn" type="button">Search Pending</button>
+            </div>
+        </form>
         <div id="pendingResourceList" class="card-list"></div>
+        <div class="row pager">
+            <button id="pendingPrevBtn" class="btn ghost" type="button">Prev</button>
+            <span id="pendingPageInfo" class="chip">Page 1 / 1</span>
+            <button id="pendingNextBtn" class="btn ghost" type="button">Next</button>
+        </div>
     </section>
 </main>
 

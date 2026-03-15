@@ -1,10 +1,17 @@
-const state = {
+﻿const state = {
     currentUser: loadUser(),
+    token: loadToken(),
     categories: [],
     tags: [],
     publicResources: [],
+    publicPage: 0,
+    publicTotalPages: 0,
+    publicTotalElements: 0,
     myResources: [],
     pendingResources: [],
+    pendingPage: 0,
+    pendingTotalPages: 0,
+    pendingTotalElements: 0,
     pendingContributors: []
 };
 
@@ -18,7 +25,15 @@ const els = {
     pendingContributorList: document.getElementById("pendingContributorList"),
     publicCategory: document.getElementById("publicCategory"),
     publicTag: document.getElementById("publicTag"),
-    resourceCategory: document.getElementById("resourceCategory")
+    resourceCategory: document.getElementById("resourceCategory"),
+    adminPendingCategory: document.getElementById("adminPendingCategory"),
+    adminPendingTag: document.getElementById("adminPendingTag"),
+    publicPrevBtn: document.getElementById("publicPrevBtn"),
+    publicNextBtn: document.getElementById("publicNextBtn"),
+    publicPageInfo: document.getElementById("publicPageInfo"),
+    pendingPrevBtn: document.getElementById("pendingPrevBtn"),
+    pendingNextBtn: document.getElementById("pendingNextBtn"),
+    pendingPageInfo: document.getElementById("pendingPageInfo")
 };
 
 init();
@@ -37,9 +52,39 @@ function bindEvents() {
     document.getElementById("resourceForm").addEventListener("submit", onCreateResource);
     document.getElementById("categoryForm").addEventListener("submit", onCreateCategory);
     document.getElementById("tagForm").addEventListener("submit", onCreateTag);
-    document.getElementById("publicSearchBtn").addEventListener("click", refreshPublicResources);
+
+    document.getElementById("publicSearchBtn").addEventListener("click", () => {
+        state.publicPage = 0;
+        refreshPublicResources();
+    });
     document.getElementById("reloadMineBtn").addEventListener("click", refreshMine);
     document.getElementById("reloadAdminBtn").addEventListener("click", refreshAdminQueues);
+    document.getElementById("pendingSearchBtn").addEventListener("click", () => {
+        state.pendingPage = 0;
+        refreshAdminQueues();
+    });
+
+    els.publicPrevBtn.addEventListener("click", () => {
+        if (state.publicPage <= 0) return;
+        state.publicPage -= 1;
+        refreshPublicResources();
+    });
+    els.publicNextBtn.addEventListener("click", () => {
+        if (state.publicPage + 1 >= state.publicTotalPages) return;
+        state.publicPage += 1;
+        refreshPublicResources();
+    });
+    els.pendingPrevBtn.addEventListener("click", () => {
+        if (state.pendingPage <= 0) return;
+        state.pendingPage -= 1;
+        refreshAdminQueues();
+    });
+    els.pendingNextBtn.addEventListener("click", () => {
+        if (state.pendingPage + 1 >= state.pendingTotalPages) return;
+        state.pendingPage += 1;
+        refreshAdminQueues();
+    });
+
     els.logoutBtn.addEventListener("click", onLogout);
 }
 
@@ -52,12 +97,14 @@ async function onLogin(event) {
     };
 
     try {
-        const user = await apiPost("/api/auth/login", payload);
-        state.currentUser = user;
-        localStorage.setItem("currentUser", JSON.stringify(user));
+        const auth = await apiPost("/api/auth/login", payload);
+        state.currentUser = auth.user;
+        state.token = auth.token;
+        localStorage.setItem("currentUser", JSON.stringify(auth.user));
+        localStorage.setItem("authToken", auth.token);
         renderSession();
         await refreshRolePanels();
-        showToast(`Welcome, ${user.userName}`);
+        showToast(`Welcome, ${auth.user.userName}`);
     } catch (error) {
         showToast(error.message, true);
     }
@@ -84,7 +131,9 @@ async function onRegister(event) {
 
 function onLogout() {
     state.currentUser = null;
+    state.token = null;
     localStorage.removeItem("currentUser");
+    localStorage.removeItem("authToken");
     renderSession();
     refreshRolePanels();
     showToast("Logged out");
@@ -113,10 +162,9 @@ async function onCreateResource(event) {
     };
 
     try {
-        const actorId = state.currentUser.userId;
-        const created = await apiPost(`/api/resources?actorId=${actorId}`, payload);
+        const created = await apiPost("/api/resources", payload);
         if (action === "submit") {
-            await apiPost(`/api/resources/${created.resourceId}/submit?actorId=${actorId}`, {});
+            await apiPost(`/api/resources/${created.resourceId}/submit`, {});
             showToast(`Resource #${created.resourceId} submitted`);
         } else {
             showToast(`Draft #${created.resourceId} created`);
@@ -140,7 +188,7 @@ async function onCreateCategory(event) {
         description: form.description.value.trim()
     };
     try {
-        await apiPost(`/api/admin/categories?actorId=${state.currentUser.userId}`, payload);
+        await apiPost("/api/admin/categories", payload);
         form.reset();
         await refreshMasterData();
         showToast("Category created");
@@ -158,7 +206,7 @@ async function onCreateTag(event) {
     const form = event.currentTarget;
     const payload = {name: form.name.value.trim()};
     try {
-        await apiPost(`/api/admin/tags?actorId=${state.currentUser.userId}`, payload);
+        await apiPost("/api/admin/tags", payload);
         form.reset();
         await refreshMasterData();
         showToast("Tag created");
@@ -178,6 +226,8 @@ async function refreshMasterData() {
     fillSelect(els.publicCategory, state.categories, "categoryId", "name", true);
     fillSelect(els.resourceCategory, state.categories, "categoryId", "name", false);
     fillSelect(els.publicTag, state.tags, "name", "name", true);
+    fillSelect(els.adminPendingCategory, state.categories, "categoryId", "name", true);
+    fillSelect(els.adminPendingTag, state.tags, "name", "name", true);
 }
 
 async function refreshPublicResources() {
@@ -188,9 +238,26 @@ async function refreshPublicResources() {
     if (form.place.value.trim()) params.set("place", form.place.value.trim());
     if (form.tag.value) params.set("tag", form.tag.value);
 
+    params.set("page", String(state.publicPage));
+    params.set("size", form.size.value || "10");
+    params.set("sortBy", form.sortBy.value || "updatedTime");
+    params.set("sortDir", form.sortDir.value || "desc");
+
     try {
-        state.publicResources = await apiGet(`/api/public/resources?${params.toString()}`);
+        const result = normalizePageResult(await apiGet(`/api/public/resources?${params.toString()}`), state.publicPage);
+        state.publicResources = result.content;
+        state.publicPage = result.page;
+        state.publicTotalPages = result.totalPages;
+        state.publicTotalElements = result.totalElements;
+
+        if (state.publicTotalPages > 0 && state.publicPage >= state.publicTotalPages) {
+            state.publicPage = state.publicTotalPages - 1;
+            await refreshPublicResources();
+            return;
+        }
+
         renderPublicResources();
+        renderPublicPager();
     } catch (error) {
         showToast(error.message, true);
     }
@@ -199,7 +266,7 @@ async function refreshPublicResources() {
 async function refreshMine() {
     if (!isContributor()) return;
     try {
-        state.myResources = await apiGet(`/api/resources/mine?actorId=${state.currentUser.userId}`);
+        state.myResources = await apiGet("/api/resources/mine");
         renderMineResources();
     } catch (error) {
         showToast(error.message, true);
@@ -207,12 +274,51 @@ async function refreshMine() {
 }
 
 async function refreshAdminQueues() {
-    if (!isAdmin()) return;
-    try {
-        state.pendingContributors = await apiGet(`/api/admin/contributors/pending?actorId=${state.currentUser.userId}`);
-        state.pendingResources = await apiGet(`/api/admin/resources/pending?actorId=${state.currentUser.userId}`);
+    if (!isAdmin()) {
+        state.pendingContributors = [];
+        state.pendingResources = [];
+        state.pendingPage = 0;
+        state.pendingTotalPages = 0;
+        state.pendingTotalElements = 0;
         renderPendingContributors();
         renderPendingResources();
+        renderPendingPager();
+        return;
+    }
+
+    try {
+        state.pendingContributors = await apiGet("/api/admin/contributors/pending");
+
+        const form = document.getElementById("pendingFilterForm");
+        const params = new URLSearchParams();
+        if (form.keyword.value.trim()) params.set("keyword", form.keyword.value.trim());
+        if (form.categoryId.value) params.set("categoryId", form.categoryId.value);
+        if (form.place.value.trim()) params.set("place", form.place.value.trim());
+        if (form.tag.value) params.set("tag", form.tag.value);
+        if (form.status.value) params.set("status", form.status.value);
+        params.set("page", String(state.pendingPage));
+        params.set("size", form.size.value || "10");
+        params.set("sortBy", form.sortBy.value || "updatedTime");
+        params.set("sortDir", form.sortDir.value || "desc");
+
+        const result = normalizePageResult(
+            await apiGet(`/api/admin/resources/pending?${params.toString()}`),
+            state.pendingPage
+        );
+        state.pendingResources = result.content;
+        state.pendingPage = result.page;
+        state.pendingTotalPages = result.totalPages;
+        state.pendingTotalElements = result.totalElements;
+
+        if (state.pendingTotalPages > 0 && state.pendingPage >= state.pendingTotalPages) {
+            state.pendingPage = state.pendingTotalPages - 1;
+            await refreshAdminQueues();
+            return;
+        }
+
+        renderPendingContributors();
+        renderPendingResources();
+        renderPendingPager();
     } catch (error) {
         showToast(error.message, true);
     }
@@ -234,7 +340,7 @@ function renderSession() {
         els.sessionText.innerHTML = "Not logged in";
         return;
     }
-    els.sessionText.innerHTML = `<b>${state.currentUser.userName}</b> · ${state.currentUser.role} · id=${state.currentUser.userId}`;
+    els.sessionText.innerHTML = `<b>${state.currentUser.userName}</b> | ${state.currentUser.role} | id=${state.currentUser.userId}`;
 }
 
 function renderPublicResources() {
@@ -261,6 +367,13 @@ function renderPublicResources() {
             <div id="commentBox-${resource.resourceId}" class="stack"></div>
         </article>
     `).join("");
+}
+
+function renderPublicPager() {
+    const pageNumber = state.publicTotalPages === 0 ? 0 : state.publicPage + 1;
+    els.publicPageInfo.textContent = `Page ${pageNumber} / ${state.publicTotalPages} · ${state.publicTotalElements} items`;
+    els.publicPrevBtn.disabled = state.publicPage <= 0;
+    els.publicNextBtn.disabled = state.publicTotalPages === 0 || state.publicPage + 1 >= state.publicTotalPages;
 }
 
 function renderMineResources() {
@@ -317,6 +430,7 @@ function renderPendingResources() {
         <article class="card">
             <h3 class="card-title">${escapeHtml(resource.title)}</h3>
             <div class="meta">
+                <span class="chip status-${resource.status}">${resource.status}</span>
                 <span class="chip">${escapeHtml(resource.topic)}</span>
                 <span class="chip">${escapeHtml(resource.placeName)}</span>
                 <span class="chip">${escapeHtml(resource.categoryName)}</span>
@@ -330,10 +444,17 @@ function renderPendingResources() {
     `).join("");
 }
 
+function renderPendingPager() {
+    const pageNumber = state.pendingTotalPages === 0 ? 0 : state.pendingPage + 1;
+    els.pendingPageInfo.textContent = `Page ${pageNumber} / ${state.pendingTotalPages} · ${state.pendingTotalElements} items`;
+    els.pendingPrevBtn.disabled = state.pendingPage <= 0;
+    els.pendingNextBtn.disabled = state.pendingTotalPages === 0 || state.pendingPage + 1 >= state.pendingTotalPages;
+}
+
 window.UI = {
     async submitResource(resourceId) {
         try {
-            await apiPost(`/api/resources/${resourceId}/submit?actorId=${state.currentUser.userId}`, {});
+            await apiPost(`/api/resources/${resourceId}/submit`, {});
             await refreshMine();
             showToast("Submitted for review");
         } catch (error) {
@@ -343,7 +464,7 @@ window.UI = {
 
     async resubmitResource(resourceId) {
         try {
-            await apiPost(`/api/resources/${resourceId}/resubmit?actorId=${state.currentUser.userId}`, {});
+            await apiPost(`/api/resources/${resourceId}/resubmit`, {});
             await refreshMine();
             showToast("Resubmitted");
         } catch (error) {
@@ -353,7 +474,7 @@ window.UI = {
 
     async approveContributor(userId) {
         try {
-            await apiPut(`/api/admin/contributors/${userId}/approve?actorId=${state.currentUser.userId}`, {});
+            await apiPut(`/api/admin/contributors/${userId}/approve`, {});
             await refreshAdminQueues();
             showToast("Contributor approved");
         } catch (error) {
@@ -364,7 +485,7 @@ window.UI = {
     async reviewResource(resourceId, decision) {
         try {
             const feedbackEl = document.getElementById(`reviewFeedback-${resourceId}`);
-            await apiPost(`/api/resources/${resourceId}/review?actorId=${state.currentUser.userId}`, {
+            await apiPost(`/api/resources/${resourceId}/review`, {
                 decision,
                 feedback: feedbackEl.value
             });
@@ -419,7 +540,7 @@ window.UI = {
             return;
         }
         try {
-            await apiPost(`/api/public/resources/${resourceId}/comments?actorId=${state.currentUser.userId}`, {content});
+            await apiPost(`/api/public/resources/${resourceId}/comments`, {content});
             input.value = "";
             await window.UI.viewComments(resourceId);
             showToast("Comment posted");
@@ -450,20 +571,60 @@ async function apiPut(path, body) {
 }
 
 async function request(path, options) {
-    const response = await fetch(path, options);
+    const headers = {...(options.headers || {})};
+    if (state.token) {
+        headers.Authorization = `Bearer ${state.token}`;
+    }
+    const response = await fetch(path, {...options, headers});
     const text = await response.text();
-    const data = text ? JSON.parse(text) : {};
+    let data = {};
+    if (text) {
+        try {
+            data = JSON.parse(text);
+        } catch {
+            data = {message: text};
+        }
+    }
     if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+            state.currentUser = null;
+            state.token = null;
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("authToken");
+            renderSession();
+            refreshRolePanels();
+        }
         throw new Error(data.message || `HTTP ${response.status}`);
     }
     return data;
 }
 
 function fillSelect(selectEl, list, valueKey, labelKey, includeAny) {
+    if (!selectEl) return;
     const defaultOption = includeAny ? `<option value="">Any</option>` : `<option value="">Select</option>`;
     selectEl.innerHTML = defaultOption + list
         .map((item) => `<option value="${item[valueKey]}">${escapeHtml(item[labelKey])}</option>`)
         .join("");
+}
+
+function normalizePageResult(raw, fallbackPage) {
+    if (Array.isArray(raw)) {
+        return {
+            content: raw,
+            page: fallbackPage,
+            size: raw.length,
+            totalElements: raw.length,
+            totalPages: raw.length > 0 ? 1 : 0
+        };
+    }
+
+    return {
+        content: Array.isArray(raw?.content) ? raw.content : [],
+        page: Number.isInteger(raw?.page) ? raw.page : fallbackPage,
+        size: Number.isInteger(raw?.size) ? raw.size : 10,
+        totalElements: Number.isFinite(raw?.totalElements) ? raw.totalElements : 0,
+        totalPages: Number.isInteger(raw?.totalPages) ? raw.totalPages : 0
+    };
 }
 
 function splitTags(raw) {
@@ -495,13 +656,15 @@ function loadUser() {
         return null;
     }
 }
-
+function loadToken() {
+    return localStorage.getItem("authToken");
+}
 function escapeHtml(text) {
     if (text === null || text === undefined) return "";
     return String(text)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
+        .replace(/\"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }

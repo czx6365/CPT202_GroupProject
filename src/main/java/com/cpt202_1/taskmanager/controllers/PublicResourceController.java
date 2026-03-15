@@ -2,6 +2,7 @@ package com.cpt202_1.taskmanager.controllers;
 
 import java.util.List;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,8 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cpt202_1.taskmanager.dto.request.CommentRequest;
 import com.cpt202_1.taskmanager.dto.response.CommentView;
+import com.cpt202_1.taskmanager.dto.response.PageResult;
 import com.cpt202_1.taskmanager.dto.response.ResourceDetail;
 import com.cpt202_1.taskmanager.dto.response.ResourceSummary;
+import com.cpt202_1.taskmanager.security.AuthenticatedUser;
 import com.cpt202_1.taskmanager.service.PlatformService;
 
 @RestController
@@ -26,12 +29,16 @@ public class PublicResourceController {
     }
 
     @GetMapping
-    public List<ResourceSummary> search(
+    public PageResult<ResourceSummary> search(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String place,
-            @RequestParam(required = false) String tag) {
-        return platformService.searchApproved(keyword, categoryId, place, tag);
+            @RequestParam(required = false) String tag,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "updatedTime") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        return platformService.searchApproved(keyword, categoryId, place, tag, page, size, sortBy, sortDir);
     }
 
     @GetMapping("/{resourceId}")
@@ -46,9 +53,9 @@ public class PublicResourceController {
 
     @PostMapping("/{resourceId}/comments")
     public CommentView comment(
-            @RequestParam Long actorId,
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
             @PathVariable Long resourceId,
             @RequestBody CommentRequest request) {
-        return platformService.addComment(actorId, resourceId, request);
+        return platformService.addComment(currentUser.getUserId(), resourceId, request);
     }
 }

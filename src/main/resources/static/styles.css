@@ -149,6 +149,12 @@ textarea {
     gap: 8px;
 }
 
+.pager {
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
 .btn {
     border: 0;
     background: linear-gradient(120deg, var(--brand), #008a84);
@@ -167,6 +173,11 @@ textarea {
     background: transparent;
     color: var(--brand);
     border: 1px solid var(--brand);
+}
+
+.btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 .card-list {

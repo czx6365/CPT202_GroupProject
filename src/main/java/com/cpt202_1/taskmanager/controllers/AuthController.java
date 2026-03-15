@@ -9,16 +9,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cpt202_1.taskmanager.dto.request.LoginRequest;
 import com.cpt202_1.taskmanager.dto.request.RegisterRequest;
+import com.cpt202_1.taskmanager.dto.response.AuthResponse;
 import com.cpt202_1.taskmanager.dto.response.UserSummary;
+import com.cpt202_1.taskmanager.security.JwtService;
 import com.cpt202_1.taskmanager.service.PlatformService;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
     private final PlatformService platformService;
+    private final JwtService jwtService;
 
-    public AuthController(PlatformService platformService) {
+    public AuthController(PlatformService platformService, JwtService jwtService) {
         this.platformService = platformService;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/register")
@@ -27,8 +31,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public UserSummary login(@RequestBody LoginRequest request) {
-        return platformService.login(request);
+    public AuthResponse login(@RequestBody LoginRequest request) {
+        UserSummary user = platformService.login(request);
+        String token = jwtService.generateToken(user);
+        return new AuthResponse(token, "Bearer", jwtService.getExpirationMs() / 1000, user);
     }
 
     @PostMapping("/logout")
