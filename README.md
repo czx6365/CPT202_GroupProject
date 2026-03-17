@@ -260,7 +260,7 @@ spring.datasource.password=${DB_PASSWORD:}
 
 ```powershell
 cd 你电脑中的CPT202路径
-$env:JAVA_HOME="Java路径（在控制台输入which java/which javac后的结果）"
+$env:JAVA_HOME="你本地的Java路径"
 $env:Path="$env:JAVA_HOME\bin;$env:Path"
 $env:DB_PASSWORD="你的MySQL密码"
 .\mvnw.cmd spring-boot:run "-Dmaven.test.skip=true"
