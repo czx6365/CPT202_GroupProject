@@ -50,8 +50,16 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
+/**
+ * 平台核心业务服务层。
+ * <p>职责：
+ * 1) 用户注册、登录、资料维护
+ * 2) 管理员分类/标签/投稿者审批管理
+ * 3) 资源工作流状态流转（草稿、送审、审核、归档）
+ * 4) 公开检索与评论
+ */
 @Service
-@Transactional
+@Transactional // 默认开启事务，保证同一业务方法内的数据一致性
 public class PlatformService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
@@ -75,6 +83,10 @@ public class PlatformService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * 用户注册。
+     * <p>关键规则：禁止公开接口注册管理员；用户名和邮箱必须唯一；密码使用 BCrypt 存储。
+     */
     public UserSummary register(RegisterRequest request) {
         if (request == null || !StringUtils.hasText(request.userName()) || !StringUtils.hasText(request.password())
                 || !StringUtils.hasText(request.email())) {
@@ -106,6 +118,10 @@ public class PlatformService {
         return toUserSummary(user);
     }
 
+    /**
+     * 用户登录。
+     * <p>流程：按用户名查找 -> 账号可用性校验 -> 密码匹配（兼容旧明文并自动升级）。
+     */
     @Transactional
     public UserSummary login(LoginRequest request) {
         if (request == null || !StringUtils.hasText(request.userName()) || !StringUtils.hasText(request.password())) {
@@ -123,11 +139,18 @@ public class PlatformService {
         return toUserSummary(user);
     }
 
+    /**
+     * 查询个人资料。
+     */
     @Transactional(readOnly = true)
     public UserSummary getProfile(Long userId) {
         return toUserSummary(getUserOrThrow(userId));
     }
 
+    /**
+     * 更新个人资料（部分更新）。
+     * <p>支持字段：userName、email、password；更新 userName/email 时依然校验唯一性。
+     */
     public UserSummary updateProfile(Long userId, UpdateProfileRequest request) {
         if (request == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Request body is required");
@@ -157,6 +180,9 @@ public class PlatformService {
         return toUserSummary(userRepository.save(user));
     }
 
+    /**
+     * 管理员审批投稿者资格。
+     */
     public UserSummary approveContributor(Long actorId, Long contributorId) {
         User actor = getUserOrThrow(actorId);
         requireRole(actor, UserRole.ADMIN_REVIEWER);
@@ -171,6 +197,9 @@ public class PlatformService {
         return toUserSummary(contributor);
     }
 
+    /**
+     * 管理员新增分类。
+     */
     public Category createCategory(Long actorId, CreateCategoryRequest request) {
         User actor = getUserOrThrow(actorId);
         requireRole(actor, UserRole.ADMIN_REVIEWER);
@@ -187,11 +216,17 @@ public class PlatformService {
         return categoryRepository.save(category);
     }
 
+    /**
+     * 查询分类（按名称升序）。
+     */
     @Transactional(readOnly = true)
     public List<Category> listCategories() {
         return categoryRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
     }
 
+    /**
+     * 管理员新增标签。
+     */
     public Tag createTag(Long actorId, CreateTagRequest request) {
         User actor = getUserOrThrow(actorId);
         requireRole(actor, UserRole.ADMIN_REVIEWER);
@@ -208,11 +243,17 @@ public class PlatformService {
         return tagRepository.save(tag);
     }
 
+    /**
+     * 查询标签（按名称升序）。
+     */
     @Transactional(readOnly = true)
     public List<Tag> listTags() {
         return tagRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
     }
 
+    /**
+     * 查询待审批投稿者列表（角色为 CONTRIBUTOR 且未被批准）。
+     */
     @Transactional(readOnly = true)
     public List<UserSummary> listPendingContributors(Long actorId) {
         User actor = getUserOrThrow(actorId);
@@ -225,6 +266,10 @@ public class PlatformService {
                 .toList();
     }
 
+    /**
+     * 管理端资源列表（默认待审核）。
+     * <p>支持：关键词、分类、地点、标签、状态筛选 + 分页 + 排序。
+     */
     @Transactional(readOnly = true)
     public PageResult<ResourceSummary> listPendingResources(
             Long actorId,
@@ -248,6 +293,9 @@ public class PlatformService {
         return PageResult.from(resultPage, this::toResourceSummary);
     }
 
+    /**
+     * 兼容旧接口的无分页版本（内部转为分页查询）。
+     */
     @Transactional(readOnly = true)
     public List<ResourceSummary> listPendingResources(Long actorId) {
         return listPendingResources(
@@ -255,6 +303,9 @@ public class PlatformService {
                 .content();
     }
 
+    /**
+     * 投稿者创建草稿资源，初始状态为 DRAFT。
+     */
     public ResourceDetail createDraft(Long actorId, ResourceUpsertRequest request) {
         User actor = getUserOrThrow(actorId);
         requireRole(actor, UserRole.CONTRIBUTOR);
@@ -267,6 +318,9 @@ public class PlatformService {
         return toResourceDetail(resourceEntryRepository.save(entry));
     }
 
+    /**
+     * 投稿者更新草稿/驳回资源，仅所有者可操作。
+     */
     public ResourceDetail updateDraft(Long actorId, Long resourceId, ResourceUpsertRequest request) {
         User actor = getUserOrThrow(actorId);
         ResourceEntry entry = getResourceOrThrow(resourceId);
@@ -280,6 +334,10 @@ public class PlatformService {
         return toResourceDetail(resourceEntryRepository.save(entry));
     }
 
+    /**
+     * 投稿者提交审核。
+     * <p>状态流转：DRAFT/REJECTED -> PENDING_REVIEW。
+     */
     public ResourceDetail submitForReview(Long actorId, Long resourceId) {
         User actor = getUserOrThrow(actorId);
         ResourceEntry entry = getResourceOrThrow(resourceId);
@@ -300,6 +358,9 @@ public class PlatformService {
         return toResourceDetail(resourceEntryRepository.save(entry));
     }
 
+    /**
+     * 投稿者重新提交审核，仅 REJECTED 可重提。
+     */
     public ResourceDetail resubmit(Long actorId, Long resourceId) {
         User actor = getUserOrThrow(actorId);
         ResourceEntry entry = getResourceOrThrow(resourceId);
@@ -319,6 +380,10 @@ public class PlatformService {
         return toResourceDetail(resourceEntryRepository.save(entry));
     }
 
+    /**
+     * 管理员审核资源。
+     * <p>APPROVE: PENDING_REVIEW -> APPROVED；REJECT: PENDING_REVIEW -> REJECTED。
+     */
     public ResourceDetail review(Long actorId, Long resourceId, ReviewRequest request) {
         User actor = getUserOrThrow(actorId);
         requireRole(actor, UserRole.ADMIN_REVIEWER);
@@ -345,6 +410,9 @@ public class PlatformService {
         return toResourceDetail(resourceEntryRepository.save(entry));
     }
 
+    /**
+     * 管理员归档资源，归档后不会出现在公开检索结果中。
+     */
     public ResourceDetail archive(Long actorId, Long resourceId) {
         User actor = getUserOrThrow(actorId);
         requireRole(actor, UserRole.ADMIN_REVIEWER);
@@ -355,6 +423,9 @@ public class PlatformService {
         return toResourceDetail(resourceEntryRepository.save(entry));
     }
 
+    /**
+     * 投稿者查看自己资源（按更新时间倒序）。
+     */
     @Transactional(readOnly = true)
     public List<ResourceSummary> listMyResources(Long actorId) {
         User actor = getUserOrThrow(actorId);
@@ -365,6 +436,10 @@ public class PlatformService {
                 .toList();
     }
 
+    /**
+     * 公开资源检索（仅 APPROVED）。
+     * <p>支持：关键词、分类、地点、标签筛选 + 分页 + 排序。
+     */
     @Transactional(readOnly = true)
     public PageResult<ResourceSummary> searchApproved(
             String keyword,
@@ -382,11 +457,17 @@ public class PlatformService {
         return PageResult.from(resultPage, this::toResourceSummary);
     }
 
+    /**
+     * 兼容旧接口的无分页检索版本。
+     */
     @Transactional(readOnly = true)
     public List<ResourceSummary> searchApproved(String keyword, Long categoryId, String place, String tag) {
         return searchApproved(keyword, categoryId, place, tag, 0, 1000, "updatedTime", "desc").content();
     }
 
+    /**
+     * 公开资源详情（仅 APPROVED 可见）。
+     */
     @Transactional(readOnly = true)
     public ResourceDetail getApprovedDetail(Long resourceId) {
         ResourceEntry entry = getResourceOrThrow(resourceId);
@@ -396,6 +477,10 @@ public class PlatformService {
         return toResourceDetail(entry);
     }
 
+    /**
+     * 新增评论。
+     * <p>仅启用用户可评论，且目标资源必须是 APPROVED。
+     */
     public CommentView addComment(Long actorId, Long resourceId, CommentRequest request) {
         User actor = getUserOrThrow(actorId);
         if (!actor.isEnabled()) {
@@ -417,6 +502,9 @@ public class PlatformService {
         return toCommentView(resourceCommentRepository.save(comment));
     }
 
+    /**
+     * 查询评论列表（按创建时间升序）。
+     */
     @Transactional(readOnly = true)
     public List<CommentView> listComments(Long resourceId) {
         ResourceEntry entry = getResourceOrThrow(resourceId);
@@ -428,6 +516,10 @@ public class PlatformService {
                 .toList();
     }
 
+    /**
+     * 资源动态条件构造器。
+     * <p>用于 public/admin 两个列表接口复用同一套筛选逻辑。
+     */
     private Specification<ResourceEntry> buildResourceSpecification(
             String keyword,
             Long categoryId,
@@ -467,6 +559,9 @@ public class PlatformService {
         };
     }
 
+    /**
+     * 构建分页与排序参数，统一处理 page/size/sortBy/sortDir 校验。
+     */
     private Pageable buildResourcePageRequest(int page, int size, String sortBy, String sortDir) {
         if (page < 0) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "page must be >= 0");
@@ -479,6 +574,9 @@ public class PlatformService {
         return PageRequest.of(page, size, Sort.by(direction, sortProperty));
     }
 
+    /**
+     * 对外排序字段到实体字段的映射。
+     */
     private String resolveResourceSortProperty(String sortBy) {
         if (!StringUtils.hasText(sortBy)) {
             return "updatedAt";
@@ -492,6 +590,9 @@ public class PlatformService {
         };
     }
 
+    /**
+     * 排序方向解析，仅允许 asc/desc。
+     */
     private Sort.Direction resolveSortDirection(String sortDir) {
         if (!StringUtils.hasText(sortDir) || "desc".equalsIgnoreCase(sortDir)) {
             return Sort.Direction.DESC;
@@ -502,6 +603,9 @@ public class PlatformService {
         throw new ApiException(HttpStatus.BAD_REQUEST, "sortDir must be asc or desc");
     }
 
+    /**
+     * 按 userId 查询用户，不存在抛业务异常。
+     */
     private User getUserOrThrow(Long userId) {
         if (userId == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "actorId/userId is required");
@@ -510,11 +614,17 @@ public class PlatformService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found: " + userId));
     }
 
+    /**
+     * 按 resourceId 查询资源，不存在抛业务异常。
+     */
     private ResourceEntry getResourceOrThrow(Long resourceId) {
         return resourceEntryRepository.findById(resourceId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Resource not found: " + resourceId));
     }
 
+    /**
+     * 按 categoryId 查询分类，不存在抛业务异常。
+     */
     private Category getCategoryOrThrow(Long categoryId) {
         if (categoryId == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "categoryId is required");
@@ -523,18 +633,27 @@ public class PlatformService {
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Category not found: " + categoryId));
     }
 
+    /**
+     * 通用角色校验。
+     */
     private void requireRole(User user, UserRole role) {
         if (user.getRole() != role) {
             throw new ApiException(HttpStatus.FORBIDDEN, "User role not allowed for this action");
         }
     }
 
+    /**
+     * 所有者校验：仅资源作者本人可修改。
+     */
     private void requireOwner(User actor, ResourceEntry entry) {
         if (!entry.getContributor().getUserId().equals(actor.getUserId())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Only owner contributor can modify this resource");
         }
     }
 
+    /**
+     * 资源公共字段填充与必填校验（创建/编辑复用）。
+     */
     private void fillResourceFields(ResourceEntry entry, ResourceUpsertRequest request) {
         if (request == null || !StringUtils.hasText(request.title()) || !StringUtils.hasText(request.topic())
                 || !StringUtils.hasText(request.placeName()) || !StringUtils.hasText(request.description())
@@ -555,6 +674,10 @@ public class PlatformService {
         entry.setTags(resolveTags(request.tags()));
     }
 
+    /**
+     * 标签名集合解析为 Tag 实体集合。
+     * <p>策略：忽略空值；标签必须预先存在。
+     */
     private Set<Tag> resolveTags(Set<String> names) {
         if (names == null || names.isEmpty()) {
             return new HashSet<>();
@@ -572,6 +695,9 @@ public class PlatformService {
         return result;
     }
 
+    /**
+     * 密码匹配并在必要时升级：兼容旧明文密码，登录成功后自动迁移为 BCrypt。
+     */
     private boolean passwordMatchesAndUpgradeIfNeeded(User user, String rawPassword) {
         String encodedOrRaw = user.getPassword();
 
@@ -587,11 +713,17 @@ public class PlatformService {
         return matched;
     }
 
+    /**
+     * 粗略判断字符串是否为 BCrypt 哈希。
+     */
     private boolean isBcryptHash(String value) {
         return StringUtils.hasText(value)
                 && (value.startsWith("$2a$") || value.startsWith("$2b$") || value.startsWith("$2y$"));
     }
 
+    /**
+     * User -> UserSummary DTO 映射。
+     */
     private UserSummary toUserSummary(User user) {
         return new UserSummary(
                 user.getUserId(),
@@ -601,6 +733,9 @@ public class PlatformService {
                 user.isContributorApproved());
     }
 
+    /**
+     * ResourceEntry -> ResourceSummary DTO 映射（列表视图）。
+     */
     private ResourceSummary toResourceSummary(ResourceEntry entry) {
         return new ResourceSummary(
                 entry.getResourceId(),
@@ -616,6 +751,9 @@ public class PlatformService {
                 entry.getUpdatedAt());
     }
 
+    /**
+     * ResourceEntry -> ResourceDetail DTO 映射（详情视图）。
+     */
     private ResourceDetail toResourceDetail(ResourceEntry entry) {
         return new ResourceDetail(
                 entry.getResourceId(),
@@ -640,6 +778,9 @@ public class PlatformService {
                 entry.getArchivedAt());
     }
 
+    /**
+     * ResourceComment -> CommentView DTO 映射。
+     */
     private CommentView toCommentView(ResourceComment comment) {
         return new CommentView(
                 comment.getCommentId(),
