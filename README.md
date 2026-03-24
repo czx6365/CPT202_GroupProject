@@ -124,119 +124,121 @@ src
 
 ## 代码文件职责说明
 
+下面的表格只保留文件名，具体所在位置看对应的小节标题和包名。
+
 ### 1. 根目录与启动配置
 
 | 文件 | 作用 |
 | --- | --- |
 | `pom.xml` | Maven 项目描述文件，声明 Spring Boot、JPA、Security、JWT、MySQL 等依赖与 Java 21 版本。 |
-| `src/main/java/com/cpt202_1/taskmanager/TaskmanagerApplication.java` | Spring Boot 启动入口，负责启动应用，并启用 `@ConfigurationProperties` 扫描。 |
-| `src/main/resources/application.properties` | 应用基础配置，定义数据源、JPA 行为、JWT 默认参数。 |
+| `TaskmanagerApplication.java` | Spring Boot 启动入口，负责启动应用，并启用 `@ConfigurationProperties` 扫描。 |
+| `application.properties` | 应用基础配置，定义数据源、JPA 行为、JWT 默认参数。 |
 
 ### 2. `config` 包
 
 | 文件 | 作用 |
 | --- | --- |
-| `src/main/java/com/cpt202_1/taskmanager/config/BootstrapDataConfig.java` | 应用启动后执行初始化逻辑：如果数据库中没有 `admin`，就创建默认管理员；如果发现旧的明文密码，会升级成 BCrypt。 |
-| `src/main/java/com/cpt202_1/taskmanager/config/JwtProperties.java` | 读取 `app.jwt.*` 配置，向 `JwtService` 提供 JWT 密钥和过期时间。 |
+| `BootstrapDataConfig.java` | 应用启动后执行初始化逻辑：如果数据库中没有 `admin`，就创建默认管理员；如果发现旧的明文密码，会升级成 BCrypt。 |
+| `JwtProperties.java` | 读取 `app.jwt.*` 配置，向 `JwtService` 提供 JWT 密钥和过期时间。 |
 
 ### 3. `controllers` 包
 
 | 文件 | 作用 |
 | --- | --- |
-| `src/main/java/com/cpt202_1/taskmanager/controllers/AuthController.java` | 处理注册、登录、登出接口；登录成功后签发 JWT。 |
-| `src/main/java/com/cpt202_1/taskmanager/controllers/ProfileController.java` | 提供用户资料查看和更新接口，并限制只能本人或管理员访问。 |
-| `src/main/java/com/cpt202_1/taskmanager/controllers/PublicResourceController.java` | 公开资源接口，负责分页检索、查看详情、查看评论、发表评论。 |
-| `src/main/java/com/cpt202_1/taskmanager/controllers/ResourceWorkflowController.java` | 资源工作流接口，负责投稿者创建草稿、更新草稿、提交审核、重新提交，以及查看“我的资源”；也包含管理员审核入口。 |
-| `src/main/java/com/cpt202_1/taskmanager/controllers/AdminController.java` | 管理员接口，负责审批投稿者、创建分类、创建标签、查询待审核资源、归档资源。 |
-| `src/main/java/com/cpt202_1/taskmanager/controllers/taskController.java` | 提供数据库探活和可视化诊断页面，用于快速验证数据库是否连通。 |
+| `AuthController.java` | 处理注册、登录、登出接口；登录成功后签发 JWT。 |
+| `ProfileController.java` | 提供用户资料查看和更新接口，并限制只能本人或管理员访问。 |
+| `PublicResourceController.java` | 公开资源接口，负责分页检索、查看详情、查看评论、发表评论。 |
+| `ResourceWorkflowController.java` | 资源工作流接口，负责投稿者创建草稿、更新草稿、提交审核、重新提交，以及查看“我的资源”；也包含管理员审核入口。 |
+| `AdminController.java` | 管理员接口，负责审批投稿者、创建分类、创建标签、查询待审核资源、归档资源。 |
+| `taskController.java` | 提供数据库探活和可视化诊断页面，用于快速验证数据库是否连通。 |
 
 ### 4. `service` 包
 
 | 文件 | 作用 |
 | --- | --- |
-| `src/main/java/com/cpt202_1/taskmanager/service/PlatformService.java` | 项目唯一的核心业务服务层，集中处理用户注册登录、资料修改、投稿者审批、分类标签管理、资源状态流转、公开检索、评论、分页与排序、DTO 映射等逻辑。 |
+| `PlatformService.java` | 项目唯一的核心业务服务层，集中处理用户注册登录、资料修改、投稿者审批、分类标签管理、资源状态流转、公开检索、评论、分页与排序、DTO 映射等逻辑。 |
 
 ### 5. `security` 包
 
 | 文件 | 作用 |
 | --- | --- |
-| `src/main/java/com/cpt202_1/taskmanager/security/SecurityConfig.java` | Spring Security 总配置，定义开放接口、角色权限、异常返回格式、密码加密器，并注册 JWT 过滤器。 |
-| `src/main/java/com/cpt202_1/taskmanager/security/JwtAuthenticationFilter.java` | 从请求头读取 Bearer Token，校验 JWT，查库确认用户状态，并把认证信息放进 Spring Security 上下文。 |
-| `src/main/java/com/cpt202_1/taskmanager/security/JwtService.java` | 负责 JWT 的生成、解析、校验和过期时间管理。 |
-| `src/main/java/com/cpt202_1/taskmanager/security/AuthenticatedUser.java` | 当前登录用户的轻量级认证对象，供控制器用 `@AuthenticationPrincipal` 直接读取。 |
+| `SecurityConfig.java` | Spring Security 总配置，定义开放接口、角色权限、异常返回格式、密码加密器，并注册 JWT 过滤器。 |
+| `JwtAuthenticationFilter.java` | 从请求头读取 Bearer Token，校验 JWT，查库确认用户状态，并把认证信息放进 Spring Security 上下文。 |
+| `JwtService.java` | 负责 JWT 的生成、解析、校验和过期时间管理。 |
+| `AuthenticatedUser.java` | 当前登录用户的轻量级认证对象，供控制器用 `@AuthenticationPrincipal` 直接读取。 |
 
 ### 6. `repository` 包
 
 | 文件 | 作用 |
 | --- | --- |
-| `src/main/java/com/cpt202_1/taskmanager/repository/UserRepository.java` | 用户表访问接口，提供按用户名查询、用户名查重、邮箱查重。 |
-| `src/main/java/com/cpt202_1/taskmanager/repository/CategoryRepository.java` | 分类表访问接口，提供按名称忽略大小写查询。 |
-| `src/main/java/com/cpt202_1/taskmanager/repository/TagRepository.java` | 标签表访问接口，提供按名称查询和批量按名称查询。 |
-| `src/main/java/com/cpt202_1/taskmanager/repository/ResourceEntryRepository.java` | 资源表访问接口，支持 `Specification` 动态检索与“按投稿者查询我的资源”。 |
-| `src/main/java/com/cpt202_1/taskmanager/repository/ResourceCommentRepository.java` | 评论表访问接口，提供按资源查询评论列表。 |
+| `UserRepository.java` | 用户表访问接口，提供按用户名查询、用户名查重、邮箱查重。 |
+| `CategoryRepository.java` | 分类表访问接口，提供按名称忽略大小写查询。 |
+| `TagRepository.java` | 标签表访问接口，提供按名称查询和批量按名称查询。 |
+| `ResourceEntryRepository.java` | 资源表访问接口，支持 `Specification` 动态检索与“按投稿者查询我的资源”。 |
+| `ResourceCommentRepository.java` | 评论表访问接口，提供按资源查询评论列表。 |
 
 ### 7. `pojo` 实体包
 
 | 文件 | 作用 |
 | --- | --- |
-| `src/main/java/com/cpt202_1/taskmanager/pojo/User.java` | 用户实体，对应 `tb_user`，包含用户名、密码、邮箱、角色、是否启用、投稿者审批状态和时间戳。 |
-| `src/main/java/com/cpt202_1/taskmanager/pojo/Category.java` | 分类实体，对应 `tb_category`，保存分类名称和描述。 |
-| `src/main/java/com/cpt202_1/taskmanager/pojo/Tag.java` | 标签实体，对应 `tb_tag`，保存资源标签名称。 |
-| `src/main/java/com/cpt202_1/taskmanager/pojo/ResourceEntry.java` | 资源实体，对应 `tb_resource`，保存标题、主题、地点、描述、资源链接、版权声明、审核信息、分类、标签及多个业务时间点。 |
-| `src/main/java/com/cpt202_1/taskmanager/pojo/ResourceComment.java` | 评论实体，对应 `tb_resource_comment`，表示用户对某个已发布资源的评论记录。 |
+| `User.java` | 用户实体，对应 `tb_user`，包含用户名、密码、邮箱、角色、是否启用、投稿者审批状态和时间戳。 |
+| `Category.java` | 分类实体，对应 `tb_category`，保存分类名称和描述。 |
+| `Tag.java` | 标签实体，对应 `tb_tag`，保存资源标签名称。 |
+| `ResourceEntry.java` | 资源实体，对应 `tb_resource`，保存标题、主题、地点、描述、资源链接、版权声明、审核信息、分类、标签及多个业务时间点。 |
+| `ResourceComment.java` | 评论实体，对应 `tb_resource_comment`，表示用户对某个已发布资源的评论记录。 |
 
 ### 8. `pojo/enums` 枚举包
 
 | 文件 | 作用 |
 | --- | --- |
-| `src/main/java/com/cpt202_1/taskmanager/pojo/enums/UserRole.java` | 定义系统中的三类用户角色：管理员、投稿者、普通注册用户。 |
-| `src/main/java/com/cpt202_1/taskmanager/pojo/enums/ResourceStatus.java` | 定义资源在工作流中的状态：草稿、待审、通过、驳回、归档。 |
-| `src/main/java/com/cpt202_1/taskmanager/pojo/enums/ReviewDecision.java` | 定义管理员审核动作：通过或驳回。 |
+| `UserRole.java` | 定义系统中的三类用户角色：管理员、投稿者、普通注册用户。 |
+| `ResourceStatus.java` | 定义资源在工作流中的状态：草稿、待审、通过、驳回、归档。 |
+| `ReviewDecision.java` | 定义管理员审核动作：通过或驳回。 |
 
 ### 9. `dto/request` 包
 
 | 文件 | 作用 |
 | --- | --- |
-| `src/main/java/com/cpt202_1/taskmanager/dto/request/LoginRequest.java` | 登录请求体，包含用户名和密码。 |
-| `src/main/java/com/cpt202_1/taskmanager/dto/request/RegisterRequest.java` | 注册请求体，包含用户名、密码、邮箱和目标角色。 |
-| `src/main/java/com/cpt202_1/taskmanager/dto/request/UpdateProfileRequest.java` | 用户资料更新请求体，支持用户名、邮箱、密码的部分更新。 |
-| `src/main/java/com/cpt202_1/taskmanager/dto/request/CreateCategoryRequest.java` | 管理员创建分类时使用的请求体。 |
-| `src/main/java/com/cpt202_1/taskmanager/dto/request/CreateTagRequest.java` | 管理员创建标签时使用的请求体。 |
-| `src/main/java/com/cpt202_1/taskmanager/dto/request/ResourceUpsertRequest.java` | 创建或更新资源时的统一请求体，包含标题、主题、地点、描述、分类、标签、文件地址、外链、版权声明。 |
-| `src/main/java/com/cpt202_1/taskmanager/dto/request/ReviewRequest.java` | 管理员审核资源时的请求体，包含审核决定和反馈。 |
-| `src/main/java/com/cpt202_1/taskmanager/dto/request/CommentRequest.java` | 用户发表评论时的请求体，只包含评论内容。 |
+| `LoginRequest.java` | 登录请求体，包含用户名和密码。 |
+| `RegisterRequest.java` | 注册请求体，包含用户名、密码、邮箱和目标角色。 |
+| `UpdateProfileRequest.java` | 用户资料更新请求体，支持用户名、邮箱、密码的部分更新。 |
+| `CreateCategoryRequest.java` | 管理员创建分类时使用的请求体。 |
+| `CreateTagRequest.java` | 管理员创建标签时使用的请求体。 |
+| `ResourceUpsertRequest.java` | 创建或更新资源时的统一请求体，包含标题、主题、地点、描述、分类、标签、文件地址、外链、版权声明。 |
+| `ReviewRequest.java` | 管理员审核资源时的请求体，包含审核决定和反馈。 |
+| `CommentRequest.java` | 用户发表评论时的请求体，只包含评论内容。 |
 
 ### 10. `dto/response` 包
 
 | 文件 | 作用 |
 | --- | --- |
-| `src/main/java/com/cpt202_1/taskmanager/dto/response/UserSummary.java` | 对外返回的用户摘要信息，不暴露密码等敏感字段。 |
-| `src/main/java/com/cpt202_1/taskmanager/dto/response/AuthResponse.java` | 登录成功后的响应体，包含 JWT、令牌类型、过期时间和当前用户信息。 |
-| `src/main/java/com/cpt202_1/taskmanager/dto/response/ResourceSummary.java` | 资源列表项响应体，用于公共检索、我的资源、待审核队列等列表场景。 |
-| `src/main/java/com/cpt202_1/taskmanager/dto/response/ResourceDetail.java` | 资源详情响应体，提供比列表更完整的资源内容和审核时间信息。 |
-| `src/main/java/com/cpt202_1/taskmanager/dto/response/CommentView.java` | 评论展示响应体，返回评论人和评论内容。 |
-| `src/main/java/com/cpt202_1/taskmanager/dto/response/PageResult.java` | 统一分页响应包装类，把 Spring Data 的 `Page` 转换为前端更容易使用的结构。 |
+| `UserSummary.java` | 对外返回的用户摘要信息，不暴露密码等敏感字段。 |
+| `AuthResponse.java` | 登录成功后的响应体，包含 JWT、令牌类型、过期时间和当前用户信息。 |
+| `ResourceSummary.java` | 资源列表项响应体，用于公共检索、我的资源、待审核队列等列表场景。 |
+| `ResourceDetail.java` | 资源详情响应体，提供比列表更完整的资源内容和审核时间信息。 |
+| `CommentView.java` | 评论展示响应体，返回评论人和评论内容。 |
+| `PageResult.java` | 统一分页响应包装类，把 Spring Data 的 `Page` 转换为前端更容易使用的结构。 |
 
 ### 11. `exception` 包
 
 | 文件 | 作用 |
 | --- | --- |
-| `src/main/java/com/cpt202_1/taskmanager/exception/ApiException.java` | 自定义业务异常，允许在业务层直接绑定 HTTP 状态码和错误消息。 |
-| `src/main/java/com/cpt202_1/taskmanager/exception/GlobalExceptionHandler.java` | 全局异常处理器，把业务异常和未知异常统一转换成 JSON 错误响应。 |
+| `ApiException.java` | 自定义业务异常，允许在业务层直接绑定 HTTP 状态码和错误消息。 |
+| `GlobalExceptionHandler.java` | 全局异常处理器，把业务异常和未知异常统一转换成 JSON 错误响应。 |
 
 ### 12. 前端静态文件
 
 | 文件 | 作用 |
 | --- | --- |
-| `src/main/resources/static/index.html` | 演示页面入口，包含登录、注册、公开浏览、投稿者工作台、管理员审核台三个主要区域。 |
-| `src/main/resources/static/app.js` | 前端主要逻辑，负责调用后端 API、保存 JWT、控制角色视图切换、分页、评论和审核交互。 |
-| `src/main/resources/static/styles.css` | 页面样式文件，定义配色、布局、卡片、按钮、响应式规则。 |
+| `index.html` | 演示页面入口，包含登录、注册、公开浏览、投稿者工作台、管理员审核台三个主要区域。 |
+| `app.js` | 前端主要逻辑，负责调用后端 API、保存 JWT、控制角色视图切换、分页、评论和审核交互。 |
+| `styles.css` | 页面样式文件，定义配色、布局、卡片、按钮、响应式规则。 |
 
 ### 13. 测试文件
 
 | 文件 | 作用 |
 | --- | --- |
-| `src/test/java/com/cpt202_1/taskmanager/TaskmanagerApplicationTests.java` | 最基础的 Spring Boot 上下文加载测试，用于确认应用能正常启动。 |
+| `TaskmanagerApplicationTests.java` | 最基础的 Spring Boot 上下文加载测试，用于确认应用能正常启动。 |
 
 ## 主要接口分组
 
