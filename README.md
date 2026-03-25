@@ -17,7 +17,7 @@
 
 6.Public Resource Discovery 李慕阳
 
-7.Resource Comment Management
+7.Resource Comment Management 许亦多
 
 8.Master Data Management
 
