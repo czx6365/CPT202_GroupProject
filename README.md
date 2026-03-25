@@ -22,7 +22,8 @@
 8.Master Data Management 邱虹瑜
 核心任务是由平台管理员对资源category（分类）进行统一管理。首先，管理员可以对分类执行完整的增删改查操作，包括创建新分类、编辑已有分类的名称与描述、浏览和搜索分类列表，以及删除不再使用的分类（已被引用的分类会被系统阻止删除）。其次，为保证所有变更的可追溯性，模块还提供审计日志功能，自动记录每次操作的执行人、时间和变更内容，并支持筛选查询和导出文件，且仅限授权用户访问。
 
-9.Administrative Operations and Archiving
+9.Administrative Operations and Archiving 张亚楠
+首先，Administrator 可以执行“紧急撤回（Emergency Unpublishing）”以快速处理违规内容，并支持对资源进行“批量归档与恢复（Bulk Archiving & Restoration）”，实现对平台资源生命周期的有效管控。然后，系统会实时生成“不可篡改的审计日志（Audit Logs）”，记录所有管理行为的操作人与时间戳，确保行政操作的可追溯性。接着，管理员能够处理“发布后更正请求（Correction Requests）”，在审核通过后动态更新已发布资源的元数据，以保证平台信息的准确性。最后，管理员可以发布“全站公告（System Announcements）”来传达维护信息或政策变更，并支持基于数据库的用户隐藏逻辑，确保沟通的高效性与用户体验，从而为平台提供全方位的合规保障与行政支持。
 
 ## 技术栈
 
