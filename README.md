@@ -7,7 +7,8 @@
 
 1.Authentication
 
-2.Profile and User Management
+2.Profile and User Management 徐灏言
+该模块主要面向已注册用户（Registered User）以及管理员（Administrator），用于管理用户个人信息以及控制贡献者（Contributor）的权限获取流程。首先，系统为每个注册用户提供个人资料页面，用户可以查看自己的基本信息（如用户名、邮箱等）以及当前的贡献者状态（Contributor Status）。同时，用户可以对个人资料中的可编辑信息进行修改。其次，系统支持贡献者申请流程。普通注册用户（Registered Viewer）可以通过填写申请表单来申请成为贡献者。管理员可以在贡献者管理界面查看所有待审核申请，并查看申请用户的详细资料。最后，管理员可以对申请进行批准或拒绝操作。批准后，用户角色将更新为“Contributor”，获得资源提交权限；若拒绝，则用户保持原有身份，并记录申请结果。所有审批结果都会在系统中保存并可见。
 
 3.Resource Draft Management 仇肖涵
 
