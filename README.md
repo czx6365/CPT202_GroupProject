@@ -5,13 +5,15 @@
 
 ## 项目功能概览
 
-- 用户注册、登录、资料查看与修改
-- 基于 JWT 的无状态认证
-- 投稿者创建草稿、提交审核、驳回后再次提交
-- 管理员审批投稿者资格、管理分类和标签、审核与归档资源
-- 公众按关键字、分类、地点、标签分页检索已发布资源
-- 登录用户对已发布资源发表评论
-- 提供数据库连通性测试页面
+1.Authentication
+2.Profile and User Management
+3.Resource Draft Management
+4.Submission and Resubmission
+5.Review Workflow  陈子熹
+6.Public Resource Discovery
+7.Resource Comment Management
+8.Master Data Management
+9.Administrative Operations and Archiving
 
 ## 技术栈
 
