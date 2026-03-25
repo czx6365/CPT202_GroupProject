@@ -14,7 +14,7 @@
 4.Submission and Resubmission
 
 5.Review Workflow  陈子熹
-
+首先，Reviewer 能查看待审核资源列表，并按提交时间排序或按贡献者筛选；然后，Reviewer 可以进入资源详情页，查看 metadata（元数据）以及附件或外部链接，以支持审核判断。接着，Reviewer 可以对资源执行 approve 或 reject：批准后资源会公开展示，拒绝后系统会保存反馈、审核人身份和时间戳。最后，Contributor 能查看 rejection feedback、修改被拒资源并重新提交，使资源重新进入待审核列表，形成可追踪的 review cycle（审核循环）
 6.Public Resource Discovery 李慕阳
 
 7.Resource Comment Management 许亦多
