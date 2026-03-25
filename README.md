@@ -1,8 +1,7 @@
-# TaskManager
+# HeritageHub: A Community Heritage Resource Sharing and Curation Platform
 
 一个基于 Spring Boot 3、Spring Security、JPA 和 MySQL 的资源管理系统。项目面向“社区文化/地方遗产资源”场景，支持用户注册登录、投稿者提交资源、管理员审核发布、公众检索浏览与评论，并附带一个静态前端页面用于演示完整流程。
 
-以下说明只覆盖仓库中手写的源码与关键配置文件，不包含 `target/` 下的编译产物。
 
 ## 项目功能概览
 
