@@ -19,7 +19,7 @@
 
 7.Resource Comment Management 许亦多
 
-8.Master Data Management
+8.Master Data Management 邱虹瑜
 
 9.Administrative Operations and Archiving
 
