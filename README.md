@@ -6,13 +6,21 @@
 ## 项目功能概览
 
 1.Authentication
+
 2.Profile and User Management
+
 3.Resource Draft Management
+
 4.Submission and Resubmission
+
 5.Review Workflow  陈子熹
-6.Public Resource Discovery
+
+6.Public Resource Discovery 李慕阳
+
 7.Resource Comment Management
+
 8.Master Data Management
+
 9.Administrative Operations and Archiving
 
 ## 技术栈
