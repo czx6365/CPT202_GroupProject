@@ -5,7 +5,9 @@
 
 ## 项目功能概览
 
-1.Authentication
+1.Authentication 廖峻弘
+
+该模块主要负责用户身份验证（Authentication）和访问控制（Access Control），面向所有用户，包括未注册访客（Unregistered Visitors）、注册用户（Registered Users）以及管理员（Administrators）。系统支持用户注册（User Registration），要求填写必要信息，并对邮箱唯一性（Email Uniqueness）和密码强度（Password Strength）进行校验，以保证数据的有效性与安全性。注册成功后，用户可以通过登录（Login）进入系统，系统基于角色权限控制（Role-Based Access Control, RBAC），根据不同身份（Viewer、Contributor、Administrator）分配对应功能并跳转至相应界面。同时，系统提供登出（Logout）功能，确保在共享设备上的使用安全。此外，模块还支持密码重置（Password Reset），用户可通过邮箱获取重置链接恢复账户访问。为提升整体安全性，系统还引入登录失败次数限制（Login Attempt Limitation）、账户锁定（Account Lockout）以及验证码（CAPTCHA）等机制，以防止暴力破解（Brute-force Attack）。
 
 2.Profile and User Management 徐灏言
 
