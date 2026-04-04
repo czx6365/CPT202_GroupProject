@@ -1,0 +1,80 @@
+:root {
+  --hh-bg: #f7f5f2;
+  --hh-surface: #ffffff;
+  --hh-primary: #2f3e2f;
+  --hh-accent: #c8a96a;
+  --hh-text: #1f1f1f;
+  --hh-border: #e7e1d8;
+  --hh-shadow: 0 22px 60px rgba(31, 31, 31, 0.18);
+  --hh-radius: 20px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(31, 31, 31, 0.35);
+  backdrop-filter: blur(3px);
+}
+
+.modal {
+  width: 100%;
+  max-width: 520px;
+  background: var(--hh-surface);
+  border: 1px solid rgba(231, 225, 216, 0.85);
+  border-radius: var(--hh-radius);
+  box-shadow: var(--hh-shadow);
+  padding: 20px;
+  box-sizing: border-box;
+  color: var(--hh-text);
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.modal__title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--hh-primary);
+}
+
+.modal__close {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--hh-border);
+  border-radius: 999px;
+  background: #fbfaf8;
+  color: var(--hh-text);
+  font-size: 1.35rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.modal__close:hover {
+  background: #f3eee8;
+  color: var(--hh-primary);
+  border-color: #d8ccbb;
+}
+
+.modal__body {
+  line-height: 1.6;
+}
+
+.modal__footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}

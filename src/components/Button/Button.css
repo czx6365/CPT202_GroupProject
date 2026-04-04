@@ -1,0 +1,70 @@
+:root {
+  --hh-bg: #f7f5f2;
+  --hh-surface: #ffffff;
+  --hh-primary: #2f3e2f;
+  --hh-accent: #c8a96a;
+  --hh-text: #1f1f1f;
+  --hh-border: #e7e1d8;
+  --hh-danger: #9f5b52;
+  --hh-shadow: 0 10px 24px rgba(47, 62, 47, 0.08);
+  --hh-radius: 16px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 12px 18px;
+  border-radius: var(--hh-radius);
+  border: 1px solid transparent;
+  box-shadow: var(--hh-shadow);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.button:focus-visible {
+  outline: 2px solid rgba(200, 169, 106, 0.4);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.button--primary {
+  background: var(--hh-primary);
+  color: #ffffff;
+}
+
+.button--primary:hover:not(:disabled) {
+  background: #263326;
+}
+
+.button--secondary {
+  background: var(--hh-surface);
+  color: var(--hh-text);
+  border-color: var(--hh-border);
+}
+
+.button--secondary:hover:not(:disabled) {
+  background: #f3eee8;
+}
+
+.button--danger {
+  background: var(--hh-danger);
+  color: #ffffff;
+}
+
+.button--danger:hover:not(:disabled) {
+  background: #8c4e46;
+}

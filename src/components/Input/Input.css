@@ -1,0 +1,49 @@
+:root {
+  --hh-bg: #f7f5f2;
+  --hh-surface: #ffffff;
+  --hh-primary: #2f3e2f;
+  --hh-accent: #c8a96a;
+  --hh-text: #1f1f1f;
+  --hh-border: #ddd5ca;
+  --hh-radius: 16px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group__label {
+  color: var(--hh-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.input-group__field {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1px solid var(--hh-border);
+  border-radius: var(--hh-radius);
+  background: var(--hh-surface);
+  color: var(--hh-text);
+  font: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.input-group__field::placeholder {
+  color: #9a9388;
+}
+
+.input-group__field:focus {
+  outline: none;
+  border-color: var(--hh-primary);
+  box-shadow: 0 0 0 4px rgba(47, 62, 47, 0.1);
+}
+
+.input-group__field:disabled {
+  background: #f2eee8;
+  cursor: not-allowed;
+}
