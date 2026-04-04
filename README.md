@@ -5,7 +5,9 @@
 
 ## 项目功能概览
 
-1.Authentication
+1.Authentication 廖峻弘
+
+该模块主要负责用户身份验证（Authentication）和访问控制（Access Control），面向所有用户，包括未注册访客（Unregistered Visitors）、注册用户（Registered Users）以及管理员（Administrators）。系统支持用户注册（User Registration），要求填写必要信息，并对邮箱唯一性（Email Uniqueness）和密码强度（Password Strength）进行校验，以保证数据的有效性与安全性。注册成功后，用户可以通过登录（Login）进入系统，系统基于角色权限控制（Role-Based Access Control, RBAC），根据不同身份（Viewer、Contributor、Administrator）分配对应功能并跳转至相应界面。同时，系统提供登出（Logout）功能，确保在共享设备上的使用安全。此外，模块还支持密码重置（Password Reset），用户可通过邮箱获取重置链接恢复账户访问。为提升整体安全性，系统还引入登录失败次数限制（Login Attempt Limitation）、账户锁定（Account Lockout）以及验证码（CAPTCHA）等机制，以防止暴力破解（Brute-force Attack）。
 
 2.Profile and User Management 徐灏言
 
@@ -284,6 +286,100 @@ src
 - 对旧数据做了“明文密码登录后自动升级为 BCrypt”的兼容处理
 - 公开浏览与后台管理共用资源筛选逻辑，减少重复代码
 
-## 当前实现的适用场景
 
-这个项目适合作为课程项目、Spring Boot 分层架构示例，或者“投稿审核类平台”的后端模板。它已经覆盖了典型的用户、权限、审核流、分页检索、评论和静态前端演示，但测试、接口文档、删除/编辑评论、文件上传、对象存储等能力还可以继续扩展。
+
+## Database Setup
+
+- Database name: `CPT202_Project_DB`
+- Default port: `8080`
+- Default startup command on Windows: `.\mvnw.cmd spring-boot:run`
+- Default startup command on macOS/Linux: `./mvnw spring-boot:run`
+
+Initialize the database before the first run:
+
+```bash
+mysql -u root -p < sql/init.sql
+```
+
+What `sql/init.sql` does:
+
+- Creates the `CPT202_Project_DB` database
+- Creates the current application tables
+- Inserts a few starter categories and tags
+
+The application also keeps `spring.jpa.hibernate.ddl-auto=update`, so Hibernate can still adjust the schema on startup if entities change later.
+
+## Environment Variables
+
+The datasource and JWT settings are already externalized in [application.properties](/c:/Users/16973/Desktop/大三下/CPT202/project/taskmanager/src/main/resources/application.properties#L4).
+
+| Variable | Required | Default | Purpose |
+| --- | --- | --- | --- |
+| `DB_URL` | No | `jdbc:mysql://127.0.0.1:3306/CPT202_Project_DB?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8` | MySQL JDBC URL |
+| `DB_USER` | No | `root` | MySQL username |
+| `DB_PASSWORD` | No | empty | MySQL password |
+| `JWT_SECRET` | Yes in real deployments | `ChangeThisToAtLeast32CharsSecretKey123456` | JWT signing secret |
+| `JWT_EXPIRATION_MS` | No | `86400000` | JWT expiration in milliseconds |
+
+Do not keep the default `JWT_SECRET` outside local development.
+
+## Quick Start
+
+### Windows PowerShell
+
+```powershell
+$env:DB_URL="jdbc:mysql://127.0.0.1:3306/CPT202_Project_DB?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8"
+$env:DB_USER="root"
+$env:DB_PASSWORD="your-password"
+$env:JWT_SECRET="replace-with-a-long-random-secret"
+.\mvnw.cmd spring-boot:run
+```
+
+### macOS or Linux
+
+```bash
+export DB_URL='jdbc:mysql://127.0.0.1:3306/CPT202_Project_DB?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8'
+export DB_USER='root'
+export DB_PASSWORD='your-password'
+export JWT_SECRET='replace-with-a-long-random-secret'
+./mvnw spring-boot:run
+```
+
+After the application starts:
+
+- Home page: `http://localhost:8080/`
+- Database check endpoint: `http://localhost:8080/api/db/view`
+
+## Default Initialization Data
+
+On first startup, the application creates a default administrator account if it does not already exist in the database. The logic lives in [BootstrapDataConfig.java](/c:/Users/16973/Desktop/大三下/CPT202/project/taskmanager/src/main/java/com/cpt202_1/taskmanager/config/BootstrapDataConfig.java).
+
+- Username: `admin`
+- Password: `admin123`
+- Email: `admin@taskmanager.local`
+
+`sql/init.sql` also inserts starter master data:
+
+- Categories: `Historic Site`, `Festival`, `Oral History`
+- Tags: `photo`, `archive`, `interview`, `local-memory`
+
+## Build a JAR
+
+Windows:
+
+```powershell
+.\mvnw.cmd clean package
+```
+
+macOS or Linux:
+
+```bash
+./mvnw clean package
+```
+
+Then run:
+
+```bash
+java -jar target/taskmanager-0.0.1-SNAPSHOT.jar
+```
+
