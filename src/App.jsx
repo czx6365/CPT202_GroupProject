@@ -1,8 +1,13 @@
 import React from "react";
-import Homepage from "./pages/Homepage";
+import { AuthProvider } from "./context/AuthContext";
+import AppRouter from "./router";
 
 function App() {
-  return <Homepage />;
+  return (
+    <AuthProvider>
+      <AppRouter />
+    </AuthProvider>
+  );
 }
 
 export default App;

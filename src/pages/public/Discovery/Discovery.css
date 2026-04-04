@@ -1,0 +1,17 @@
+.placeholder-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 140px 24px 72px;
+  color: #1f1f1f;
+}
+
+.placeholder-page h1 {
+  margin: 0 0 12px;
+  color: #2f3e2f;
+}
+
+.placeholder-page p {
+  margin: 0;
+  color: #5f584f;
+  line-height: 1.7;
+}

@@ -1,0 +1,46 @@
+import React from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import AppShell from "../shared/AppShell";
+import Homepage from "../pages/public/Home/Homepage";
+import Discovery from "../pages/public/Discovery/Discovery";
+import ResourceDetail from "../pages/public/ResourceDetail/ResourceDetail";
+import Login from "../pages/user/Auth/Login";
+import Register from "../pages/user/Auth/Register";
+import Profile from "../pages/user/Profile/Profile";
+import ContributorDashboard from "../pages/contributor/Dashboard/Dashboard";
+import Submit from "../pages/contributor/Submit/Submit";
+import Resubmit from "../pages/contributor/Resubmit/Resubmit";
+import ReviewList from "../pages/admin/Review/ReviewList";
+import ReviewDetail from "../pages/admin/Review/ReviewDetail";
+import UserApproval from "../pages/admin/Users/UserApproval";
+import Categories from "../pages/admin/MasterData/Categories";
+import Tags from "../pages/admin/MasterData/Tags";
+import Archive from "../pages/admin/Archive/Archive";
+
+function AppRouter() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route path="/" element={<Homepage />} />
+          <Route path="/discovery" element={<Discovery />} />
+          <Route path="/resource/:id" element={<ResourceDetail />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/dashboard" element={<ContributorDashboard />} />
+          <Route path="/submit" element={<Submit />} />
+          <Route path="/resubmit/:id" element={<Resubmit />} />
+          <Route path="/admin/review" element={<ReviewList />} />
+          <Route path="/admin/review/:id" element={<ReviewDetail />} />
+          <Route path="/admin/users" element={<UserApproval />} />
+          <Route path="/admin/master-data/categories" element={<Categories />} />
+          <Route path="/admin/master-data/tags" element={<Tags />} />
+          <Route path="/admin/archive" element={<Archive />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default AppRouter;
