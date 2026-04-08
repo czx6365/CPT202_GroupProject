@@ -14,23 +14,25 @@ import com.cpt202_1.taskmanager.dto.response.UserSummary;
 import com.cpt202_1.taskmanager.exception.ApiException;
 import com.cpt202_1.taskmanager.pojo.enums.UserRole;
 import com.cpt202_1.taskmanager.security.AuthenticatedUser;
-import com.cpt202_1.taskmanager.service.PlatformService;
+import com.cpt202_1.taskmanager.service.AccountService;
 
 @RestController
 @RequestMapping("/api/users")
 public class ProfileController {
-    private final PlatformService platformService;
+    private final AccountService accountService;
 
-    public ProfileController(PlatformService platformService) {
-        this.platformService = platformService;
+    public ProfileController(AccountService accountService) {
+        this.accountService = accountService;
     }
 
+    // 1. get user profile
+    // 2. update user profile
     @GetMapping("/{userId}")
     public UserSummary getProfile(
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @PathVariable Long userId) {
         requireSelfOrAdmin(currentUser, userId);
-        return platformService.getProfile(userId);
+        return accountService.getProfile(userId);
     }
 
     @PutMapping("/{userId}")
@@ -39,7 +41,7 @@ public class ProfileController {
             @PathVariable Long userId,
             @RequestBody UpdateProfileRequest request) {
         requireSelfOrAdmin(currentUser, userId);
-        return platformService.updateProfile(userId, request);
+        return accountService.updateProfile(userId, request);
     }
 
     private void requireSelfOrAdmin(AuthenticatedUser currentUser, Long targetUserId) {

@@ -43,7 +43,7 @@
 
 ## 技术栈
 
-- Java 21
+- Java 17
 - Spring Boot 3.5
 - Spring Web
 - Spring Data JPA
@@ -74,7 +74,7 @@
 
 ### 环境要求
 
-- JDK 21
+- JDK 17
 - MySQL 8+
 - Maven 或项目自带 Maven Wrapper
 
@@ -157,7 +157,7 @@ src
 
 | 文件 | 作用 |
 | --- | --- |
-| `pom.xml` | Maven 项目描述文件，声明 Spring Boot、JPA、Security、JWT、MySQL 等依赖与 Java 21 版本。 |
+| `pom.xml` | Maven 项目描述文件，声明 Spring Boot、JPA、Security、JWT、MySQL 等依赖与 Java 17 版本。 |
 | `TaskmanagerApplication.java` | Spring Boot 启动入口，负责启动应用，并启用 `@ConfigurationProperties` 扫描。 |
 | `application.properties` | 应用基础配置，定义数据源、JPA 行为、JWT 默认参数。 |
 

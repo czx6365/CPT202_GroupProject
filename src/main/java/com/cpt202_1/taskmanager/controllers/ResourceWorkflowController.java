@@ -16,22 +16,28 @@ import com.cpt202_1.taskmanager.dto.request.ReviewRequest;
 import com.cpt202_1.taskmanager.dto.response.ResourceDetail;
 import com.cpt202_1.taskmanager.dto.response.ResourceSummary;
 import com.cpt202_1.taskmanager.security.AuthenticatedUser;
-import com.cpt202_1.taskmanager.service.PlatformService;
+import com.cpt202_1.taskmanager.service.ResourceWorkflowService;
 
 @RestController
 @RequestMapping("/api/resources")
 public class ResourceWorkflowController {
-    private final PlatformService platformService;
+    private final ResourceWorkflowService resourceWorkflowService;
 
-    public ResourceWorkflowController(PlatformService platformService) {
-        this.platformService = platformService;
+    public ResourceWorkflowController(ResourceWorkflowService resourceWorkflowService) {
+        this.resourceWorkflowService = resourceWorkflowService;
     }
 
+    // 1. create resource draft
+    // 2. update resource draft
+    // 3. submit resource for review
+    // 4. resubmit resource for review
+    // 5. review resource
+    // 6. list my resources
     @PostMapping
     public ResourceDetail createDraft(
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @RequestBody ResourceUpsertRequest request) {
-        return platformService.createDraft(currentUser.getUserId(), request);
+        return resourceWorkflowService.createDraft(currentUser.getUserId(), request);
     }
 
     @PutMapping("/{resourceId}")
@@ -39,21 +45,21 @@ public class ResourceWorkflowController {
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @PathVariable Long resourceId,
             @RequestBody ResourceUpsertRequest request) {
-        return platformService.updateDraft(currentUser.getUserId(), resourceId, request);
+        return resourceWorkflowService.updateDraft(currentUser.getUserId(), resourceId, request);
     }
 
     @PostMapping("/{resourceId}/submit")
     public ResourceDetail submit(
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @PathVariable Long resourceId) {
-        return platformService.submitForReview(currentUser.getUserId(), resourceId);
+        return resourceWorkflowService.submitForReview(currentUser.getUserId(), resourceId);
     }
 
     @PostMapping("/{resourceId}/resubmit")
     public ResourceDetail resubmit(
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @PathVariable Long resourceId) {
-        return platformService.resubmit(currentUser.getUserId(), resourceId);
+        return resourceWorkflowService.resubmit(currentUser.getUserId(), resourceId);
     }
 
     @PostMapping("/{resourceId}/review")
@@ -61,11 +67,11 @@ public class ResourceWorkflowController {
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @PathVariable Long resourceId,
             @RequestBody ReviewRequest request) {
-        return platformService.review(currentUser.getUserId(), resourceId, request);
+        return resourceWorkflowService.review(currentUser.getUserId(), resourceId, request);
     }
 
     @GetMapping("/mine")
     public List<ResourceSummary> mine(@AuthenticationPrincipal AuthenticatedUser currentUser) {
-        return platformService.listMyResources(currentUser.getUserId());
+        return resourceWorkflowService.listMyResources(currentUser.getUserId());
     }
 }

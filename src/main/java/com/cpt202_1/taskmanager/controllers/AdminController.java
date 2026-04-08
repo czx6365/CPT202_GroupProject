@@ -22,58 +22,72 @@ import com.cpt202_1.taskmanager.pojo.Category;
 import com.cpt202_1.taskmanager.pojo.Tag;
 import com.cpt202_1.taskmanager.pojo.enums.ResourceStatus;
 import com.cpt202_1.taskmanager.security.AuthenticatedUser;
-import com.cpt202_1.taskmanager.service.PlatformService;
+import com.cpt202_1.taskmanager.service.AdminService;
+import com.cpt202_1.taskmanager.service.ResourceCatalogService;
 
-@RestController
+@RestController//能接收 HTTP 请求
+// 返回的数据会直接变成 JSON
+// 比如方法返回：
+// return adminService.listTags();
+// Spring 会自动把 List<Tag> 转成 JSON 返回给前端
 @RequestMapping("/api/admin")
 public class AdminController {
-    private final PlatformService platformService;
+    private final AdminService adminService;
+    private final ResourceCatalogService resourceCatalogService;
 
-    public AdminController(PlatformService platformService) {
-        this.platformService = platformService;
+    public AdminController(AdminService adminService, ResourceCatalogService resourceCatalogService) {
+        this.adminService = adminService;
+        this.resourceCatalogService = resourceCatalogService;
     }
-
+    // 1. approve contributor
+    // 2. list pending contributors
+    // 3. create category
+    // 4. list categories
+    // 5. create tag
+    // 6. list tags
+    // 7. archive resource
+    // 8. list pending resources
     @PutMapping("/contributors/{userId}/approve")
     public UserSummary approveContributor(
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @PathVariable Long userId) {
-        return platformService.approveContributor(currentUser.getUserId(), userId);
+        return adminService.approveContributor(currentUser.getUserId(), userId);
     }
 
     @GetMapping("/contributors/pending")
     public List<UserSummary> listPendingContributors(@AuthenticationPrincipal AuthenticatedUser currentUser) {
-        return platformService.listPendingContributors(currentUser.getUserId());
+        return adminService.listPendingContributors(currentUser.getUserId());
     }
 
     @PostMapping("/categories")
     public Category createCategory(
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @RequestBody CreateCategoryRequest request) {
-        return platformService.createCategory(currentUser.getUserId(), request);
+        return adminService.createCategory(currentUser.getUserId(), request);
     }
 
     @GetMapping("/categories")
     public List<Category> listCategories() {
-        return platformService.listCategories();
+        return adminService.listCategories();
     }
 
     @PostMapping("/tags")
     public Tag createTag(
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @RequestBody CreateTagRequest request) {
-        return platformService.createTag(currentUser.getUserId(), request);
+        return adminService.createTag(currentUser.getUserId(), request);
     }
 
     @GetMapping("/tags")
     public List<Tag> listTags() {
-        return platformService.listTags();
+        return adminService.listTags();
     }
 
     @PutMapping("/resources/{resourceId}/archive")
     public ResourceDetail archive(
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @PathVariable Long resourceId) {
-        return platformService.archive(currentUser.getUserId(), resourceId);
+        return adminService.archive(currentUser.getUserId(), resourceId);
     }
 
     @GetMapping("/resources/pending")
@@ -88,7 +102,7 @@ public class AdminController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "updatedTime") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
-        return platformService.listPendingResources(
+        return resourceCatalogService.listPendingResources(
                 currentUser.getUserId(),
                 keyword,
                 categoryId,

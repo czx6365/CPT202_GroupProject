@@ -17,17 +17,21 @@ import com.cpt202_1.taskmanager.dto.response.PageResult;
 import com.cpt202_1.taskmanager.dto.response.ResourceDetail;
 import com.cpt202_1.taskmanager.dto.response.ResourceSummary;
 import com.cpt202_1.taskmanager.security.AuthenticatedUser;
-import com.cpt202_1.taskmanager.service.PlatformService;
+import com.cpt202_1.taskmanager.service.ResourceCatalogService;
 
 @RestController
 @RequestMapping("/api/public/resources")
 public class PublicResourceController {
-    private final PlatformService platformService;
+    private final ResourceCatalogService resourceCatalogService;
 
-    public PublicResourceController(PlatformService platformService) {
-        this.platformService = platformService;
+    public PublicResourceController(ResourceCatalogService resourceCatalogService) {
+        this.resourceCatalogService = resourceCatalogService;
     }
 
+    // 1. search approved resources
+    // 2. get approved resource detail
+    // 3. list resource comments
+    // 4. add resource comment
     @GetMapping
     public PageResult<ResourceSummary> search(
             @RequestParam(required = false) String keyword,
@@ -38,17 +42,17 @@ public class PublicResourceController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "updatedTime") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
-        return platformService.searchApproved(keyword, categoryId, place, tag, page, size, sortBy, sortDir);
+        return resourceCatalogService.searchApproved(keyword, categoryId, place, tag, page, size, sortBy, sortDir);
     }
 
     @GetMapping("/{resourceId}")
     public ResourceDetail detail(@PathVariable Long resourceId) {
-        return platformService.getApprovedDetail(resourceId);
+        return resourceCatalogService.getApprovedDetail(resourceId);
     }
 
     @GetMapping("/{resourceId}/comments")
     public List<CommentView> comments(@PathVariable Long resourceId) {
-        return platformService.listComments(resourceId);
+        return resourceCatalogService.listComments(resourceId);
     }
 
     @PostMapping("/{resourceId}/comments")
@@ -56,6 +60,6 @@ public class PublicResourceController {
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @PathVariable Long resourceId,
             @RequestBody CommentRequest request) {
-        return platformService.addComment(currentUser.getUserId(), resourceId, request);
+        return resourceCatalogService.addComment(currentUser.getUserId(), resourceId, request);
     }
 }

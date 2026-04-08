@@ -18,6 +18,8 @@ public class taskController {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    // 1. ping database
+    // 2. show database status page
     @GetMapping("/db/ping")
     public Map<String, Object> pingDatabase() {
         Integer result = jdbcTemplate.queryForObject("SELECT 1", Integer.class);

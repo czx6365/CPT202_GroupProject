@@ -12,27 +12,30 @@ import com.cpt202_1.taskmanager.dto.request.RegisterRequest;
 import com.cpt202_1.taskmanager.dto.response.AuthResponse;
 import com.cpt202_1.taskmanager.dto.response.UserSummary;
 import com.cpt202_1.taskmanager.security.JwtService;
-import com.cpt202_1.taskmanager.service.PlatformService;
+import com.cpt202_1.taskmanager.service.AccountService;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    private final PlatformService platformService;
+    private final AccountService accountService;
     private final JwtService jwtService;
 
-    public AuthController(PlatformService platformService, JwtService jwtService) {
-        this.platformService = platformService;
+    public AuthController(AccountService accountService, JwtService jwtService) {
+        this.accountService = accountService;
         this.jwtService = jwtService;
     }
 
+    // 1. register user
+    // 2. login user
+    // 3. logout user
     @PostMapping("/register")
     public UserSummary register(@RequestBody RegisterRequest request) {
-        return platformService.register(request);
+        return accountService.register(request);
     }
 
     @PostMapping("/login")
     public AuthResponse login(@RequestBody LoginRequest request) {
-        UserSummary user = platformService.login(request);
+        UserSummary user = accountService.login(request);
         String token = jwtService.generateToken(user);
         return new AuthResponse(token, "Bearer", jwtService.getExpirationMs() / 1000, user);
     }
