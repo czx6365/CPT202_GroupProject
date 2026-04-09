@@ -167,7 +167,7 @@ function Discovery() {
 
         <form className="discovery-filter" onSubmit={onSearch}>
           <div className="discovery-filter__grid">
-            <label className="discovery-field">
+            <label className="discovery-field discovery-field--compact">
               <span className="discovery-field__label">Keyword</span>
               <input
                 className="discovery-field__control"
@@ -198,7 +198,7 @@ function Discovery() {
               </select>
             </label>
 
-            <label className="discovery-field">
+            <label className="discovery-field discovery-field--compact">
               <span className="discovery-field__label">Place</span>
               <input
                 className="discovery-field__control"

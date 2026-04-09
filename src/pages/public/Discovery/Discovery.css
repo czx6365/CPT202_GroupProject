@@ -113,6 +113,13 @@
   font-family: inherit;
 }
 
+.discovery-field--compact .discovery-field__control {
+  width: 92%;
+  min-height: 40px;
+  padding: 0 10px;
+  font-size: 0.9rem;
+}
+
 .discovery-field__control:focus {
   outline: none;
   border-color: rgba(200, 169, 106, 0.82);
@@ -150,12 +157,12 @@
 }
 
 .discovery-btn {
-  min-height: 44px;
+  min-height: 40px;
   border-radius: 999px;
-  padding: 0 18px;
+  padding: 0 14px;
   border: 1px solid transparent;
   cursor: pointer;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 600;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
