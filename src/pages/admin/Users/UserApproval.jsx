@@ -6,19 +6,30 @@ import { approveContributor, fetchPendingUsers } from "../../../services/adminSe
 import AdminWorkspace from "../AdminWorkspace";
 import "./UserApproval.css";
 
+function formatRequestedAt(value) {
+  if (!value) return "-";
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+}
+
 function UserApproval() {
-  const { token } = useAuth();
+  const { token, isAuthenticated, user } = useAuth();
   const [pendingApplicants, setPendingApplicants] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(null);
-  const [keyword, setKeyword] = useState("");
+  const [keywordInput, setKeywordInput] = useState("");
+  const [appliedKeyword, setAppliedKeyword] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [actionMessage, setActionMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [isApproving, setIsApproving] = useState(false);
 
   useEffect(() => {
     const loadPendingUsers = async () => {
       if (!token) {
+        setPendingApplicants([]);
+        setSelectedUserId(null);
+        setErrorMessage("Please log in with an administrator account to review contributor applications.");
         setIsLoading(false);
         return;
       }
@@ -28,9 +39,12 @@ function UserApproval() {
 
       try {
         const users = await fetchPendingUsers(token);
-        setPendingApplicants(Array.isArray(users) ? users : []);
-        setSelectedUserId(users?.[0]?.userId || null);
+        const applicantList = Array.isArray(users) ? users : [];
+        setPendingApplicants(applicantList);
+        setSelectedUserId(applicantList[0]?.userId || null);
       } catch (error) {
+        setPendingApplicants([]);
+        setSelectedUserId(null);
         setErrorMessage(error.message || "Unable to load pending applicants.");
       } finally {
         setIsLoading(false);
@@ -41,7 +55,7 @@ function UserApproval() {
   }, [token]);
 
   const filteredApplicants = useMemo(() => {
-    const normalizedKeyword = keyword.trim().toLowerCase();
+    const normalizedKeyword = appliedKeyword.trim().toLowerCase();
     if (!normalizedKeyword) return pendingApplicants;
 
     return pendingApplicants.filter((applicant) => {
@@ -54,44 +68,60 @@ function UserApproval() {
         application.includes(normalizedKeyword)
       );
     });
-  }, [keyword, pendingApplicants]);
+  }, [appliedKeyword, pendingApplicants]);
 
   const selectedApplicant = useMemo(
-    () => filteredApplicants.find((applicant) => applicant.userId === selectedUserId) || filteredApplicants[0] || null,
+    () => filteredApplicants.find((applicant) => applicant.userId === selectedUserId) || null,
     [filteredApplicants, selectedUserId]
   );
 
+  useEffect(() => {
+    if (!filteredApplicants.length) {
+      setSelectedUserId(null);
+      return;
+    }
+
+    if (!filteredApplicants.some((applicant) => applicant.userId === selectedUserId)) {
+      setSelectedUserId(filteredApplicants[0].userId);
+    }
+  }, [filteredApplicants, selectedUserId]);
+
   const applyKeyword = () => {
-    setSelectedUserId((previous) => {
-      if (filteredApplicants.some((applicant) => applicant.userId === previous)) {
-        return previous;
-      }
-      return filteredApplicants[0]?.userId || null;
-    });
+    setAppliedKeyword(keywordInput);
   };
 
   const resetKeyword = () => {
-    setKeyword("");
-    setSelectedUserId(pendingApplicants[0]?.userId || null);
+    setKeywordInput("");
+    setAppliedKeyword("");
+    setSuccessMessage("");
   };
 
   const handleApprove = async () => {
     if (!selectedApplicant || !token) return;
 
     setIsApproving(true);
-    setActionMessage("");
+    setErrorMessage("");
+    setSuccessMessage("");
 
     try {
       await approveContributor(selectedApplicant.userId, token);
       setPendingApplicants((previous) => previous.filter((item) => item.userId !== selectedApplicant.userId));
-      setSelectedUserId(null);
-      setActionMessage(`Approved ${selectedApplicant.userName} as contributor.`);
+      setSuccessMessage(`Approved ${selectedApplicant.userName} as contributor.`);
     } catch (error) {
-      setActionMessage(error.message || "Unable to approve this applicant.");
+      setErrorMessage(error.message || "Unable to approve this applicant.");
     } finally {
       setIsApproving(false);
     }
   };
+
+  const isAdmin = user?.role === "ADMIN_REVIEWER";
+  const showAuthError = !isAuthenticated || !token;
+  const showRoleError = isAuthenticated && Boolean(token) && !isAdmin;
+  const effectiveErrorMessage = showAuthError
+    ? "Please log in with an administrator account to review contributor applications."
+    : showRoleError
+    ? "Your account does not have administrator access to approve contributors."
+    : errorMessage;
 
   return (
     <AdminWorkspace
@@ -106,8 +136,9 @@ function UserApproval() {
             id="approval-keyword"
             label="Keyword"
             placeholder="Search applicant name or email"
-            value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
+            value={keywordInput}
+            onChange={(event) => setKeywordInput(event.target.value)}
+            disabled={showAuthError || showRoleError}
           />
 
           <div className="input-group">
@@ -120,15 +151,15 @@ function UserApproval() {
           </div>
 
           <div className="approval-toolbar__actions">
-            <Button variant="primary" onClick={applyKeyword}>Apply Filters</Button>
-            <Button variant="secondary" onClick={resetKeyword}>Reset</Button>
+            <Button variant="primary" onClick={applyKeyword} disabled={showAuthError || showRoleError}>Apply Filters</Button>
+            <Button variant="secondary" onClick={resetKeyword} disabled={showAuthError || showRoleError}>Reset</Button>
           </div>
         </div>
 
         <div className="approval-toolbar__summary">
           <div className="approval-summary-card">
             <span className="approval-summary-card__label">Pending</span>
-            <strong className="approval-summary-card__value">{filteredApplicants.length}</strong>
+            <strong className="approval-summary-card__value">{pendingApplicants.length}</strong>
             <p className="approval-summary-card__hint">Applications waiting for administrator decision.</p>
           </div>
           <div className="approval-summary-card">
@@ -138,7 +169,7 @@ function UserApproval() {
           </div>
           <div className="approval-summary-card">
             <span className="approval-summary-card__label">Filter</span>
-            <strong className="approval-summary-card__value">{keyword.trim() ? "ON" : "OFF"}</strong>
+            <strong className="approval-summary-card__value">{appliedKeyword.trim() ? "ON" : "OFF"}</strong>
             <p className="approval-summary-card__hint">Keyword filter for applicant name, email, or application text.</p>
           </div>
           <div className="approval-summary-card">
@@ -149,15 +180,17 @@ function UserApproval() {
         </div>
       </div>
 
+      {effectiveErrorMessage && <p className="approval-feedback approval-feedback--error">{effectiveErrorMessage}</p>}
+      {successMessage && <p className="approval-feedback approval-feedback--success">{successMessage}</p>}
+
       <div className="approval-layout">
         <div className="approval-list">
-          {isLoading && <p>Loading pending applicants...</p>}
-          {!isLoading && errorMessage && <p className="approval-panel__note">{errorMessage}</p>}
-          {!isLoading && !errorMessage && filteredApplicants.length === 0 && (
+          {isLoading && <p className="approval-panel__note">Loading pending applicants...</p>}
+          {!isLoading && !effectiveErrorMessage && filteredApplicants.length === 0 && (
             <p className="approval-panel__note">No pending contributor applications.</p>
           )}
 
-          {!isLoading && !errorMessage && filteredApplicants.map((applicant) => (
+          {!isLoading && !effectiveErrorMessage && filteredApplicants.map((applicant) => (
             <article
               key={applicant.userId}
               className={`approval-card ${selectedApplicant?.userId === applicant.userId ? "approval-card--active" : ""}`}
@@ -176,7 +209,7 @@ function UserApproval() {
               <div className="approval-card__facts">
                 <div className="approval-card__fact">
                   <span>Requested</span>
-                  <strong>{applicant.contributorRequestedAt ? new Date(applicant.contributorRequestedAt).toLocaleString() : "-"}</strong>
+                  <strong>{formatRequestedAt(applicant.contributorRequestedAt)}</strong>
                 </div>
                 <div className="approval-card__fact">
                   <span>Promotion Path</span>
@@ -219,9 +252,7 @@ function UserApproval() {
                 <div className="approval-data-item">
                   <span className="approval-data-item__label">Requested At</span>
                   <p className="approval-data-item__value">
-                    {selectedApplicant.contributorRequestedAt
-                      ? new Date(selectedApplicant.contributorRequestedAt).toLocaleString()
-                      : "-"}
+                    {formatRequestedAt(selectedApplicant.contributorRequestedAt)}
                   </p>
                 </div>
 
@@ -240,12 +271,14 @@ function UserApproval() {
             </p>
 
             <div className="approval-panel__actions">
-              <Button variant="primary" onClick={handleApprove} disabled={!selectedApplicant || isApproving}>
+              <Button
+                variant="primary"
+                onClick={handleApprove}
+                disabled={!selectedApplicant || isApproving || showAuthError || showRoleError}
+              >
                 {isApproving ? "Approving..." : "Approve Contributor"}
               </Button>
             </div>
-
-            {actionMessage && <p className="approval-panel__note">{actionMessage}</p>}
           </section>
         </div>
       </div>

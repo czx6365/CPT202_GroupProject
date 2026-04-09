@@ -18,6 +18,12 @@ function AppShell() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    if (isAdminRoute && !isAuthenticated) {
+      navigate("/login", { replace: true, state: { from: location.pathname } });
+    }
+  }, [isAdminRoute, isAuthenticated, location.pathname, navigate]);
+
   const navLinks = useMemo(() => {
     const baseLinks = [
       { label: "Home", key: "/" },
@@ -63,6 +69,12 @@ function AppShell() {
   const isHome = location.pathname === "/";
   const headerClassName = `app-shell__header ${isHome && !isScrolled ? "app-shell__header--floating" : "app-shell__header--solid"} ${isAdminRoute ? "app-shell__header--admin" : ""}`;
 
+  const handleLogout = () => {
+    const shouldReturnToLogin = isAdminRoute || isAuthenticated;
+    logout();
+    navigate(shouldReturnToLogin ? "/login" : "/", { replace: true });
+  };
+
   return (
     <div className="app-shell">
       <header className={headerClassName}>
@@ -85,7 +97,7 @@ function AppShell() {
                     {user?.userName || (isAdminRoute ? "Admin Profile" : "Profile")}
                   </span>
                 </Link>
-                <button type="button" className="app-shell__logout" onClick={logout}>
+                <button type="button" className="app-shell__logout" onClick={handleLogout}>
                   Logout
                 </button>
               </>

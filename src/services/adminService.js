@@ -42,14 +42,6 @@ export async function fetchPendingUsers(token) {
   });
 }
 
-export async function fetchCategories() {
-  return request("/api/admin/categories");
-}
-
-export async function fetchTags() {
-  return request("/api/admin/tags");
-}
-
 export async function approveContributor(userId, token) {
   return request(`/api/admin/contributors/${userId}/approve`, {
     method: "PUT",
@@ -57,4 +49,12 @@ export async function approveContributor(userId, token) {
       Authorization: `Bearer ${token}`,
     },
   });
+}
+
+export async function fetchCategories() {
+  return request("/api/admin/categories");
+}
+
+export async function fetchTags() {
+  return request("/api/admin/tags");
 }
