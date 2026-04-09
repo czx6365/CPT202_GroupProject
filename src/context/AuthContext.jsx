@@ -5,8 +5,16 @@ const USER_KEY = "heritagehub.user";
 
 const AuthContext = createContext(null);
 
-function readStoredUser() {
-  const raw = localStorage.getItem(USER_KEY);
+function readStoredValue(storage, key) {
+  try {
+    return storage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function readStoredUser(storage) {
+  const raw = readStoredValue(storage, USER_KEY);
   if (!raw) return null;
 
   try {
@@ -16,35 +24,73 @@ function readStoredUser() {
   }
 }
 
-export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || "");
-  const [user, setUser] = useState(() => readStoredUser());
+function readSession() {
+  const localToken = readStoredValue(localStorage, TOKEN_KEY);
+  if (localToken) {
+    return {
+      token: localToken,
+      user: readStoredUser(localStorage),
+      persistent: true,
+    };
+  }
 
-  const login = (authPayload) => {
+  const sessionToken = readStoredValue(sessionStorage, TOKEN_KEY);
+  if (sessionToken) {
+    return {
+      token: sessionToken,
+      user: readStoredUser(sessionStorage),
+      persistent: false,
+    };
+  }
+
+  return {
+    token: "",
+    user: null,
+    persistent: true,
+  };
+}
+
+function clearSessionStorage() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(USER_KEY);
+}
+
+export function AuthProvider({ children }) {
+  const [session, setSession] = useState(() => readSession());
+  const { token, user, persistent } = session;
+
+  const login = (authPayload, options = {}) => {
     const nextToken = authPayload?.token || "";
     const nextUser = authPayload?.user || null;
+    const nextPersistent = options.persistent ?? true;
+    const targetStorage = nextPersistent ? localStorage : sessionStorage;
 
-    setToken(nextToken);
-    setUser(nextUser);
+    clearSessionStorage();
 
     if (nextToken) {
-      localStorage.setItem(TOKEN_KEY, nextToken);
-    } else {
-      localStorage.removeItem(TOKEN_KEY);
+      targetStorage.setItem(TOKEN_KEY, nextToken);
     }
 
     if (nextUser) {
-      localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
-    } else {
-      localStorage.removeItem(USER_KEY);
+      targetStorage.setItem(USER_KEY, JSON.stringify(nextUser));
     }
+
+    setSession({
+      token: nextToken,
+      user: nextUser,
+      persistent: nextPersistent,
+    });
   };
 
   const logout = () => {
-    setToken("");
-    setUser(null);
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    clearSessionStorage();
+    setSession({
+      token: "",
+      user: null,
+      persistent: true,
+    });
   };
 
   const value = useMemo(
@@ -53,10 +99,11 @@ export function AuthProvider({ children }) {
       user,
       role: user?.role || "viewer",
       isAuthenticated: Boolean(token),
+      persistent,
       login,
       logout,
     }),
-    [token, user]
+    [persistent, token, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

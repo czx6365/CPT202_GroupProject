@@ -10,7 +10,15 @@ async function request(path, options = {}) {
   });
 
   const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
+  let data = null;
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { message: text };
+    }
+  }
 
   if (!response.ok) {
     throw new Error(data?.message || `Request failed: ${response.status}`);
@@ -22,14 +30,33 @@ async function request(path, options = {}) {
 export async function login(credentials) {
   return request("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify(credentials),
+    body: JSON.stringify({
+      userName: credentials.userName,
+      password: credentials.password,
+    }),
   });
 }
 
 export async function register(payload) {
   return request("/api/auth/register", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      userName: payload.userName,
+      password: payload.password,
+      email: payload.email,
+      role: payload.role,
+    }),
+  });
+}
+
+export async function logout(token) {
+  return request("/api/auth/logout", {
+    method: "POST",
+    headers: token
+      ? {
+          Authorization: `Bearer ${token}`,
+        }
+      : undefined,
   });
 }
 

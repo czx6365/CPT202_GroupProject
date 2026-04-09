@@ -1,205 +1,194 @@
 import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
+import { login as loginRequest } from "../../../services/authService";
 import "./Auth.css";
 
 function Login() {
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
-        role: "viewer",
-        remember: false,
-    });
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [formData, setFormData] = useState({
+    userName: "",
+    password: "",
+    remember: true,
+  });
+  const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [errors, setErrors] = useState({});
-    const [successMessage, setSuccessMessage] = useState("");
+  const validateForm = () => {
+    const nextErrors = {};
 
-    const validateEmail = (email) => {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    };
+    if (!formData.userName.trim()) {
+      nextErrors.userName = "Username is required.";
+    }
 
-    const validateForm = () => {
-        const newErrors = {};
+    if (!formData.password.trim()) {
+      nextErrors.password = "Password is required.";
+    } else if (formData.password.length < 6) {
+      nextErrors.password = "Password must contain at least 6 characters.";
+    }
 
-        if (!formData.email.trim()) {
-            newErrors.email = "Email is required.";
-        } else if (!validateEmail(formData.email)) {
-            newErrors.email = "Please enter a valid email address.";
-        }
+    return nextErrors;
+  };
 
-        if (!formData.password.trim()) {
-            newErrors.password = "Password is required.";
-        } else if (formData.password.length < 6) {
-            newErrors.password = "Password must contain at least 6 characters.";
-        }
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
 
-        return newErrors;
-    };
+    setFormData((previous) => ({
+      ...previous,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+    setErrors((previous) => ({
+      ...previous,
+      [name]: "",
+    }));
+    setSubmitError("");
+  };
 
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: type === "checkbox" ? checked : value,
-        }));
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
-        setErrors((prev) => ({
-            ...prev,
-            [name]: "",
-        }));
-        setSuccessMessage("");
-    };
+    const nextErrors = validateForm();
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitError("");
 
-        const newErrors = validateForm();
-        if (Object.keys(newErrors).length > 0) {
-            setErrors(newErrors);
-            setSuccessMessage("");
-            return;
-        }
+    try {
+      const authPayload = await loginRequest({
+        userName: formData.userName.trim(),
+        password: formData.password,
+      });
 
-        const fakeToken = "demo-token-123456";
-        const storage = formData.remember ? localStorage : sessionStorage;
+      login(authPayload, { persistent: formData.remember });
 
-        storage.setItem("token", fakeToken);
-        storage.setItem("role", formData.role);
-        storage.setItem("userEmail", formData.email);
+      if (authPayload?.user?.role === "ADMIN_REVIEWER") {
+        navigate("/admin");
+      } else if (authPayload?.user?.role === "CONTRIBUTOR") {
+        navigate("/dashboard");
+      } else {
+        navigate("/profile");
+      }
+    } catch (error) {
+      setSubmitError(error.message || "Unable to sign in with the provided credentials.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-        setSuccessMessage("Login successful. Your session has been saved.");
-        console.log("Login submitted:", formData);
-    };
+  return (
+    <section className="auth-page">
+      <div className="auth-shell">
+        <div className="auth-showcase">
+          <div className="auth-showcase__content">
+            <div className="auth-showcase__eyebrow">HeritageHub Access</div>
+            <h1 className="auth-showcase__title">Welcome back to your cultural archive.</h1>
+            <p className="auth-showcase__text">
+              Sign in with your real backend account to access saved discovery, role-based navigation, and protected features.
+            </p>
 
-    return (
-        <section className="auth-page">
-            <div className="auth-shell">
-                <div className="auth-showcase">
-                    <div className="auth-showcase__content">
-                        <div className="auth-showcase__eyebrow">HeritageHub Access</div>
-                        <h1 className="auth-showcase__title">
-                            Welcome back to your cultural archive.
-                        </h1>
-                        <p className="auth-showcase__text">
-                            Sign in to continue exploring heritage resources, saved collections,
-                            and community stories through a seamless and secure system entrance.
-                        </p>
-
-                        <div className="auth-badge-list">
-                            <span className="auth-badge">Secure sign-in</span>
-                            <span className="auth-badge">Role-based access</span>
-                            <span className="auth-badge">Saved collections</span>
-                        </div>
-                    </div>
-
-                    <div className="auth-showcase__grid">
-                        <div className="auth-feature">
-                            <h4>Explore with continuity</h4>
-                            <p>Return to your saved resources, browsing history, and curated discoveries.</p>
-                        </div>
-                        <div className="auth-feature">
-                            <h4>Access your profile</h4>
-                            <p>Manage personal details and track your path from viewer to contributor.</p>
-                        </div>
-                        <div className="auth-feature">
-                            <h4>Join the community</h4>
-                            <p>Read stories, engage with comments, and discover living heritage in one place.</p>
-                        </div>
-                        <div className="auth-feature">
-                            <h4>Protected entry point</h4>
-                            <p>Your authentication flow supports a reliable and role-aware user experience.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="auth-card">
-                    <div className="auth-card__eyebrow">Login</div>
-                    <h2 className="auth-card__title">Sign in to HeritageHub</h2>
-                    <p className="auth-card__subtitle">
-                        Enter your account details to access personalized features, saved resources,
-                        and contributor-related services.
-                    </p>
-
-                    <form className="auth-form" onSubmit={handleSubmit}>
-                        <div className="auth-field">
-                            <label htmlFor="email">Email address</label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                placeholder="Enter your email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                className={errors.email ? "is-invalid" : ""}
-                            />
-                            <small>Please use the email linked to your HeritageHub account.</small>
-                            {errors.email && <div className="auth-error">{errors.email}</div>}
-                        </div>
-
-                        <div className="auth-field">
-                            <label htmlFor="password">Password</label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                placeholder="Enter your password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                className={errors.password ? "is-invalid" : ""}
-                            />
-                            {errors.password && <div className="auth-error">{errors.password}</div>}
-                        </div>
-
-                        <div className="auth-field">
-                            <label htmlFor="role">Sign in as</label>
-                            <select
-                                id="role"
-                                name="role"
-                                value={formData.role}
-                                onChange={handleChange}
-                            >
-                                <option value="viewer">Viewer</option>
-                                <option value="contributor">Contributor</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
-
-                        <div className="auth-form__options">
-                            <label className="auth-checkbox">
-                                <input
-                                    type="checkbox"
-                                    name="remember"
-                                    checked={formData.remember}
-                                    onChange={handleChange}
-                                />
-                                Remember me
-                            </label>
-
-                            <a href="/forgot-password" className="auth-link">
-                                Forgot password?
-                            </a>
-                        </div>
-
-                        {successMessage && (
-                            <div className="auth-success">{successMessage}</div>
-                        )}
-
-                        <button type="submit" className="auth-button">
-                            Sign In
-                        </button>
-
-                        <div className="auth-divider" />
-
-                        <button type="button" className="auth-button auth-button--accent">
-                            Continue as Guest
-                        </button>
-                    </form>
-
-                    <div className="auth-footer">
-                        Don’t have an account? <a href="/register" className="auth-link">Create one</a>
-                    </div>
-                </div>
+            <div className="auth-badge-list">
+              <span className="auth-badge">Spring Boot API</span>
+              <span className="auth-badge">JWT token</span>
+              <span className="auth-badge">Remember me</span>
             </div>
-        </section>
-    );
+          </div>
+
+          <div className="auth-showcase__grid">
+            <div className="auth-feature">
+              <h4>Live authentication</h4>
+              <p>The login form now uses the backend response instead of creating a fake token in the browser.</p>
+            </div>
+            <div className="auth-feature">
+              <h4>Persistent session</h4>
+              <p>Choose whether the JWT should stay in localStorage or only survive this browser session.</p>
+            </div>
+            <div className="auth-feature">
+              <h4>Role-based landing</h4>
+              <p>After sign-in, viewers, contributors, and admins can be routed to different workspace pages.</p>
+            </div>
+            <div className="auth-feature">
+              <h4>Consistent navbar state</h4>
+              <p>The auth context updates immediately so the navbar can switch from guest actions to the user profile chip.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="auth-card">
+          <div className="auth-card__eyebrow">Login</div>
+          <h2 className="auth-card__title">Sign in to HeritageHub</h2>
+          <p className="auth-card__subtitle">
+            Use the same username and password stored in your backend database account.
+          </p>
+
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div className="auth-field">
+              <label htmlFor="userName">Username</label>
+              <input
+                id="userName"
+                name="userName"
+                type="text"
+                placeholder="Enter your username"
+                value={formData.userName}
+                onChange={handleChange}
+                className={errors.userName ? "is-invalid" : ""}
+              />
+              <small>Backend login uses `userName`, not email.</small>
+              {errors.userName && <div className="auth-error">{errors.userName}</div>}
+            </div>
+
+            <div className="auth-field">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleChange}
+                className={errors.password ? "is-invalid" : ""}
+              />
+              {errors.password && <div className="auth-error">{errors.password}</div>}
+            </div>
+
+            <div className="auth-form__options">
+              <label className="auth-checkbox">
+                <input type="checkbox" name="remember" checked={formData.remember} onChange={handleChange} />
+                Remember me
+              </label>
+
+              <Link to="/register" className="auth-link">
+                Create account
+              </Link>
+            </div>
+
+            {submitError && <div className="auth-error auth-error--surface">{submitError}</div>}
+
+            <button type="submit" className="auth-button" disabled={isSubmitting}>
+              {isSubmitting ? "Signing In..." : "Sign In"}
+            </button>
+
+            <div className="auth-divider" />
+
+            <Link to="/discovery" className="auth-button auth-button--accent auth-button--link">
+              Continue as Guest
+            </Link>
+          </form>
+
+          <div className="auth-footer">
+            Don&apos;t have an account?{" "}
+            <Link to="/register" className="auth-link">
+              Create one
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export default Login;
