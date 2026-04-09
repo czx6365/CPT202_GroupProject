@@ -22,7 +22,9 @@ public class PlatformViewMapper {
                 user.getUserName(),
                 user.getEmail(),
                 user.getRole(),
-                user.isContributorApproved());
+                user.isContributorApproved(),
+                user.getContributorApplication(),
+                user.getContributorRequestedAt());
     }
 
     public ResourceSummary toResourceSummary(ResourceEntry entry) {

@@ -52,7 +52,7 @@ public class ProfileController {
             @PathVariable Long userId,
             @RequestBody ContributorApplicationRequest request) {
         requireSelfOrAdmin(currentUser, userId);
-        return platformService.applyContributor(userId, request == null ? null : request.application());
+        return accountService.applyContributor(userId, request == null ? null : request.application());
     }
 
     private void requireSelfOrAdmin(AuthenticatedUser currentUser, Long targetUserId) {
