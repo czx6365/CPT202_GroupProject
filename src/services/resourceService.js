@@ -3,7 +3,15 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, options);
   const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
+  let data = null;
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { message: text };
+    }
+  }
 
   if (!response.ok) {
     throw new Error(data?.message || `Request failed: ${response.status}`);
@@ -12,8 +20,35 @@ async function request(path, options = {}) {
   return data;
 }
 
-export async function fetchPublicResources() {
-  return request("/api/public/resources");
+function buildQuery(params = {}) {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === null || value === undefined) return;
+
+    const normalizedValue = typeof value === "string" ? value.trim() : value;
+    if (normalizedValue === "") return;
+
+    searchParams.set(key, String(normalizedValue));
+  });
+
+  const query = searchParams.toString();
+  return query ? `?${query}` : "";
+}
+
+export async function fetchPublicResources(params = {}) {
+  const query = buildQuery({
+    keyword: params.keyword,
+    categoryId: params.categoryId,
+    place: params.place,
+    tag: params.tag,
+    page: params.page ?? 0,
+    size: params.size ?? 10,
+    sortBy: params.sortBy ?? "updatedTime",
+    sortDir: params.sortDir ?? "desc",
+  });
+
+  return request(`/api/public/resources${query}`);
 }
 
 export async function fetchResourceDetail(resourceId) {
@@ -26,4 +61,12 @@ export async function fetchMyResources(token) {
       Authorization: `Bearer ${token}`,
     },
   });
+}
+
+export async function fetchCategories() {
+  return request("/api/admin/categories");
+}
+
+export async function fetchTags() {
+  return request("/api/admin/tags");
 }

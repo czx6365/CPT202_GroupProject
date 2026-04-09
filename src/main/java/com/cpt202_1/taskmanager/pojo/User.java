@@ -39,6 +39,12 @@ public class User {
     @Column(name = "contributor_approved", nullable = false)
     private boolean contributorApproved = false;
 
+    @Column(name = "contributor_application", length = 2000)
+    private String contributorApplication;
+
+    @Column(name = "contributor_requested_at")
+    private LocalDateTime contributorRequestedAt;
+
     @Column(nullable = false)
     private boolean enabled = true;
 
@@ -57,7 +63,7 @@ public class User {
         this.password = password;
         this.email = email;
         this.role = role;
-        this.contributorApproved = role != UserRole.CONTRIBUTOR;
+        this.contributorApproved = false;
     }
 
     @PrePersist
@@ -118,6 +124,22 @@ public class User {
 
     public void setContributorApproved(boolean contributorApproved) {
         this.contributorApproved = contributorApproved;
+    }
+
+    public String getContributorApplication() {
+        return contributorApplication;
+    }
+
+    public void setContributorApplication(String contributorApplication) {
+        this.contributorApplication = contributorApplication;
+    }
+
+    public LocalDateTime getContributorRequestedAt() {
+        return contributorRequestedAt;
+    }
+
+    public void setContributorRequestedAt(LocalDateTime contributorRequestedAt) {
+        this.contributorRequestedAt = contributorRequestedAt;
     }
 
     public boolean isEnabled() {

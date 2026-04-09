@@ -4,11 +4,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cpt202_1.taskmanager.dto.request.ContributorApplicationRequest;
 import com.cpt202_1.taskmanager.dto.request.UpdateProfileRequest;
 import com.cpt202_1.taskmanager.dto.response.UserSummary;
 import com.cpt202_1.taskmanager.exception.ApiException;
@@ -42,6 +44,15 @@ public class ProfileController {
             @RequestBody UpdateProfileRequest request) {
         requireSelfOrAdmin(currentUser, userId);
         return accountService.updateProfile(userId, request);
+    }
+
+    @PostMapping("/{userId}/contributor-application")
+    public UserSummary applyContributor(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @PathVariable Long userId,
+            @RequestBody ContributorApplicationRequest request) {
+        requireSelfOrAdmin(currentUser, userId);
+        return platformService.applyContributor(userId, request == null ? null : request.application());
     }
 
     private void requireSelfOrAdmin(AuthenticatedUser currentUser, Long targetUserId) {

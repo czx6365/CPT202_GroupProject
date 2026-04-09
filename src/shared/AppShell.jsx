@@ -9,6 +9,7 @@ function AppShell() {
   const navigate = useNavigate();
   const { isAuthenticated, role, user, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 24);
@@ -23,42 +24,76 @@ function AppShell() {
       { label: "Explore", key: "/discovery" },
     ];
 
+    if (isAdminRoute) {
+      return [
+        { label: "Overview", key: "/admin" },
+        { label: "Review", key: "/admin/review" },
+        { label: "Promotion", key: "/admin/users" },
+        { label: "Master Data", key: "/admin/master-data/categories" },
+        { label: "Audit", key: "/admin/audit" },
+      ];
+    }
+
     if (!isAuthenticated) {
       return [...baseLinks, { label: "Login", key: "/login" }, { label: "Register", key: "/register" }];
     }
 
     if (role === "ADMIN_REVIEWER" || role === "admin") {
-      return [...baseLinks, { label: "Review", key: "/admin/review" }, { label: "Users", key: "/admin/users" }];
+      return [
+        ...baseLinks,
+        { label: "Admin", key: "/admin" },
+        { label: "Review", key: "/admin/review" },
+        { label: "Users", key: "/admin/users" },
+        { label: "Categories", key: "/admin/master-data/categories" },
+        { label: "Audit", key: "/admin/audit" },
+      ];
     }
 
-    if (role === "CONTRIBUTOR" || role === "contributor") {
+    const isApprovedContributor =
+      (role === "CONTRIBUTOR" || role === "contributor") && Boolean(user?.contributorApproved);
+
+    if (isApprovedContributor) {
       return [...baseLinks, { label: "Dashboard", key: "/dashboard" }, { label: "Submit", key: "/submit" }];
     }
 
     return [...baseLinks, { label: "Profile", key: "/profile" }];
-  }, [isAuthenticated, role]);
+  }, [isAdminRoute, isAuthenticated, role, user?.contributorApproved]);
 
   const avatarLabel = user?.userName?.slice(0, 1)?.toUpperCase() || "H";
   const isHome = location.pathname === "/";
-  const headerClassName = `app-shell__header ${isHome && !isScrolled ? "app-shell__header--floating" : "app-shell__header--solid"}`;
+  const headerClassName = `app-shell__header ${isHome && !isScrolled ? "app-shell__header--floating" : "app-shell__header--solid"} ${isAdminRoute ? "app-shell__header--admin" : ""}`;
 
   return (
     <div className="app-shell">
       <header className={headerClassName}>
         <div className="app-shell__nav-wrap">
-          <Navbar links={navLinks} onNavigate={(path) => navigate(path)} user={normalizeNavbarUser(role)} />
+          <Navbar
+            links={navLinks}
+            onNavigate={(path) => navigate(path)}
+            user={normalizeNavbarUser(role, user?.contributorApproved)}
+          />
 
           <div className="app-shell__account">
             {isAuthenticated ? (
               <>
-                <Link to="/profile" className="app-shell__profile-chip">
+                <Link
+                  to={isAdminRoute ? "/profile" : "/profile"}
+                  className={`app-shell__profile-chip ${isAdminRoute ? "app-shell__profile-chip--admin" : ""}`}
+                >
                   <span className="app-shell__avatar">{avatarLabel}</span>
-                  <span className="app-shell__profile-text">{user?.userName || "Profile"}</span>
+                  <span className="app-shell__profile-text">
+                    {user?.userName || (isAdminRoute ? "Admin Profile" : "Profile")}
+                  </span>
                 </Link>
                 <button type="button" className="app-shell__logout" onClick={logout}>
                   Logout
                 </button>
               </>
+            ) : isAdminRoute ? (
+              <div className="app-shell__profile-chip app-shell__profile-chip--admin-preview">
+                <span className="app-shell__avatar">A</span>
+                <span className="app-shell__profile-text">Admin Preview</span>
+              </div>
             ) : (
               <div className="app-shell__guest-label">Guest Access</div>
             )}
@@ -73,8 +108,8 @@ function AppShell() {
   );
 }
 
-function normalizeNavbarUser(role) {
-  if (role === "CONTRIBUTOR" || role === "contributor") {
+function normalizeNavbarUser(role, contributorApproved) {
+  if ((role === "CONTRIBUTOR" || role === "contributor") && contributorApproved) {
     return { role: "contributor" };
   }
 

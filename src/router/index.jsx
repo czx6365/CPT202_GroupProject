@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import AppShell from "../shared/AppShell";
 import Homepage from "../pages/public/Home/Homepage";
 import Discovery from "../pages/public/Discovery/Discovery";
@@ -10,6 +10,7 @@ import Profile from "../pages/user/Profile/Profile";
 import ContributorDashboard from "../pages/contributor/Dashboard/Dashboard";
 import Submit from "../pages/contributor/Submit/Submit";
 import Resubmit from "../pages/contributor/Resubmit/Resubmit";
+import AdminDashboard from "../pages/admin/Dashboard/AdminDashboard";
 import ReviewList from "../pages/admin/Review/ReviewList";
 import ReviewDetail from "../pages/admin/Review/ReviewDetail";
 import UserApproval from "../pages/admin/Users/UserApproval";
@@ -31,11 +32,14 @@ function AppRouter() {
           <Route path="/dashboard" element={<ContributorDashboard />} />
           <Route path="/submit" element={<Submit />} />
           <Route path="/resubmit/:id" element={<Resubmit />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
           <Route path="/admin/review" element={<ReviewList />} />
           <Route path="/admin/review/:id" element={<ReviewDetail />} />
           <Route path="/admin/users" element={<UserApproval />} />
           <Route path="/admin/master-data/categories" element={<Categories />} />
           <Route path="/admin/master-data/tags" element={<Tags />} />
+          <Route path="/admin/audit" element={<Archive />} />
           <Route path="/admin/archive" element={<Archive />} />
         </Route>
       </Routes>
