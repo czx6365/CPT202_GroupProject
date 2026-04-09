@@ -68,7 +68,7 @@ function Login() {
 
       if (authPayload?.user?.role === "ADMIN_REVIEWER") {
         navigate("/admin");
-      } else if (authPayload?.user?.role === "CONTRIBUTOR") {
+      } else if (authPayload?.user?.role === "CONTRIBUTOR" && authPayload?.user?.contributorApproved) {
         navigate("/dashboard");
       } else {
         navigate("/profile");

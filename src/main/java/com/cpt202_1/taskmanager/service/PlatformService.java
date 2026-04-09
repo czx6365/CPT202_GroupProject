@@ -112,7 +112,7 @@ public class PlatformService {
         user.setPassword(passwordEncoder.encode(request.password().trim()));
         user.setEmail(email);
         user.setRole(role);
-        user.setContributorApproved(role != UserRole.CONTRIBUTOR);
+        user.setContributorApproved(false);
         userRepository.save(user);
 
         return toUserSummary(user);
@@ -174,7 +174,21 @@ public class PlatformService {
         }
 
         if (StringUtils.hasText(request.password())) {
-            user.setPassword(passwordEncoder.encode(request.password().trim()));
+            if (!StringUtils.hasText(request.currentPassword())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Current password is required");
+            }
+
+            String currentPassword = request.currentPassword().trim();
+            if (!passwordMatchesAndUpgradeIfNeeded(user, currentPassword)) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
+            }
+
+            String newPassword = request.password().trim();
+            if (newPassword.length() < 6) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "New password must contain at least 6 characters");
+            }
+
+            user.setPassword(passwordEncoder.encode(newPassword));
         }
 
         return toUserSummary(userRepository.save(user));
@@ -195,6 +209,32 @@ public class PlatformService {
         contributor.setContributorApproved(true);
         userRepository.save(contributor);
         return toUserSummary(contributor);
+    }
+
+    /**
+     * 用户提交 contributor 申请（包含申请文本）。
+     */
+    public UserSummary applyContributor(Long userId, String applicationText) {
+        if (!StringUtils.hasText(applicationText)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Application content is required");
+        }
+
+        User user = getUserOrThrow(userId);
+        if (!user.isEnabled()) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "User is disabled");
+        }
+        if (user.getRole() == UserRole.ADMIN_REVIEWER) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Admin account cannot apply as contributor");
+        }
+        if (user.getRole() == UserRole.CONTRIBUTOR && user.isContributorApproved()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "You are already an approved contributor");
+        }
+
+        user.setRole(UserRole.CONTRIBUTOR);
+        user.setContributorApproved(false);
+        user.setContributorApplication(applicationText.trim());
+        user.setContributorRequestedAt(LocalDateTime.now());
+        return toUserSummary(userRepository.save(user));
     }
 
     /**
@@ -730,7 +770,9 @@ public class PlatformService {
                 user.getUserName(),
                 user.getEmail(),
                 user.getRole(),
-                user.isContributorApproved());
+                user.isContributorApproved(),
+                user.getContributorApplication(),
+                user.getContributorRequestedAt());
     }
 
     /**

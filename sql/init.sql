@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS `tb_user` (
   `email` VARCHAR(255) NOT NULL,
   `role_type` VARCHAR(50) NOT NULL,
   `contributor_approved` TINYINT(1) NOT NULL DEFAULT 0,
+  `contributor_application` VARCHAR(2000) DEFAULT NULL,
+  `contributor_requested_at` DATETIME(6) DEFAULT NULL,
   `enabled` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` DATETIME(6) NOT NULL,
   `updated_at` DATETIME(6) NOT NULL,

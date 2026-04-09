@@ -1,12 +1,14 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 async function request(path, options = {}) {
+  const mergedHeaders = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+  };
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
     ...options,
+    headers: mergedHeaders,
   });
 
   const text = await response.text();
@@ -65,5 +67,34 @@ export async function getProfile(userId, token) {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+  });
+}
+
+export async function updateProfile(userId, payload, token) {
+  return request(`/api/users/${userId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      userName: payload.userName,
+      email: payload.email,
+      currentPassword: payload.currentPassword,
+      password: payload.password,
+    }),
+  });
+}
+
+export async function applyContributor(userId, application, token) {
+  return request(`/api/users/${userId}/contributor-application`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      application,
+    }),
   });
 }

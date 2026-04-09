@@ -49,12 +49,15 @@ function AppShell() {
       ];
     }
 
-    if (role === "CONTRIBUTOR" || role === "contributor") {
+    const isApprovedContributor =
+      (role === "CONTRIBUTOR" || role === "contributor") && Boolean(user?.contributorApproved);
+
+    if (isApprovedContributor) {
       return [...baseLinks, { label: "Dashboard", key: "/dashboard" }, { label: "Submit", key: "/submit" }];
     }
 
     return [...baseLinks, { label: "Profile", key: "/profile" }];
-  }, [isAdminRoute, isAuthenticated, role]);
+  }, [isAdminRoute, isAuthenticated, role, user?.contributorApproved]);
 
   const avatarLabel = user?.userName?.slice(0, 1)?.toUpperCase() || "H";
   const isHome = location.pathname === "/";
@@ -64,7 +67,11 @@ function AppShell() {
     <div className="app-shell">
       <header className={headerClassName}>
         <div className="app-shell__nav-wrap">
-          <Navbar links={navLinks} onNavigate={(path) => navigate(path)} user={normalizeNavbarUser(role)} />
+          <Navbar
+            links={navLinks}
+            onNavigate={(path) => navigate(path)}
+            user={normalizeNavbarUser(role, user?.contributorApproved)}
+          />
 
           <div className="app-shell__account">
             {isAuthenticated ? (
@@ -101,8 +108,8 @@ function AppShell() {
   );
 }
 
-function normalizeNavbarUser(role) {
-  if (role === "CONTRIBUTOR" || role === "contributor") {
+function normalizeNavbarUser(role, contributorApproved) {
+  if ((role === "CONTRIBUTOR" || role === "contributor") && contributorApproved) {
     return { role: "contributor" };
   }
 

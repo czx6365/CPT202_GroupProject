@@ -1,69 +1,103 @@
-import React from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import Button from "../../../components/Button/Button";
 import Input from "../../../components/Input/Input";
+import { useAuth } from "../../../context/AuthContext";
+import { approveContributor, fetchPendingUsers } from "../../../services/adminService";
 import AdminWorkspace from "../AdminWorkspace";
 import "./UserApproval.css";
 
-const pendingApplicants = [
-  {
-    id: "usr-301",
-    name: "Lin Qiao",
-    email: "lin.qiao@heritagehub.org",
-    currentRole: "Registered Viewer",
-    requestedAt: "2026-04-06 09:15",
-    focus: "Oral traditions and neighborhood interviews",
-    contributionPlan:
-      "Plans to document intergenerational festival stories, interview long-term residents, and submit audio-supported community narratives.",
-    status: "Awaiting Approval",
-    readiness: "Application Complete",
-  },
-  {
-    id: "usr-305",
-    name: "Wang Zhen",
-    email: "wang.zhen@heritagehub.org",
-    currentRole: "Registered Viewer",
-    requestedAt: "2026-04-05 18:40",
-    focus: "Built heritage photography",
-    contributionPlan:
-      "Intends to contribute documented photo surveys of historic lane houses with descriptive metadata and preservation notes.",
-    status: "Awaiting Approval",
-    readiness: "Needs Final Review",
-  },
-  {
-    id: "usr-309",
-    name: "He Yutong",
-    email: "he.yutong@heritagehub.org",
-    currentRole: "Registered Viewer",
-    requestedAt: "2026-04-05 11:05",
-    focus: "Market culture and food memory",
-    contributionPlan:
-      "Would like to archive interviews and photographs related to long-running food stalls, seasonal rituals, and informal local knowledge.",
-    status: "Awaiting Approval",
-    readiness: "Application Complete",
-  },
-];
-
-const selectedApplicant = {
-  name: "Lin Qiao",
-  email: "lin.qiao@heritagehub.org",
-  currentRole: "Registered Viewer",
-  requestedRole: "Contributor",
-  requestedAt: "2026-04-06 09:15",
-  location: "Suzhou Industrial District",
-  experience: "Community oral history volunteer for 2 years",
-  contributionPlan:
-    "I want to contribute interview-based records about local celebrations, elder memories, and small neighborhood landmarks that are often missing from formal archives.",
-  motivation:
-    "My goal is to help younger residents understand why these stories matter and to preserve context before community memory becomes fragmented.",
-  interests: ["Oral History", "Festivals", "Community Identity", "Audio Documentation"],
-};
-
 function UserApproval() {
+  const { token } = useAuth();
+  const [pendingApplicants, setPendingApplicants] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [keyword, setKeyword] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
+  const [isApproving, setIsApproving] = useState(false);
+
+  useEffect(() => {
+    const loadPendingUsers = async () => {
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setErrorMessage("");
+
+      try {
+        const users = await fetchPendingUsers(token);
+        setPendingApplicants(Array.isArray(users) ? users : []);
+        setSelectedUserId(users?.[0]?.userId || null);
+      } catch (error) {
+        setErrorMessage(error.message || "Unable to load pending applicants.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPendingUsers();
+  }, [token]);
+
+  const filteredApplicants = useMemo(() => {
+    const normalizedKeyword = keyword.trim().toLowerCase();
+    if (!normalizedKeyword) return pendingApplicants;
+
+    return pendingApplicants.filter((applicant) => {
+      const name = applicant.userName?.toLowerCase() || "";
+      const email = applicant.email?.toLowerCase() || "";
+      const application = applicant.contributorApplication?.toLowerCase() || "";
+      return (
+        name.includes(normalizedKeyword) ||
+        email.includes(normalizedKeyword) ||
+        application.includes(normalizedKeyword)
+      );
+    });
+  }, [keyword, pendingApplicants]);
+
+  const selectedApplicant = useMemo(
+    () => filteredApplicants.find((applicant) => applicant.userId === selectedUserId) || filteredApplicants[0] || null,
+    [filteredApplicants, selectedUserId]
+  );
+
+  const applyKeyword = () => {
+    setSelectedUserId((previous) => {
+      if (filteredApplicants.some((applicant) => applicant.userId === previous)) {
+        return previous;
+      }
+      return filteredApplicants[0]?.userId || null;
+    });
+  };
+
+  const resetKeyword = () => {
+    setKeyword("");
+    setSelectedUserId(pendingApplicants[0]?.userId || null);
+  };
+
+  const handleApprove = async () => {
+    if (!selectedApplicant || !token) return;
+
+    setIsApproving(true);
+    setActionMessage("");
+
+    try {
+      await approveContributor(selectedApplicant.userId, token);
+      setPendingApplicants((previous) => previous.filter((item) => item.userId !== selectedApplicant.userId));
+      setSelectedUserId(null);
+      setActionMessage(`Approved ${selectedApplicant.userName} as contributor.`);
+    } catch (error) {
+      setActionMessage(error.message || "Unable to approve this applicant.");
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
   return (
     <AdminWorkspace
       eyebrow="Contributor Access"
       title="User Approval"
-      description="Review contributor promotion requests from registered users and decide who can enter the submission workflow. This static workspace already mirrors the future approval flow with filters, applicant cards, and a decision panel."
+      description="Review contributor promotion requests from registered users and approve eligible applications."
       actions={[{ label: "Back to Dashboard", to: "/admin", variant: "secondary" }]}
     >
       <div className="approval-toolbar">
@@ -72,88 +106,87 @@ function UserApproval() {
             id="approval-keyword"
             label="Keyword"
             placeholder="Search applicant name or email"
-            value=""
-            onChange={() => {}}
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
           />
 
           <div className="input-group">
             <label className="input-group__label" htmlFor="approval-status">
               Status
             </label>
-            <select id="approval-status" className="input-group__field" defaultValue="pending">
+            <select id="approval-status" className="input-group__field" value="pending" disabled>
               <option value="pending">Awaiting Approval</option>
-              <option value="approved">Approved</option>
-              <option value="hold">Needs Review</option>
             </select>
           </div>
 
           <div className="approval-toolbar__actions">
-            <Button variant="primary">Apply Filters</Button>
-            <Button variant="secondary">Reset</Button>
+            <Button variant="primary" onClick={applyKeyword}>Apply Filters</Button>
+            <Button variant="secondary" onClick={resetKeyword}>Reset</Button>
           </div>
         </div>
 
         <div className="approval-toolbar__summary">
           <div className="approval-summary-card">
             <span className="approval-summary-card__label">Pending</span>
-            <strong className="approval-summary-card__value">7</strong>
+            <strong className="approval-summary-card__value">{filteredApplicants.length}</strong>
             <p className="approval-summary-card__hint">Applications waiting for administrator decision.</p>
           </div>
           <div className="approval-summary-card">
-            <span className="approval-summary-card__label">Ready</span>
-            <strong className="approval-summary-card__value">4</strong>
-            <p className="approval-summary-card__hint">Applications with enough information for approval now.</p>
+            <span className="approval-summary-card__label">Selected</span>
+            <strong className="approval-summary-card__value">{selectedApplicant ? "1" : "0"}</strong>
+            <p className="approval-summary-card__hint">Current application shown in the decision panel.</p>
           </div>
           <div className="approval-summary-card">
-            <span className="approval-summary-card__label">Review Hold</span>
-            <strong className="approval-summary-card__value">2</strong>
-            <p className="approval-summary-card__hint">Applications needing a secondary policy check.</p>
+            <span className="approval-summary-card__label">Filter</span>
+            <strong className="approval-summary-card__value">{keyword.trim() ? "ON" : "OFF"}</strong>
+            <p className="approval-summary-card__hint">Keyword filter for applicant name, email, or application text.</p>
           </div>
           <div className="approval-summary-card">
-            <span className="approval-summary-card__label">This Week</span>
-            <strong className="approval-summary-card__value">11</strong>
-            <p className="approval-summary-card__hint">New contributor requests received this week.</p>
+            <span className="approval-summary-card__label">Data Source</span>
+            <strong className="approval-summary-card__value">Live API</strong>
+            <p className="approval-summary-card__hint">Pending applicants now come from backend `/api/admin/contributors/pending`.</p>
           </div>
         </div>
       </div>
 
       <div className="approval-layout">
         <div className="approval-list">
-          {pendingApplicants.map((applicant, index) => (
+          {isLoading && <p>Loading pending applicants...</p>}
+          {!isLoading && errorMessage && <p className="approval-panel__note">{errorMessage}</p>}
+          {!isLoading && !errorMessage && filteredApplicants.length === 0 && (
+            <p className="approval-panel__note">No pending contributor applications.</p>
+          )}
+
+          {!isLoading && !errorMessage && filteredApplicants.map((applicant) => (
             <article
-              key={applicant.id}
-              className={`approval-card ${index === 0 ? "approval-card--active" : ""}`}
+              key={applicant.userId}
+              className={`approval-card ${selectedApplicant?.userId === applicant.userId ? "approval-card--active" : ""}`}
             >
               <div className="approval-card__content">
                 <div className="approval-card__meta">
-                  <span className="approval-chip--status">{applicant.status}</span>
-                  <span className="approval-chip">{applicant.currentRole}</span>
-                  <span className="approval-chip">{applicant.readiness}</span>
+                  <span className="approval-chip--status">Awaiting Approval</span>
+                  <span className="approval-chip">Registered Viewer</span>
                 </div>
 
-                <h2 className="approval-card__title">{applicant.name}</h2>
+                <h2 className="approval-card__title">{applicant.userName}</h2>
                 <p className="approval-card__subtitle">{applicant.email}</p>
-                <p className="approval-card__description">{applicant.contributionPlan}</p>
+                <p className="approval-card__description">{applicant.contributorApplication || "No application text submitted."}</p>
               </div>
 
               <div className="approval-card__facts">
                 <div className="approval-card__fact">
                   <span>Requested</span>
-                  <strong>{applicant.requestedAt}</strong>
-                </div>
-                <div className="approval-card__fact">
-                  <span>Focus</span>
-                  <strong>{applicant.focus}</strong>
+                  <strong>{applicant.contributorRequestedAt ? new Date(applicant.contributorRequestedAt).toLocaleString() : "-"}</strong>
                 </div>
                 <div className="approval-card__fact">
                   <span>Promotion Path</span>
-                  <strong>Viewer → Contributor</strong>
+                  <strong>Viewer to Contributor</strong>
                 </div>
 
                 <div className="approval-card__footer">
-                  <Button variant="primary">Open Applicant</Button>
-                  <Button variant="secondary" className="approval-card__secondary">
-                    Quick Approve
+                  <Button variant="primary" onClick={() => setSelectedUserId(applicant.userId)}>Open Applicant</Button>
+                  <Button variant="secondary" className="approval-card__secondary" onClick={() => setSelectedUserId(applicant.userId)}>
+                    Quick Review
                   </Button>
                 </div>
               </div>
@@ -164,105 +197,55 @@ function UserApproval() {
         <div className="approval-detail">
           <section className="approval-panel">
             <div className="approval-profile">
-              <span className="approval-profile__avatar">L</span>
+              <span className="approval-profile__avatar">
+                {(selectedApplicant?.userName || "U").charAt(0).toUpperCase()}
+              </span>
 
               <div>
-                <h3 className="approval-profile__name">{selectedApplicant.name}</h3>
+                <h3 className="approval-profile__name">{selectedApplicant?.userName || "No applicant selected"}</h3>
                 <p className="approval-profile__role">
-                  {selectedApplicant.currentRole} requesting promotion to {selectedApplicant.requestedRole}
+                  {selectedApplicant ? "Registered Viewer requesting promotion to Contributor" : "Select an applicant to review details."}
                 </p>
               </div>
             </div>
 
-            <div className="approval-data-grid">
-              <div className="approval-data-item">
-                <span className="approval-data-item__label">Email</span>
-                <p className="approval-data-item__value">{selectedApplicant.email}</p>
-              </div>
+            {selectedApplicant && (
+              <div className="approval-data-grid">
+                <div className="approval-data-item">
+                  <span className="approval-data-item__label">Email</span>
+                  <p className="approval-data-item__value">{selectedApplicant.email}</p>
+                </div>
 
-              <div className="approval-data-item">
-                <span className="approval-data-item__label">Requested At</span>
-                <p className="approval-data-item__value">{selectedApplicant.requestedAt}</p>
-              </div>
+                <div className="approval-data-item">
+                  <span className="approval-data-item__label">Requested At</span>
+                  <p className="approval-data-item__value">
+                    {selectedApplicant.contributorRequestedAt
+                      ? new Date(selectedApplicant.contributorRequestedAt).toLocaleString()
+                      : "-"}
+                  </p>
+                </div>
 
-              <div className="approval-data-item">
-                <span className="approval-data-item__label">Location</span>
-                <p className="approval-data-item__value">{selectedApplicant.location}</p>
-              </div>
-
-              <div className="approval-data-item">
-                <span className="approval-data-item__label">Experience</span>
-                <p className="approval-data-item__value">{selectedApplicant.experience}</p>
-              </div>
-
-              <div className="approval-data-item approval-data-item--full">
-                <span className="approval-data-item__label">Contribution Plan</span>
-                <p className="approval-data-item__text">{selectedApplicant.contributionPlan}</p>
-              </div>
-
-              <div className="approval-data-item approval-data-item--full">
-                <span className="approval-data-item__label">Motivation</span>
-                <p className="approval-data-item__text">{selectedApplicant.motivation}</p>
-              </div>
-
-              <div className="approval-data-item approval-data-item--full">
-                <span className="approval-data-item__label">Content Interests</span>
-                <div className="approval-interest-list">
-                  {selectedApplicant.interests.map((interest) => (
-                    <span key={interest} className="approval-chip">
-                      {interest}
-                    </span>
-                  ))}
+                <div className="approval-data-item approval-data-item--full">
+                  <span className="approval-data-item__label">Application Text</span>
+                  <p className="approval-data-item__text">{selectedApplicant.contributorApplication || "No application text submitted."}</p>
                 </div>
               </div>
-            </div>
+            )}
           </section>
 
           <section className="approval-panel">
             <h3 className="approval-panel__title">Decision Panel</h3>
             <p className="approval-panel__description">
-              This panel is reserved for the final administrator decision. Later, the approve action
-              will trigger the real promotion API and refresh the pending list.
+              Approve this request to grant contributor access and unlock the submission workflow for this account.
             </p>
-
-            <div className="approval-panel__section">
-              <span className="approval-panel__section-label">Approval Note</span>
-              <textarea
-                className="approval-note"
-                placeholder="Record internal notes about approval readiness, applicant fit, or policy concerns."
-                defaultValue="Applicant shows a clear cultural contribution plan and enough background context to join the contributor workflow."
-              />
-            </div>
 
             <div className="approval-panel__actions">
-              <Button variant="primary">Approve Contributor</Button>
-              <Button variant="secondary">Request Clarification</Button>
+              <Button variant="primary" onClick={handleApprove} disabled={!selectedApplicant || isApproving}>
+                {isApproving ? "Approving..." : "Approve Contributor"}
+              </Button>
             </div>
 
-            <p className="approval-panel__note">
-              Future behavior: approval should update the applicant role path, while clarification can
-              be used for internal moderation follow-up.
-            </p>
-          </section>
-
-          <section className="approval-panel">
-            <h3 className="approval-panel__title">Review Checklist</h3>
-            <div className="approval-checklist">
-              <div className="approval-checklist__item">
-                <h4>Identity Context</h4>
-                <p>Applicant profile is complete enough for admin-side review and role transition.</p>
-              </div>
-
-              <div className="approval-checklist__item">
-                <h4>Contribution Clarity</h4>
-                <p>The submission plan clearly explains what heritage material the user intends to contribute.</p>
-              </div>
-
-              <div className="approval-checklist__item">
-                <h4>Platform Fit</h4>
-                <p>The proposed content aligns with community heritage sharing rather than general social posting.</p>
-              </div>
-            </div>
+            {actionMessage && <p className="approval-panel__note">{actionMessage}</p>}
           </section>
         </div>
       </div>

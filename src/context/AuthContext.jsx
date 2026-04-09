@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
 
 const TOKEN_KEY = "heritagehub.token";
 const USER_KEY = "heritagehub.user";
@@ -60,8 +60,16 @@ function clearSessionStorage() {
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(() => readSession());
   const { token, user, persistent } = session;
+  const writeUserToStorage = useCallback((nextUser, nextPersistent) => {
+    const targetStorage = nextPersistent ? localStorage : sessionStorage;
+    localStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem(USER_KEY);
+    if (nextUser) {
+      targetStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+    }
+  }, []);
 
-  const login = (authPayload, options = {}) => {
+  const login = useCallback((authPayload, options = {}) => {
     const nextToken = authPayload?.token || "";
     const nextUser = authPayload?.user || null;
     const nextPersistent = options.persistent ?? true;
@@ -82,16 +90,24 @@ export function AuthProvider({ children }) {
       user: nextUser,
       persistent: nextPersistent,
     });
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     clearSessionStorage();
     setSession({
       token: "",
       user: null,
       persistent: true,
     });
-  };
+  }, []);
+
+  const setUser = useCallback((nextUser) => {
+    writeUserToStorage(nextUser, persistent);
+    setSession((previous) => ({
+      ...previous,
+      user: nextUser,
+    }));
+  }, [persistent, writeUserToStorage]);
 
   const value = useMemo(
     () => ({
@@ -102,8 +118,9 @@ export function AuthProvider({ children }) {
       persistent,
       login,
       logout,
+      setUser,
     }),
-    [persistent, token, user]
+    [login, logout, persistent, setUser, token, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
