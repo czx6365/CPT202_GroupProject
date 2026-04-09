@@ -170,6 +170,39 @@
     box-shadow: 0 0 0 4px rgba(200, 169, 106, 0.12);
 }
 
+.profile-application-status {
+    margin-bottom: 20px;
+    padding: 18px 20px;
+    border-radius: 18px;
+    border: 1px solid rgba(231, 225, 216, 0.9);
+    background: linear-gradient(145deg, rgba(255, 253, 249, 0.98), rgba(247, 245, 242, 0.96));
+}
+
+.profile-application-status__label {
+    display: inline-flex;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(47, 62, 47, 0.08);
+    color: var(--hh-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.profile-application-status__value {
+    display: block;
+    margin-top: 12px;
+    color: var(--hh-primary);
+    font-size: 1.2rem;
+}
+
+.profile-application-status__text {
+    margin: 8px 0 0;
+    color: #5f584f;
+    line-height: 1.7;
+}
+
 .profile-feedback {
     margin: 12px 0 0;
     font-size: 0.92rem;

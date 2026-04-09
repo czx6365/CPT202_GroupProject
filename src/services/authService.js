@@ -46,7 +46,6 @@ export async function register(payload) {
       userName: payload.userName,
       password: payload.password,
       email: payload.email,
-      role: payload.role,
     }),
   });
 }

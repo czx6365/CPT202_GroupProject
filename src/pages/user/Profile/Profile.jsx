@@ -70,20 +70,35 @@ function Profile() {
   }, [setUser, token, user?.userId]);
 
   const roleLabel = useMemo(() => {
-    const role = profile?.role || "REGISTERED_VIEWER";
+    const role =
+      profile?.role === "CONTRIBUTOR" && profile?.contributorApproved
+        ? "CONTRIBUTOR"
+        : "REGISTERED_VIEWER";
     if (role === "ADMIN_REVIEWER") return "Admin";
     if (role === "CONTRIBUTOR") return "Contributor";
     return "Registered Viewer";
-  }, [profile?.role]);
+  }, [profile?.contributorApproved, profile?.role]);
 
   const contributorStatus = useMemo(() => {
     if (!profile) return "";
-    if (profile.role !== "CONTRIBUTOR") return "Not applied";
-    if (profile.contributorApproved) return "Approved";
-    return "Pending review";
+    if (profile.role === "CONTRIBUTOR" && profile.contributorApproved) return "Approved";
+    if (profile.contributorRequestedAt) return "Pending review";
+    return "Not applied";
   }, [profile]);
   const isApprovedContributor = profile?.role === "CONTRIBUTOR" && Boolean(profile?.contributorApproved);
-  const isContributorPending = profile?.role === "CONTRIBUTOR" && !profile?.contributorApproved;
+  const isContributorPending = Boolean(profile?.contributorRequestedAt) && !profile?.contributorApproved;
+
+  const contributorHeading = isApprovedContributor
+    ? "Contributor Access Approved"
+    : isContributorPending
+    ? "Contributor Application Pending"
+    : "Become a Contributor";
+
+  const contributorDescription = isApprovedContributor
+    ? "Your account has been approved for contributor access. You can now move into the submission workflow."
+    : isContributorPending
+    ? "Your application has been submitted and is waiting for administrator review. You can still revise the text below before approval."
+    : "Apply to share your cultural content. New accounts begin as registered viewers and can request contributor access here.";
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -269,14 +284,26 @@ function Profile() {
       <section className="homepage-section reveal-section">
         <div className="section-heading">
           <div className="section-heading__eyebrow">Contributor</div>
-          <h2 className="section-heading__title">Become a Contributor</h2>
-          <p className="section-heading__text">Apply to share your cultural content.</p>
+          <h2 className="section-heading__title">{contributorHeading}</h2>
+          <p className="section-heading__text">{contributorDescription}</p>
         </div>
 
         <div className="profile-bubble">
+          <div className="profile-application-status">
+            <span className="profile-application-status__label">Application Status</span>
+            <strong className="profile-application-status__value">{contributorStatus || "Not applied"}</strong>
+            <p className="profile-application-status__text">
+              {isApprovedContributor
+                ? "Contributor access is active on this account."
+                : isContributorPending
+                ? "An administrator will review your request before your role changes."
+                : "Submit an application below if you want to contribute heritage resources."}
+            </p>
+          </div>
+
           <form className="profile-form" onSubmit={handleContributorSubmit}>
             <textarea
-              placeholder="Why do you want to become a contributor?"
+              placeholder="Explain why you want contributor access and what kind of heritage content you plan to submit."
               rows="5"
               value={applicationText}
               onChange={(event) => {
@@ -296,7 +323,7 @@ function Profile() {
                 : isSubmittingApplication
                 ? "Submitting..."
                 : isContributorPending
-                ? "Update Application"
+                ? "Update Pending Application"
                 : "Submit Application"}
             </button>
           </form>

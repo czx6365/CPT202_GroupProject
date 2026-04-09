@@ -55,10 +55,14 @@ public class AdminService {
         accessControlService.requireRole(actor, UserRole.ADMIN_REVIEWER);
 
         User contributor = accessControlService.getUserOrThrow(contributorId);
-        if (contributor.getRole() != UserRole.CONTRIBUTOR) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Target user is not a contributor");
+        if (!StringUtils.hasText(contributor.getContributorApplication()) || contributor.getContributorRequestedAt() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Target user has not submitted a contributor application");
+        }
+        if (contributor.isContributorApproved()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Target user is already an approved contributor");
         }
 
+        contributor.setRole(UserRole.CONTRIBUTOR);
         contributor.setContributorApproved(true);
         userRepository.save(contributor);
         return viewMapper.toUserSummary(contributor);
@@ -112,7 +116,8 @@ public class AdminService {
         accessControlService.requireRole(actor, UserRole.ADMIN_REVIEWER);
 
         return userRepository.findAll().stream()
-                .filter(user -> user.getRole() == UserRole.CONTRIBUTOR)
+                .filter(user -> StringUtils.hasText(user.getContributorApplication()))
+                .filter(user -> user.getContributorRequestedAt() != null)
                 .filter(user -> !user.isContributorApproved())
                 .map(viewMapper::toUserSummary)
                 .toList();

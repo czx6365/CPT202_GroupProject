@@ -3,11 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { register as registerRequest } from "../../../services/authService";
 import "./Auth.css";
 
-const ROLE_OPTIONS = [
-  { value: "REGISTERED_VIEWER", label: "Viewer" },
-  { value: "CONTRIBUTOR", label: "Contributor" },
-];
-
 function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -15,7 +10,6 @@ function Register() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "REGISTERED_VIEWER",
     agree: false,
   });
   const [errors, setErrors] = useState({});
@@ -88,7 +82,6 @@ function Register() {
         userName: formData.userName.trim(),
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
-        role: formData.role,
       });
 
       setSuccessMessage("Registration successful. You can now sign in with your new account.");
@@ -123,8 +116,8 @@ function Register() {
               <p>The register form now submits to `/api/auth/register` instead of storing demo data in localStorage.</p>
             </div>
             <div className="auth-feature">
-              <h4>Match backend enums</h4>
-              <p>Viewer and contributor roles are mapped to the exact Spring Boot enum values expected by the server.</p>
+              <h4>Start as viewer</h4>
+              <p>Every new account starts as a registered viewer and can apply for contributor access after login.</p>
             </div>
             <div className="auth-feature">
               <h4>Strong validation</h4>
@@ -217,18 +210,6 @@ function Register() {
                 />
                 {errors.confirmPassword && <div className="auth-error">{errors.confirmPassword}</div>}
               </div>
-            </div>
-
-            <div className="auth-field">
-              <label htmlFor="role">Register as</label>
-              <select id="role" name="role" value={formData.role} onChange={handleChange}>
-                {ROLE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <small>These options are mapped to backend enum values expected by the API.</small>
             </div>
 
             <div className="auth-form__options">

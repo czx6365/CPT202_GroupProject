@@ -42,11 +42,6 @@ public class AccountService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "userName, password, email are required");
         }
 
-        UserRole role = request.role() == null ? UserRole.REGISTERED_VIEWER : request.role();
-        if (role == UserRole.ADMIN_REVIEWER) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Admin registration is not allowed via public API");
-        }
-
         String userName = request.userName().trim();
         String email = request.email().trim().toLowerCase();
         if (userRepository.existsByUserName(userName)) {
@@ -60,7 +55,7 @@ public class AccountService {
         user.setUserName(userName);
         user.setPassword(passwordEncoder.encode(request.password().trim()));
         user.setEmail(email);
-        user.setRole(role);
+        user.setRole(UserRole.REGISTERED_VIEWER);
         user.setContributorApproved(false);
         userRepository.save(user);
 
@@ -148,7 +143,7 @@ public class AccountService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "You are already an approved contributor");
         }
 
-        user.setRole(UserRole.CONTRIBUTOR);
+        user.setRole(UserRole.REGISTERED_VIEWER);
         user.setContributorApproved(false);
         user.setContributorApplication(applicationText.trim());
         user.setContributorRequestedAt(LocalDateTime.now());
