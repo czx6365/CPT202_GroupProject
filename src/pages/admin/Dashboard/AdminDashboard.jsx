@@ -36,14 +36,34 @@ const adminModules = [
     preview: ["Categories", "Tags", "Consistency Rules"],
   },
   {
-    title: "Audit Logs",
-    subtitle: "Observe administrative actions",
+    title: "Archive Management",
+    subtitle: "Control archive and restore flows",
     description:
-      "Prepare a workspace for operation history, accountability review, and later-stage administrative traceability.",
+      "Manage archive decisions, restoration workflows, and resource lifecycle control from one operations center.",
+    meta: "Archive",
+    to: "/admin/archive",
+    accent: "audit",
+    preview: ["Archive", "Restore", "Lifecycle Control"],
+  },
+  {
+    title: "Audit Logs",
+    subtitle: "Track administrator actions",
+    description:
+      "Review cross-module administrator activity including review decisions, contributor approvals, archive events, and taxonomy changes.",
     meta: "Audit",
     to: "/admin/audit",
     accent: "audit",
     preview: ["Time", "Operator", "Action Status"],
+  },
+  {
+    title: "Announcements",
+    subtitle: "Manage platform notices",
+    description:
+      "Prepare system announcements with draft, published, and archived states so communication workflows are ready for later public wiring.",
+    meta: "Notice",
+    to: "/admin/announcements",
+    accent: "announcement",
+    preview: ["Draft", "Published", "Archived"],
   },
 ];
 
@@ -52,7 +72,7 @@ function AdminDashboard() {
     <AdminWorkspace
       eyebrow="Administrator"
       title="Administrator Dashboard"
-      description="Use the control center below to move directly into moderation, contributor promotion, taxonomy management, and audit review."
+      description="Use the control center below to move directly into moderation, contributor promotion, taxonomy management, archive management, audit review, and announcement control."
       actions={[
         { label: "Open Review Queue", to: "/admin/review", variant: "primary" },
         { label: "Open Promotion Desk", to: "/admin/users", variant: "secondary" },
@@ -83,9 +103,14 @@ function AdminDashboard() {
                 <span>Awaiting contributor approval</span>
               </div>
               <div className="admin-dashboard__snapshot-card admin-dashboard__snapshot-card--audit">
+                <span className="admin-dashboard__snapshot-pill">Archive</span>
+                <strong>Lifecycle Desk</strong>
+                <span>Archive, restore, and trace resource actions</span>
+              </div>
+              <div className="admin-dashboard__snapshot-card admin-dashboard__snapshot-card--audit">
                 <span className="admin-dashboard__snapshot-pill">Audit</span>
                 <strong>Live Trace</strong>
-                <span>Administrative actions overview</span>
+                <span>See review, archive, promotion, and taxonomy history</span>
               </div>
             </div>
           </div>

@@ -17,6 +17,8 @@ import UserApproval from "../pages/admin/Users/UserApproval";
 import Categories from "../pages/admin/MasterData/Categories";
 import Tags from "../pages/admin/MasterData/Tags";
 import Archive from "../pages/admin/Archive/Archive";
+import AuditLogs from "../pages/admin/Archive/AuditLogs";
+import Announcements from "../pages/admin/Announcement/Announcements";
 
 function AppRouter() {
   return (
@@ -39,8 +41,9 @@ function AppRouter() {
           <Route path="/admin/users" element={<UserApproval />} />
           <Route path="/admin/master-data/categories" element={<Categories />} />
           <Route path="/admin/master-data/tags" element={<Tags />} />
-          <Route path="/admin/audit" element={<Archive />} />
+          <Route path="/admin/audit" element={<AuditLogs />} />
           <Route path="/admin/archive" element={<Archive />} />
+          <Route path="/admin/announcements" element={<Announcements />} />
         </Route>
       </Routes>
     </BrowserRouter>
