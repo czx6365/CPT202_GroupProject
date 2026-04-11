@@ -103,8 +103,16 @@
   box-shadow: 0 14px 32px rgba(47, 62, 47, 0.16);
 }
 
+.app-shell__profile-chip--contributor-preview {
+  background: linear-gradient(135deg, rgba(47, 62, 47, 0.94), rgba(95, 117, 82, 0.92));
+  color: #ffffff;
+  border-color: rgba(47, 62, 47, 0.18);
+  box-shadow: 0 14px 32px rgba(47, 62, 47, 0.12);
+}
+
 .app-shell__profile-chip--admin .app-shell__avatar,
-.app-shell__profile-chip--admin-preview .app-shell__avatar {
+.app-shell__profile-chip--admin-preview .app-shell__avatar,
+.app-shell__profile-chip--contributor-preview .app-shell__avatar {
   background: rgba(200, 169, 106, 0.96);
   color: #1f1f1f;
 }
@@ -126,6 +134,12 @@
   font-weight: 600;
 }
 
+.app-shell__role-text {
+  color: #7a7369;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 .app-shell__logout {
   padding: 0 16px;
   border: 1px solid rgba(231, 225, 216, 0.9);
@@ -135,10 +149,16 @@
 }
 
 .app-shell__guest-label {
-  padding: 0 16px;
+  padding: 0 22px;
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid rgba(231, 225, 216, 0.7);
   color: #5f584f;
+  box-shadow: var(--hh-shadow);
+}
+
+.app-shell__logout:hover {
+  border-color: rgba(47, 62, 47, 0.22);
+  color: var(--hh-primary);
 }
 
 .app-shell__header--floating .app-shell__guest-label,
@@ -153,6 +173,10 @@
 .app-shell__header--floating .app-shell__avatar {
   background: rgba(200, 169, 106, 0.95);
   color: #1f1f1f;
+}
+
+.app-shell__header--floating .app-shell__role-text {
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .app-shell__header--admin .app-shell__logout {

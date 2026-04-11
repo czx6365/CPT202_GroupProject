@@ -1,7 +1,12 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, options);
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: {
+      ...(options.headers || {}),
+    },
+    ...options,
+  });
   const text = await response.text();
   let data = null;
 
@@ -60,6 +65,76 @@ export async function fetchMyResources(token) {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+  });
+}
+
+export async function fetchContributorResourceById(resourceId, token, fallbackResource = null) {
+  try {
+    return await request(`/api/resources/${resourceId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (error) {
+    if (fallbackResource) {
+      return fallbackResource;
+    }
+
+    const list = await fetchMyResources(token);
+    return (Array.isArray(list) ? list : []).find((item) => String(item.resourceId) === String(resourceId)) || null;
+  }
+}
+
+export async function createDraft(payload, token) {
+  return request("/api/resources", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateDraft(resourceId, payload, token) {
+  return request(`/api/resources/${resourceId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteDraft(resourceId, token) {
+  return request(`/api/resources/${resourceId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function submitResourceForReview(resourceId, token) {
+  return request(`/api/resources/${resourceId}/submit`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({}),
+  });
+}
+
+export async function resubmitResource(resourceId, token) {
+  return request(`/api/resources/${resourceId}/resubmit`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({}),
   });
 }
 
