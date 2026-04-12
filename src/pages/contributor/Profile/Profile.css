@@ -1,0 +1,206 @@
+.contributor-profile {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.contributor-profile__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.7fr);
+  gap: 22px;
+}
+
+.contributor-profile__identity,
+.contributor-profile__status-panel,
+.contributor-profile__summary-card,
+.contributor-profile__panel {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(231, 225, 216, 0.92);
+  border-radius: 22px;
+  box-shadow: 0 20px 48px rgba(47, 62, 47, 0.08);
+}
+
+.contributor-profile__identity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+}
+
+.contributor-profile__avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--hh-primary), #496049);
+  color: #ffffff;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.contributor-profile__eyebrow {
+  margin: 0 0 8px;
+  color: #7a7369;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.contributor-profile__name {
+  margin: 0 0 6px;
+  color: var(--hh-primary);
+  font-size: 1.9rem;
+}
+
+.contributor-profile__meta,
+.contributor-profile__status-text {
+  margin: 0;
+  color: #5f584f;
+  line-height: 1.7;
+}
+
+.contributor-profile__status-panel,
+.contributor-profile__panel {
+  padding: 24px;
+}
+
+.contributor-profile__status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.contributor-profile__status-chip--approved {
+  background: rgba(47, 62, 47, 0.12);
+  color: var(--hh-primary);
+}
+
+.contributor-profile__status-chip--pending {
+  background: rgba(200, 169, 106, 0.18);
+  color: #7a5f2b;
+}
+
+.contributor-profile__summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.contributor-profile__summary-card {
+  padding: 20px 22px;
+}
+
+.contributor-profile__summary-label {
+  display: block;
+  margin-bottom: 12px;
+  color: #7a7369;
+  font-size: 0.88rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.contributor-profile__summary-value {
+  color: var(--hh-primary);
+  font-size: 2rem;
+}
+
+.contributor-profile__layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.contributor-profile__panel-title {
+  margin: 0 0 18px;
+  color: var(--hh-primary);
+  font-size: 1.18rem;
+}
+
+.contributor-profile__facts {
+  display: grid;
+  gap: 14px;
+}
+
+.contributor-profile__fact {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(231, 225, 216, 0.8);
+}
+
+.contributor-profile__fact:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.contributor-profile__fact span {
+  color: #7a7369;
+}
+
+.contributor-profile__fact strong {
+  color: #2e342d;
+}
+
+.contributor-profile__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.contributor-profile__action-link {
+  text-decoration: none;
+}
+
+.contributor-profile__state,
+.contributor-profile__error {
+  margin: 0;
+  padding: 16px 20px;
+  border-radius: 18px;
+}
+
+.contributor-profile__state {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(231, 225, 216, 0.85);
+  color: #5f584f;
+}
+
+.contributor-profile__error {
+  background: rgba(147, 59, 59, 0.08);
+  border: 1px solid rgba(147, 59, 59, 0.16);
+  color: #7a2f2f;
+}
+
+@media (max-width: 1024px) {
+  .contributor-profile__header,
+  .contributor-profile__summary,
+  .contributor-profile__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .contributor-profile__identity {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .contributor-profile__actions {
+    flex-direction: column;
+  }
+
+  .contributor-profile__action-link {
+    width: 100%;
+  }
+
+  .contributor-profile__action-link .button {
+    width: 100%;
+  }
+}
