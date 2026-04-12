@@ -48,6 +48,13 @@ public class ResourceWorkflowController {
         return resourceWorkflowService.updateDraft(currentUser.getUserId(), resourceId, request);
     }
 
+    @GetMapping("/{resourceId}")
+    public ResourceDetail detail(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @PathVariable Long resourceId) {
+        return resourceWorkflowService.getResourceDetail(currentUser.getUserId(), resourceId);
+    }
+
     @PostMapping("/{resourceId}/submit")
     public ResourceDetail submit(
             @AuthenticationPrincipal AuthenticatedUser currentUser,

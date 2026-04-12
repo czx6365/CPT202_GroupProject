@@ -83,21 +83,27 @@ function Profile() {
     if (!profile) return "";
     if (profile.role === "CONTRIBUTOR" && profile.contributorApproved) return "Approved";
     if (profile.contributorRequestedAt) return "Pending review";
+    if (profile.contributorRejectionReason) return "Rejected";
     return "Not applied";
   }, [profile]);
   const isApprovedContributor = profile?.role === "CONTRIBUTOR" && Boolean(profile?.contributorApproved);
   const isContributorPending = Boolean(profile?.contributorRequestedAt) && !profile?.contributorApproved;
+  const isContributorRejected = Boolean(profile?.contributorRejectionReason) && !isContributorPending && !isApprovedContributor;
 
   const contributorHeading = isApprovedContributor
     ? "Contributor Access Approved"
     : isContributorPending
     ? "Contributor Application Pending"
+    : isContributorRejected
+    ? "Contributor Application Rejected"
     : "Become a Contributor";
 
   const contributorDescription = isApprovedContributor
     ? "Your account has been approved for contributor access. You can now move into the submission workflow."
     : isContributorPending
     ? "Your application has been submitted and is waiting for administrator review. You can still revise the text below before approval."
+    : isContributorRejected
+    ? "Your previous contributor application was not approved. Review the administrator feedback below, then update your application and submit again."
     : "Apply to share your cultural content. New accounts begin as registered viewers and can request contributor access here.";
 
   if (!isAuthenticated) {
@@ -297,9 +303,18 @@ function Profile() {
                 ? "Contributor access is active on this account."
                 : isContributorPending
                 ? "An administrator will review your request before your role changes."
+                : isContributorRejected
+                ? "Your last contributor application was rejected. You can revise your application and submit it again."
                 : "Submit an application below if you want to contribute heritage resources."}
             </p>
           </div>
+
+          {isContributorRejected && (
+            <div className="profile-application-status profile-application-status--rejected">
+              <span className="profile-application-status__label">Administrator Feedback</span>
+              <p className="profile-application-status__text">{profile.contributorRejectionReason}</p>
+            </div>
+          )}
 
           <form className="profile-form" onSubmit={handleContributorSubmit}>
             <textarea
@@ -324,6 +339,8 @@ function Profile() {
                 ? "Submitting..."
                 : isContributorPending
                 ? "Update Pending Application"
+                : isContributorRejected
+                ? "Resubmit Application"
                 : "Submit Application"}
             </button>
           </form>

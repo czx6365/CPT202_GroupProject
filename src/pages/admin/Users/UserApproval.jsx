@@ -2,7 +2,7 @@
 import Button from "../../../components/Button/Button";
 import Input from "../../../components/Input/Input";
 import { useAuth } from "../../../context/AuthContext";
-import { approveContributor, fetchPendingUsers } from "../../../services/adminService";
+import { approveContributor, fetchPendingUsers, rejectContributor } from "../../../services/adminService";
 import AdminWorkspace from "../AdminWorkspace";
 import "./UserApproval.css";
 
@@ -23,34 +23,38 @@ function UserApproval() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+
+  const loadPendingUsers = async () => {
+    if (!token) {
+      setPendingApplicants([]);
+      setSelectedUserId(null);
+      setErrorMessage("Please log in with an administrator account to review contributor applications.");
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      const users = await fetchPendingUsers(token);
+      const applicantList = Array.isArray(users) ? users : [];
+      setPendingApplicants(applicantList);
+      setSelectedUserId((previous) => (
+        applicantList.some((item) => item.userId === previous) ? previous : (applicantList[0]?.userId || null)
+      ));
+    } catch (error) {
+      setPendingApplicants([]);
+      setSelectedUserId(null);
+      setErrorMessage(error.message || "Unable to load pending applicants.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadPendingUsers = async () => {
-      if (!token) {
-        setPendingApplicants([]);
-        setSelectedUserId(null);
-        setErrorMessage("Please log in with an administrator account to review contributor applications.");
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-      setErrorMessage("");
-
-      try {
-        const users = await fetchPendingUsers(token);
-        const applicantList = Array.isArray(users) ? users : [];
-        setPendingApplicants(applicantList);
-        setSelectedUserId(applicantList[0]?.userId || null);
-      } catch (error) {
-        setPendingApplicants([]);
-        setSelectedUserId(null);
-        setErrorMessage(error.message || "Unable to load pending applicants.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadPendingUsers();
   }, [token]);
 
@@ -105,14 +109,43 @@ function UserApproval() {
 
     try {
       await approveContributor(selectedApplicant.userId, token);
-      setPendingApplicants((previous) => previous.filter((item) => item.userId !== selectedApplicant.userId));
       setSuccessMessage(`Approved ${selectedApplicant.userName} as contributor.`);
+      setRejectionReason("");
+      await loadPendingUsers();
     } catch (error) {
       setErrorMessage(error.message || "Unable to approve this applicant.");
     } finally {
       setIsApproving(false);
     }
   };
+
+  const handleReject = async () => {
+    if (!selectedApplicant || !token) return;
+    if (!rejectionReason.trim()) {
+      setErrorMessage("Please enter a rejection reason before rejecting this application.");
+      setSuccessMessage("");
+      return;
+    }
+
+    setIsRejecting(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      await rejectContributor(selectedApplicant.userId, rejectionReason.trim(), token);
+      setSuccessMessage(`Rejected ${selectedApplicant.userName}'s contributor application.`);
+      setRejectionReason("");
+      await loadPendingUsers();
+    } catch (error) {
+      setErrorMessage(error.message || "Unable to reject this applicant.");
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
+  useEffect(() => {
+    setRejectionReason("");
+  }, [selectedUserId]);
 
   const isAdmin = user?.role === "ADMIN_REVIEWER";
   const showAuthError = !isAuthenticated || !token;
@@ -194,6 +227,15 @@ function UserApproval() {
             <article
               key={applicant.userId}
               className={`approval-card ${selectedApplicant?.userId === applicant.userId ? "approval-card--active" : ""}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedUserId(applicant.userId)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setSelectedUserId(applicant.userId);
+                }
+              }}
             >
               <div className="approval-card__content">
                 <div className="approval-card__meta">
@@ -214,13 +256,6 @@ function UserApproval() {
                 <div className="approval-card__fact">
                   <span>Promotion Path</span>
                   <strong>Viewer to Contributor</strong>
-                </div>
-
-                <div className="approval-card__footer">
-                  <Button variant="primary" onClick={() => setSelectedUserId(applicant.userId)}>Open Applicant</Button>
-                  <Button variant="secondary" className="approval-card__secondary" onClick={() => setSelectedUserId(applicant.userId)}>
-                    Quick Review
-                  </Button>
                 </div>
               </div>
             </article>
@@ -267,16 +302,40 @@ function UserApproval() {
           <section className="approval-panel">
             <h3 className="approval-panel__title">Decision Panel</h3>
             <p className="approval-panel__description">
-              Approve this request to grant contributor access and unlock the submission workflow for this account.
+              Approve this request to unlock contributor submission access, or reject it to clear the pending promotion request.
             </p>
+
+            <div className="approval-panel__section">
+              <label className="approval-panel__section-label" htmlFor="approval-rejection-reason">
+                Rejection Reason
+              </label>
+              <textarea
+                id="approval-rejection-reason"
+                className="approval-note"
+                placeholder="Explain why this contributor application was not approved."
+                value={rejectionReason}
+                onChange={(event) => {
+                  setRejectionReason(event.target.value);
+                  setErrorMessage("");
+                }}
+                disabled={!selectedApplicant || isApproving || isRejecting || showAuthError || showRoleError}
+              />
+            </div>
 
             <div className="approval-panel__actions">
               <Button
                 variant="primary"
                 onClick={handleApprove}
-                disabled={!selectedApplicant || isApproving || showAuthError || showRoleError}
+                disabled={!selectedApplicant || isApproving || isRejecting || showAuthError || showRoleError}
               >
                 {isApproving ? "Approving..." : "Approve Contributor"}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={handleReject}
+                disabled={!selectedApplicant || isApproving || isRejecting || showAuthError || showRoleError}
+              >
+                {isRejecting ? "Rejecting..." : "Reject Application"}
               </Button>
             </div>
           </section>

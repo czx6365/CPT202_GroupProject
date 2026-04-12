@@ -79,23 +79,21 @@ function Resubmit() {
         setCategories(Array.isArray(categoryResult) ? categoryResult : []);
         setTagOptions(Array.isArray(tagResult) ? tagResult : []);
 
-        const list =
-          Array.isArray(listResult) && listResult.length > 0 ? listResult : getMockContributorResources();
+        const list = Array.isArray(listResult) ? listResult : [];
         const summaryRecord =
           list.find((item) => String(item.resourceId) === String(id)) || location.state?.resource || null;
         const detailed = summaryRecord
           ? await fetchContributorResourceById(summaryRecord.resourceId, token, summaryRecord)
           : null;
 
-        const resolved = { ...summaryRecord, ...detailed };
+        const resolved = summaryRecord || detailed ? { ...summaryRecord, ...detailed } : null;
         setResource(resolved);
         setForm(createResourceFormState(resolved));
         setTagInput("");
       } catch (error) {
-        const mockResource = getMockContributorResourceById(id);
-        setResource(mockResource);
-        setForm(createResourceFormState(mockResource));
-        setErrorMessage(error.message || "Showing demo rejected submission while live resource data is unavailable.");
+        setResource(null);
+        setForm(createResourceFormState(null));
+        setErrorMessage(error.message || "Unable to load this rejected resource right now.");
       } finally {
         setIsLoading(false);
       }

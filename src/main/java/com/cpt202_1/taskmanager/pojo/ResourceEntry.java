@@ -34,14 +34,14 @@ public class ResourceEntry {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    @Column
     private String topic;
 
-    @Column(name = "place_name", nullable = false)
+    @Column(name = "place_name")
     private String placeName;
 
     @Lob
-    @Column(nullable = false)
+    @Column
     private String description;
 
     @Column(name = "file_url")
@@ -50,7 +50,7 @@ public class ResourceEntry {
     @Column(name = "external_link")
     private String externalLink;
 
-    @Column(name = "copyright_declaration", nullable = false)
+    @Column(name = "copyright_declaration")
     private String copyrightDeclaration;
 
     @Enumerated(EnumType.STRING)
@@ -70,7 +70,7 @@ public class ResourceEntry {
     private User reviewer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id")
     private Category category;
 
     @ManyToMany(fetch = FetchType.LAZY)

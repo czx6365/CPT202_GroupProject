@@ -11,5 +11,6 @@ public record UserSummary(
         UserRole role,
         boolean contributorApproved,
         String contributorApplication,
-        LocalDateTime contributorRequestedAt) {
+        LocalDateTime contributorRequestedAt,
+        String contributorRejectionReason) {
 }

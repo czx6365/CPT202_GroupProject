@@ -1,12 +1,14 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 async function request(path, options = {}) {
+  const mergedHeaders = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+  };
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
     ...options,
+    headers: mergedHeaders,
   });
   const text = await response.text();
   let data = null;
@@ -26,8 +28,34 @@ async function request(path, options = {}) {
   return data;
 }
 
-export async function fetchPendingReviews(token) {
-  return request("/api/admin/resources/pending", {
+function buildQuery(params = {}) {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === null || value === undefined) return;
+
+    const normalizedValue = typeof value === "string" ? value.trim() : value;
+    if (normalizedValue === "") return;
+
+    searchParams.set(key, String(normalizedValue));
+  });
+
+  const query = searchParams.toString();
+  return query ? `?${query}` : "";
+}
+
+export async function fetchPendingReviews(params = {}, token) {
+  const query = buildQuery({
+    keyword: params.keyword,
+    categoryId: params.categoryId,
+    status: params.status,
+    page: params.page ?? 0,
+    size: params.size ?? 100,
+    sortBy: params.sortBy ?? "updatedTime",
+    sortDir: params.sortDir ?? "desc",
+  });
+
+  return request(`/api/admin/resources/pending${query}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -48,6 +76,36 @@ export async function approveContributor(userId, token) {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+  });
+}
+
+export async function rejectContributor(userId, reason, token) {
+  return request(`/api/admin/contributors/${userId}/reject`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      reason,
+    }),
+  });
+}
+
+export async function fetchReviewDetail(resourceId, token) {
+  return request(`/api/resources/${resourceId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function submitReviewDecision(resourceId, payload, token) {
+  return request(`/api/resources/${resourceId}/review`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
   });
 }
 

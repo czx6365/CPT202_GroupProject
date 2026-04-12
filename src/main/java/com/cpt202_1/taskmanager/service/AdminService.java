@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.cpt202_1.taskmanager.dto.request.ContributorDecisionRequest;
 import com.cpt202_1.taskmanager.dto.request.CreateCategoryRequest;
 import com.cpt202_1.taskmanager.dto.request.CreateTagRequest;
 import com.cpt202_1.taskmanager.dto.response.ResourceDetail;
@@ -64,6 +65,31 @@ public class AdminService {
 
         contributor.setRole(UserRole.CONTRIBUTOR);
         contributor.setContributorApproved(true);
+        contributor.setContributorRejectionReason(null);
+        userRepository.save(contributor);
+        return viewMapper.toUserSummary(contributor);
+    }
+
+    public UserSummary rejectContributor(Long actorId, Long contributorId, ContributorDecisionRequest request) {
+        User actor = accessControlService.getUserOrThrow(actorId);
+        accessControlService.requireRole(actor, UserRole.ADMIN_REVIEWER);
+
+        User contributor = accessControlService.getUserOrThrow(contributorId);
+        if (!StringUtils.hasText(contributor.getContributorApplication()) || contributor.getContributorRequestedAt() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Target user has not submitted a contributor application");
+        }
+        if (contributor.isContributorApproved()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Approved contributor applications cannot be rejected");
+        }
+        if (request == null || !StringUtils.hasText(request.reason())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Rejection reason is required");
+        }
+
+        contributor.setRole(UserRole.REGISTERED_VIEWER);
+        contributor.setContributorApproved(false);
+        contributor.setContributorApplication(null);
+        contributor.setContributorRequestedAt(null);
+        contributor.setContributorRejectionReason(request.reason().trim());
         userRepository.save(contributor);
         return viewMapper.toUserSummary(contributor);
     }

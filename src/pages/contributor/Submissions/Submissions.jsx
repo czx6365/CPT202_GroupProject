@@ -38,12 +38,11 @@ function Submissions() {
 
       try {
         const result = await fetchMyResources(token);
-        const allResources =
-          Array.isArray(result) && result.length > 0 ? result : getMockContributorResources();
+        const allResources = Array.isArray(result) ? result : [];
         setResources(allResources.filter((item) => item.status !== "DRAFT"));
       } catch (error) {
-        setResources(getMockContributorResources().filter((item) => item.status !== "DRAFT"));
-        setErrorMessage(error.message || "Showing demo submissions while contributor data is unavailable.");
+        setResources([]);
+        setErrorMessage(error.message || "Unable to load your live submissions right now.");
       } finally {
         setIsLoading(false);
       }

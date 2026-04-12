@@ -353,7 +353,7 @@ public class PlatformService {
         ResourceEntry entry = new ResourceEntry();
         entry.setContributor(actor);
         entry.setStatus(ResourceStatus.DRAFT);
-        fillResourceFields(entry, request);
+        fillDraftFields(entry, request);
 
         return toResourceDetail(resourceEntryRepository.save(entry));
     }
@@ -370,7 +370,7 @@ public class PlatformService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Only draft/rejected resources can be edited");
         }
 
-        fillResourceFields(entry, request);
+        fillDraftFields(entry, request);
         return toResourceDetail(resourceEntryRepository.save(entry));
     }
 
@@ -390,6 +390,7 @@ public class PlatformService {
         if (entry.getStatus() != ResourceStatus.DRAFT && entry.getStatus() != ResourceStatus.REJECTED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Only draft/rejected resources can be submitted");
         }
+        validateReadyForReview(entry);
 
         entry.setStatus(ResourceStatus.PENDING_REVIEW);
         entry.setReviewer(null);
@@ -412,6 +413,7 @@ public class PlatformService {
         if (entry.getStatus() != ResourceStatus.REJECTED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Only rejected resources can be resubmitted");
         }
+        validateReadyForReview(entry);
 
         entry.setStatus(ResourceStatus.PENDING_REVIEW);
         entry.setReviewer(null);
@@ -694,24 +696,44 @@ public class PlatformService {
     /**
      * 资源公共字段填充与必填校验（创建/编辑复用）。
      */
-    private void fillResourceFields(ResourceEntry entry, ResourceUpsertRequest request) {
-        if (request == null || !StringUtils.hasText(request.title()) || !StringUtils.hasText(request.topic())
-                || !StringUtils.hasText(request.placeName()) || !StringUtils.hasText(request.description())
-                || !StringUtils.hasText(request.copyrightDeclaration())) {
-            throw new ApiException(
-                    HttpStatus.BAD_REQUEST,
-                    "title/topic/placeName/description/copyrightDeclaration are required");
+    private void fillDraftFields(ResourceEntry entry, ResourceUpsertRequest request) {
+        if (request == null || !StringUtils.hasText(request.title())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "title is required");
         }
 
         entry.setTitle(request.title().trim());
-        entry.setTopic(request.topic().trim());
-        entry.setPlaceName(request.placeName().trim());
-        entry.setDescription(request.description().trim());
-        entry.setFileUrl(request.fileUrl());
-        entry.setExternalLink(request.externalLink());
-        entry.setCopyrightDeclaration(request.copyrightDeclaration().trim());
-        entry.setCategory(getCategoryOrThrow(request.categoryId()));
+        entry.setTopic(normalizeText(request.topic()));
+        entry.setPlaceName(normalizeText(request.placeName()));
+        entry.setDescription(normalizeText(request.description()));
+        entry.setFileUrl(normalizeText(request.fileUrl()));
+        entry.setExternalLink(normalizeText(request.externalLink()));
+        entry.setCopyrightDeclaration(normalizeText(request.copyrightDeclaration()));
+        entry.setCategory(request.categoryId() == null ? null : getCategoryOrThrow(request.categoryId()));
         entry.setTags(resolveTags(request.tags()));
+    }
+
+    private void validateReadyForReview(ResourceEntry entry) {
+        if (!StringUtils.hasText(entry.getTitle())
+                || !StringUtils.hasText(entry.getTopic())
+                || !StringUtils.hasText(entry.getPlaceName())
+                || !StringUtils.hasText(entry.getDescription())
+                || !StringUtils.hasText(entry.getCopyrightDeclaration())) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "title/topic/placeName/description/copyrightDeclaration are required before submission");
+        }
+        if (entry.getCategory() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "categoryId is required before submission");
+        }
+        if (!StringUtils.hasText(entry.getFileUrl()) && !StringUtils.hasText(entry.getExternalLink())) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "Provide at least one media reference before submission");
+        }
+    }
+
+    private String normalizeText(String value) {
+        return StringUtils.hasText(value) ? value.trim() : null;
     }
 
     /**
@@ -772,7 +794,8 @@ public class PlatformService {
                 user.getRole(),
                 user.isContributorApproved(),
                 user.getContributorApplication(),
-                user.getContributorRequestedAt());
+                user.getContributorRequestedAt(),
+                user.getContributorRejectionReason());
     }
 
     /**
@@ -783,13 +806,16 @@ public class PlatformService {
                 entry.getResourceId(),
                 entry.getTitle(),
                 entry.getTopic(),
+                entry.getDescription(),
                 entry.getPlaceName(),
                 entry.getStatus(),
+                entry.getReviewerFeedback(),
                 entry.getContributor().getUserId(),
                 entry.getContributor().getUserName(),
-                entry.getCategory().getCategoryId(),
-                entry.getCategory().getName(),
+                entry.getCategory() == null ? null : entry.getCategory().getCategoryId(),
+                entry.getCategory() == null ? null : entry.getCategory().getName(),
                 entry.getTags().stream().map(Tag::getName).collect(Collectors.toCollection(HashSet::new)),
+                entry.getCreatedAt(),
                 entry.getUpdatedAt());
     }
 
@@ -810,8 +836,8 @@ public class PlatformService {
                 entry.getReviewerFeedback(),
                 entry.getContributor().getUserId(),
                 entry.getContributor().getUserName(),
-                entry.getCategory().getCategoryId(),
-                entry.getCategory().getName(),
+                entry.getCategory() == null ? null : entry.getCategory().getCategoryId(),
+                entry.getCategory() == null ? null : entry.getCategory().getName(),
                 entry.getTags().stream().map(Tag::getName).collect(Collectors.toCollection(HashSet::new)),
                 entry.getCreatedAt(),
                 entry.getUpdatedAt(),

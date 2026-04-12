@@ -57,6 +57,7 @@ public class AccountService {
         user.setEmail(email);
         user.setRole(UserRole.REGISTERED_VIEWER);
         user.setContributorApproved(false);
+        user.setContributorRejectionReason(null);
         userRepository.save(user);
 
         return viewMapper.toUserSummary(user);
@@ -147,6 +148,7 @@ public class AccountService {
         user.setContributorApproved(false);
         user.setContributorApplication(applicationText.trim());
         user.setContributorRequestedAt(LocalDateTime.now());
+        user.setContributorRejectionReason(null);
         return viewMapper.toUserSummary(userRepository.save(user));
     }
 

@@ -96,11 +96,24 @@
   border: 1px solid rgba(231, 225, 216, 0.86);
   background: rgba(255, 255, 255, 0.98);
   box-shadow: 0 16px 36px rgba(47, 62, 47, 0.08);
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.approval-card:hover {
+  border-color: rgba(200, 169, 106, 0.42);
+  box-shadow: 0 20px 40px rgba(47, 62, 47, 0.12);
+  transform: translateY(-2px);
 }
 
 .approval-card--active {
   border-color: rgba(200, 169, 106, 0.58);
   box-shadow: 0 20px 42px rgba(47, 62, 47, 0.12);
+}
+
+.approval-card:focus-visible {
+  outline: 3px solid rgba(200, 169, 106, 0.32);
+  outline-offset: 4px;
 }
 
 .approval-card__content {
@@ -173,17 +186,6 @@
 
 .approval-card__fact strong {
   color: var(--hh-primary);
-}
-
-.approval-card__footer {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-
-.approval-card__secondary {
-  min-width: 130px;
 }
 
 .approval-detail {

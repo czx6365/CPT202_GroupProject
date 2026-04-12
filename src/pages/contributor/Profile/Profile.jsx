@@ -26,10 +26,10 @@ function Profile() {
 
       try {
         const result = await fetchMyResources(token);
-        setResources(Array.isArray(result) && result.length > 0 ? result : getMockContributorResources());
+        setResources(Array.isArray(result) ? result : []);
       } catch (error) {
-        setResources(getMockContributorResources());
-        setErrorMessage(error.message || "Showing demo contributor activity while profile data is unavailable.");
+        setResources([]);
+        setErrorMessage(error.message || "Unable to load your live contributor activity right now.");
       } finally {
         setIsLoading(false);
       }

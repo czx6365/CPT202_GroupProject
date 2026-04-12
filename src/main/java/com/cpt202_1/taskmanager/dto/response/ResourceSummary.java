@@ -9,12 +9,15 @@ public record ResourceSummary(
         Long resourceId,
         String title,
         String topic,
+        String description,
         String placeName,
         ResourceStatus status,
+        String reviewerFeedback,
         Long contributorId,
         String contributorName,
         Long categoryId,
         String categoryName,
         Set<String> tags,
+        LocalDateTime createdAt,
         LocalDateTime updatedAt) {
 }

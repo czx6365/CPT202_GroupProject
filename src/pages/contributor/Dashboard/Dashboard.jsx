@@ -44,11 +44,10 @@ function Dashboard() {
 
       try {
         const result = await fetchMyResources(token);
-        const resolved = Array.isArray(result) && result.length > 0 ? result : getMockContributorResources();
-        setResources(resolved);
+        setResources(Array.isArray(result) ? result : []);
       } catch (error) {
-        setResources(getMockContributorResources());
-        setErrorMessage(error.message || "Showing demo contributor resources while the workspace data is unavailable.");
+        setResources([]);
+        setErrorMessage(error.message || "Unable to load your live contributor workspace right now.");
       }
     };
 

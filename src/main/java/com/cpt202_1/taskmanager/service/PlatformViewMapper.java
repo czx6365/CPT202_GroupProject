@@ -24,7 +24,8 @@ public class PlatformViewMapper {
                 user.getRole(),
                 user.isContributorApproved(),
                 user.getContributorApplication(),
-                user.getContributorRequestedAt());
+                user.getContributorRequestedAt(),
+                user.getContributorRejectionReason());
     }
 
     public ResourceSummary toResourceSummary(ResourceEntry entry) {
@@ -32,13 +33,16 @@ public class PlatformViewMapper {
                 entry.getResourceId(),
                 entry.getTitle(),
                 entry.getTopic(),
+                entry.getDescription(),
                 entry.getPlaceName(),
                 entry.getStatus(),
+                entry.getReviewerFeedback(),
                 entry.getContributor().getUserId(),
                 entry.getContributor().getUserName(),
-                entry.getCategory().getCategoryId(),
-                entry.getCategory().getName(),
+                entry.getCategory() == null ? null : entry.getCategory().getCategoryId(),
+                entry.getCategory() == null ? null : entry.getCategory().getName(),
                 entry.getTags().stream().map(Tag::getName).collect(Collectors.toCollection(HashSet::new)),
+                entry.getCreatedAt(),
                 entry.getUpdatedAt());
     }
 
@@ -56,8 +60,8 @@ public class PlatformViewMapper {
                 entry.getReviewerFeedback(),
                 entry.getContributor().getUserId(),
                 entry.getContributor().getUserName(),
-                entry.getCategory().getCategoryId(),
-                entry.getCategory().getName(),
+                entry.getCategory() == null ? null : entry.getCategory().getCategoryId(),
+                entry.getCategory() == null ? null : entry.getCategory().getName(),
                 entry.getTags().stream().map(Tag::getName).collect(Collectors.toCollection(HashSet::new)),
                 entry.getCreatedAt(),
                 entry.getUpdatedAt(),

@@ -45,6 +45,9 @@ public class User {
     @Column(name = "contributor_requested_at")
     private LocalDateTime contributorRequestedAt;
 
+    @Column(name = "contributor_rejection_reason", length = 2000)
+    private String contributorRejectionReason;
+
     @Column(nullable = false)
     private boolean enabled = true;
 
@@ -148,6 +151,14 @@ public class User {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public String getContributorRejectionReason() {
+        return contributorRejectionReason;
+    }
+
+    public void setContributorRejectionReason(String contributorRejectionReason) {
+        this.contributorRejectionReason = contributorRejectionReason;
     }
 
     public LocalDateTime getCreatedAt() {

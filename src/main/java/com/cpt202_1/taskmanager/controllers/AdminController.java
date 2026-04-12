@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cpt202_1.taskmanager.dto.request.ContributorDecisionRequest;
 import com.cpt202_1.taskmanager.dto.request.CreateCategoryRequest;
 import com.cpt202_1.taskmanager.dto.request.CreateTagRequest;
 import com.cpt202_1.taskmanager.dto.response.PageResult;
@@ -52,6 +53,14 @@ public class AdminController {
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @PathVariable Long userId) {
         return adminService.approveContributor(currentUser.getUserId(), userId);
+    }
+
+    @PutMapping("/contributors/{userId}/reject")
+    public UserSummary rejectContributor(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @PathVariable Long userId,
+            @RequestBody ContributorDecisionRequest request) {
+        return adminService.rejectContributor(currentUser.getUserId(), userId, request);
     }
 
     @GetMapping("/contributors/pending")

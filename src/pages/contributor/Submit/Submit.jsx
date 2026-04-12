@@ -88,9 +88,9 @@ function Submit() {
         const matched = (Array.isArray(myResources) ? myResources : []).find(
           (resource) => String(resource.resourceId) === String(id)
         );
-        setEditingResource(matched || getMockContributorResourceById(id));
+        setEditingResource(matched || null);
       } catch {
-        setEditingResource(getMockContributorResourceById(id));
+        setEditingResource(null);
       }
     };
 

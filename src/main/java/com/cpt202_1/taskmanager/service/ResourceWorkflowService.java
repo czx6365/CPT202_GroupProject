@@ -50,7 +50,7 @@ public class ResourceWorkflowService {
         ResourceEntry entry = new ResourceEntry();
         entry.setContributor(actor);
         entry.setStatus(ResourceStatus.DRAFT);
-        fillResourceFields(entry, request);
+        fillDraftFields(entry, request);
 
         return viewMapper.toResourceDetail(resourceEntryRepository.save(entry));
     }
@@ -64,8 +64,22 @@ public class ResourceWorkflowService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Only draft/rejected resources can be edited");
         }
 
-        fillResourceFields(entry, request);
+        fillDraftFields(entry, request);
         return viewMapper.toResourceDetail(resourceEntryRepository.save(entry));
+    }
+
+    @Transactional(readOnly = true)
+    public ResourceDetail getResourceDetail(Long actorId, Long resourceId) {
+        User actor = accessControlService.getUserOrThrow(actorId);
+        ResourceEntry entry = accessControlService.getResourceOrThrow(resourceId);
+
+        boolean isOwner = entry.getContributor().getUserId().equals(actor.getUserId());
+        boolean isAdmin = actor.getRole() == UserRole.ADMIN_REVIEWER;
+        if (!isOwner && !isAdmin) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "You are not allowed to view this resource");
+        }
+
+        return viewMapper.toResourceDetail(entry);
     }
 
     public ResourceDetail submitForReview(Long actorId, Long resourceId) {
@@ -80,6 +94,7 @@ public class ResourceWorkflowService {
         if (entry.getStatus() != ResourceStatus.DRAFT && entry.getStatus() != ResourceStatus.REJECTED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Only draft/rejected resources can be submitted");
         }
+        validateReadyForReview(entry);
 
         entry.setStatus(ResourceStatus.PENDING_REVIEW);
         entry.setReviewer(null);
@@ -100,6 +115,7 @@ public class ResourceWorkflowService {
         if (entry.getStatus() != ResourceStatus.REJECTED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Only rejected resources can be resubmitted");
         }
+        validateReadyForReview(entry);
 
         entry.setStatus(ResourceStatus.PENDING_REVIEW);
         entry.setReviewer(null);
@@ -119,10 +135,13 @@ public class ResourceWorkflowService {
         if (request == null || request.decision() == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Review decision is required");
         }
+        if (request.decision() == ReviewDecision.REJECT && !StringUtils.hasText(request.feedback())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Feedback is required when rejecting a resource");
+        }
 
         entry.setReviewer(actor);
         entry.setReviewedAt(LocalDateTime.now());
-        entry.setReviewerFeedback(request.feedback());
+        entry.setReviewerFeedback(StringUtils.hasText(request.feedback()) ? request.feedback().trim() : null);
 
         if (request.decision() == ReviewDecision.APPROVE) {
             entry.setStatus(ResourceStatus.APPROVED);
@@ -144,24 +163,44 @@ public class ResourceWorkflowService {
                 .toList();
     }
 
-    private void fillResourceFields(ResourceEntry entry, ResourceUpsertRequest request) {
-        if (request == null || !StringUtils.hasText(request.title()) || !StringUtils.hasText(request.topic())
-                || !StringUtils.hasText(request.placeName()) || !StringUtils.hasText(request.description())
-                || !StringUtils.hasText(request.copyrightDeclaration())) {
-            throw new ApiException(
-                    HttpStatus.BAD_REQUEST,
-                    "title/topic/placeName/description/copyrightDeclaration are required");
+    private void fillDraftFields(ResourceEntry entry, ResourceUpsertRequest request) {
+        if (request == null || !StringUtils.hasText(request.title())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "title is required");
         }
 
         entry.setTitle(request.title().trim());
-        entry.setTopic(request.topic().trim());
-        entry.setPlaceName(request.placeName().trim());
-        entry.setDescription(request.description().trim());
-        entry.setFileUrl(request.fileUrl());
-        entry.setExternalLink(request.externalLink());
-        entry.setCopyrightDeclaration(request.copyrightDeclaration().trim());
-        entry.setCategory(accessControlService.getCategoryOrThrow(request.categoryId()));
+        entry.setTopic(normalizeText(request.topic()));
+        entry.setPlaceName(normalizeText(request.placeName()));
+        entry.setDescription(normalizeText(request.description()));
+        entry.setFileUrl(normalizeText(request.fileUrl()));
+        entry.setExternalLink(normalizeText(request.externalLink()));
+        entry.setCopyrightDeclaration(normalizeText(request.copyrightDeclaration()));
+        entry.setCategory(request.categoryId() == null ? null : accessControlService.getCategoryOrThrow(request.categoryId()));
         entry.setTags(resolveTags(request.tags()));
+    }
+
+    private void validateReadyForReview(ResourceEntry entry) {
+        if (!StringUtils.hasText(entry.getTitle())
+                || !StringUtils.hasText(entry.getTopic())
+                || !StringUtils.hasText(entry.getPlaceName())
+                || !StringUtils.hasText(entry.getDescription())
+                || !StringUtils.hasText(entry.getCopyrightDeclaration())) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "title/topic/placeName/description/copyrightDeclaration are required before submission");
+        }
+        if (entry.getCategory() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "categoryId is required before submission");
+        }
+        if (!StringUtils.hasText(entry.getFileUrl()) && !StringUtils.hasText(entry.getExternalLink())) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "Provide at least one media reference before submission");
+        }
+    }
+
+    private String normalizeText(String value) {
+        return StringUtils.hasText(value) ? value.trim() : null;
     }
 
     private Set<Tag> resolveTags(Set<String> names) {
