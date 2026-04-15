@@ -116,3 +116,61 @@ export async function fetchCategories() {
 export async function fetchTags() {
   return request("/api/admin/tags");
 }
+
+export async function createCategory(payload, token) {
+  return request("/api/admin/categories", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateCategory(categoryId, payload, token) {
+  return request(`/api/admin/categories/${categoryId}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteCategory(categoryId, token) {
+  return request(`/api/admin/categories/${categoryId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function createTag(payload, token) {
+  return request("/api/admin/tags", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateTag(tagId, payload, token) {
+  return request(`/api/admin/tags/${tagId}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteTag(tagId, token) {
+  return request(`/api/admin/tags/${tagId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}

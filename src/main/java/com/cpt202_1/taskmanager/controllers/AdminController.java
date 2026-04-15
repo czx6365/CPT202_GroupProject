@@ -15,12 +15,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cpt202_1.taskmanager.dto.request.ContributorDecisionRequest;
 import com.cpt202_1.taskmanager.dto.request.CreateCategoryRequest;
 import com.cpt202_1.taskmanager.dto.request.CreateTagRequest;
+import com.cpt202_1.taskmanager.dto.response.CategoryView;
 import com.cpt202_1.taskmanager.dto.response.PageResult;
 import com.cpt202_1.taskmanager.dto.response.ResourceDetail;
 import com.cpt202_1.taskmanager.dto.response.ResourceSummary;
+import com.cpt202_1.taskmanager.dto.response.TagView;
 import com.cpt202_1.taskmanager.dto.response.UserSummary;
 import com.cpt202_1.taskmanager.pojo.Category;
-import com.cpt202_1.taskmanager.pojo.Tag;
 import com.cpt202_1.taskmanager.pojo.enums.ResourceStatus;
 import com.cpt202_1.taskmanager.security.AuthenticatedUser;
 import com.cpt202_1.taskmanager.service.AdminService;
@@ -75,20 +76,50 @@ public class AdminController {
         return adminService.createCategory(currentUser.getUserId(), request);
     }
 
+    @PutMapping("/categories/{categoryId}")
+    public Category updateCategory(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @PathVariable Long categoryId,
+            @RequestBody CreateCategoryRequest request) {
+        return adminService.updateCategory(currentUser.getUserId(), categoryId, request);
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/categories/{categoryId}")
+    public void deleteCategory(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @PathVariable Long categoryId) {
+        adminService.deleteCategory(currentUser.getUserId(), categoryId);
+    }
+
     @GetMapping("/categories")
-    public List<Category> listCategories() {
+    public List<CategoryView> listCategories() {
         return adminService.listCategories();
     }
 
     @PostMapping("/tags")
-    public Tag createTag(
+    public TagView createTag(
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @RequestBody CreateTagRequest request) {
         return adminService.createTag(currentUser.getUserId(), request);
     }
 
+    @PutMapping("/tags/{tagId}")
+    public TagView updateTag(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @PathVariable Long tagId,
+            @RequestBody CreateTagRequest request) {
+        return adminService.updateTag(currentUser.getUserId(), tagId, request);
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/tags/{tagId}")
+    public void deleteTag(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @PathVariable Long tagId) {
+        adminService.deleteTag(currentUser.getUserId(), tagId);
+    }
+
     @GetMapping("/tags")
-    public List<Tag> listTags() {
+    public List<TagView> listTags() {
         return adminService.listTags();
     }
 

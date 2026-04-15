@@ -9,4 +9,8 @@ import com.cpt202_1.taskmanager.pojo.ResourceEntry;
 
 public interface ResourceEntryRepository extends JpaRepository<ResourceEntry, Long>, JpaSpecificationExecutor<ResourceEntry> {
     List<ResourceEntry> findByContributorUserIdOrderByUpdatedAtDesc(Long contributorId);
+
+    long countByCategoryCategoryId(Long categoryId);
+
+    long countByTagsTagId(Long tagId);
 }

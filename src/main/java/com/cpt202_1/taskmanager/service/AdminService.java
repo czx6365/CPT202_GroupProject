@@ -12,7 +12,9 @@ import org.springframework.util.StringUtils;
 import com.cpt202_1.taskmanager.dto.request.ContributorDecisionRequest;
 import com.cpt202_1.taskmanager.dto.request.CreateCategoryRequest;
 import com.cpt202_1.taskmanager.dto.request.CreateTagRequest;
+import com.cpt202_1.taskmanager.dto.response.CategoryView;
 import com.cpt202_1.taskmanager.dto.response.ResourceDetail;
+import com.cpt202_1.taskmanager.dto.response.TagView;
 import com.cpt202_1.taskmanager.dto.response.UserSummary;
 import com.cpt202_1.taskmanager.exception.ApiException;
 import com.cpt202_1.taskmanager.pojo.Category;
@@ -110,12 +112,55 @@ public class AdminService {
         return categoryRepository.save(category);
     }
 
-    @Transactional(readOnly = true)
-    public List<Category> listCategories() {
-        return categoryRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
+    public Category updateCategory(Long actorId, Long categoryId, CreateCategoryRequest request) {
+        User actor = accessControlService.getUserOrThrow(actorId);
+        accessControlService.requireRole(actor, UserRole.ADMIN_REVIEWER);
+        if (request == null || !StringUtils.hasText(request.name())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Category name is required");
+        }
+
+        Category category = accessControlService.getCategoryOrThrow(categoryId);
+        String nextName = request.name().trim();
+        categoryRepository.findByNameIgnoreCase(nextName)
+                .filter(existing -> !existing.getCategoryId().equals(categoryId))
+                .ifPresent(existing -> {
+                    throw new ApiException(HttpStatus.CONFLICT, "Category already exists");
+                });
+
+        category.setName(nextName);
+        category.setDescription(StringUtils.hasText(request.description()) ? request.description().trim() : null);
+        return categoryRepository.save(category);
     }
 
-    public Tag createTag(Long actorId, CreateTagRequest request) {
+    public void deleteCategory(Long actorId, Long categoryId) {
+        User actor = accessControlService.getUserOrThrow(actorId);
+        accessControlService.requireRole(actor, UserRole.ADMIN_REVIEWER);
+
+        Category category = accessControlService.getCategoryOrThrow(categoryId);
+        long usageCount = resourceEntryRepository.countByCategoryCategoryId(categoryId);
+        if (usageCount > 0) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Category is in use and cannot be deleted");
+        }
+
+        categoryRepository.delete(category);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CategoryView> listCategories() {
+        return categoryRepository.findAll(Sort.by(Sort.Direction.ASC, "name")).stream()
+                .map(category -> {
+                    long usageCount = resourceEntryRepository.countByCategoryCategoryId(category.getCategoryId());
+                    return new CategoryView(
+                            category.getCategoryId(),
+                            category.getName(),
+                            category.getDescription(),
+                            usageCount,
+                            usageCount > 0);
+                })
+                .toList();
+    }
+
+    public TagView createTag(Long actorId, CreateTagRequest request) {
         User actor = accessControlService.getUserOrThrow(actorId);
         accessControlService.requireRole(actor, UserRole.ADMIN_REVIEWER);
         if (request == null || !StringUtils.hasText(request.name())) {
@@ -127,13 +172,54 @@ public class AdminService {
             throw new ApiException(HttpStatus.CONFLICT, "Tag already exists");
         }
 
-        Tag tag = new Tag(name);
-        return tagRepository.save(tag);
+        Tag tag = tagRepository.save(new Tag(name));
+        return new TagView(tag.getTagId(), tag.getName(), 0, false);
+    }
+
+    public TagView updateTag(Long actorId, Long tagId, CreateTagRequest request) {
+        User actor = accessControlService.getUserOrThrow(actorId);
+        accessControlService.requireRole(actor, UserRole.ADMIN_REVIEWER);
+        if (request == null || !StringUtils.hasText(request.name())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Tag name is required");
+        }
+
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Tag not found: " + tagId));
+        String nextName = request.name().trim();
+        tagRepository.findByNameIgnoreCase(nextName)
+                .filter(existing -> !existing.getTagId().equals(tagId))
+                .ifPresent(existing -> {
+                    throw new ApiException(HttpStatus.CONFLICT, "Tag already exists");
+                });
+
+        tag.setName(nextName);
+        Tag saved = tagRepository.save(tag);
+        long usageCount = resourceEntryRepository.countByTagsTagId(saved.getTagId());
+        return new TagView(saved.getTagId(), saved.getName(), usageCount, usageCount > 0);
+    }
+
+    public void deleteTag(Long actorId, Long tagId) {
+        User actor = accessControlService.getUserOrThrow(actorId);
+        accessControlService.requireRole(actor, UserRole.ADMIN_REVIEWER);
+
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Tag not found: " + tagId));
+        long usageCount = resourceEntryRepository.countByTagsTagId(tagId);
+        if (usageCount > 0) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Tag is in use and cannot be deleted");
+        }
+
+        tagRepository.delete(tag);
     }
 
     @Transactional(readOnly = true)
-    public List<Tag> listTags() {
-        return tagRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
+    public List<TagView> listTags() {
+        return tagRepository.findAll(Sort.by(Sort.Direction.ASC, "name")).stream()
+                .map(tag -> {
+                    long usageCount = resourceEntryRepository.countByTagsTagId(tag.getTagId());
+                    return new TagView(tag.getTagId(), tag.getName(), usageCount, usageCount > 0);
+                })
+                .toList();
     }
 
     @Transactional(readOnly = true)

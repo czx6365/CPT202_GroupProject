@@ -3,6 +3,27 @@
   gap: 16px;
 }
 
+.master-feedback-message {
+  margin: 0;
+  padding: 14px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(231, 225, 216, 0.86);
+  background: rgba(255, 255, 255, 0.95);
+  color: #5f574d;
+}
+
+.master-feedback-message--success {
+  border-color: rgba(93, 140, 96, 0.25);
+  background: rgba(239, 249, 240, 0.96);
+  color: #355b38;
+}
+
+.master-feedback-message--error {
+  border-color: rgba(191, 109, 82, 0.22);
+  background: rgba(253, 242, 239, 0.96);
+  color: #8f4d39;
+}
+
 .master-toolbar__filters {
   display: grid;
   grid-template-columns: 1.8fr 1fr auto;
@@ -65,6 +86,23 @@
 .master-list {
   display: grid;
   gap: 18px;
+}
+
+.master-empty-state {
+  padding: 22px;
+  border-radius: 22px;
+  border: 1px dashed rgba(189, 180, 166, 0.7);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.master-empty-state h3,
+.master-empty-state p {
+  margin: 0;
+}
+
+.master-empty-state p {
+  margin-top: 10px;
+  color: #6b645a;
 }
 
 .master-record {
