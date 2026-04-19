@@ -109,6 +109,62 @@ export async function submitReviewDecision(resourceId, payload, token) {
   });
 }
 
+export async function fetchPublishedResources(params = {}, token) {
+  const query = buildQuery({
+    keyword: params.keyword,
+    categoryId: params.categoryId,
+    place: params.place,
+    tag: params.tag,
+    page: params.page ?? 0,
+    size: params.size ?? 100,
+    sortBy: params.sortBy ?? "updatedTime",
+    sortDir: params.sortDir ?? "desc",
+  });
+
+  return request(`/api/admin/resources/published${query}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function archiveResource(resourceId, token) {
+  return request(`/api/admin/resources/${resourceId}/archive`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function fetchArchivedResources(params = {}, token) {
+  const query = buildQuery({
+    keyword: params.keyword,
+    categoryId: params.categoryId,
+    place: params.place,
+    tag: params.tag,
+    page: params.page ?? 0,
+    size: params.size ?? 100,
+    sortBy: params.sortBy ?? "updatedTime",
+    sortDir: params.sortDir ?? "desc",
+  });
+
+  return request(`/api/admin/resources/archived${query}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function restoreResource(resourceId, token) {
+  return request(`/api/admin/resources/${resourceId}/restore`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 export async function fetchCategories() {
   return request("/api/admin/categories");
 }

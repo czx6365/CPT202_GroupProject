@@ -130,6 +130,13 @@ public class AdminController {
         return adminService.archive(currentUser.getUserId(), resourceId);
     }
 
+    @PutMapping("/resources/{resourceId}/restore")
+    public ResourceDetail restore(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @PathVariable Long resourceId) {
+        return adminService.restore(currentUser.getUserId(), resourceId);
+    }
+
     @GetMapping("/resources/pending")
     public PageResult<ResourceSummary> listPendingResources(
             @AuthenticationPrincipal AuthenticatedUser currentUser,
@@ -149,6 +156,54 @@ public class AdminController {
                 place,
                 tag,
                 status,
+                page,
+                size,
+                sortBy,
+                sortDir);
+    }
+
+    @GetMapping("/resources/published")
+    public PageResult<ResourceSummary> listPublishedResources(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String place,
+            @RequestParam(required = false) String tag,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "updatedTime") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        return resourceCatalogService.listResourcesByStatus(
+                currentUser.getUserId(),
+                keyword,
+                categoryId,
+                place,
+                tag,
+                ResourceStatus.APPROVED,
+                page,
+                size,
+                sortBy,
+                sortDir);
+    }
+
+    @GetMapping("/resources/archived")
+    public PageResult<ResourceSummary> listArchivedResources(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String place,
+            @RequestParam(required = false) String tag,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "updatedTime") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        return resourceCatalogService.listResourcesByStatus(
+                currentUser.getUserId(),
+                keyword,
+                categoryId,
+                place,
+                tag,
+                ResourceStatus.ARCHIVED,
                 page,
                 size,
                 sortBy,

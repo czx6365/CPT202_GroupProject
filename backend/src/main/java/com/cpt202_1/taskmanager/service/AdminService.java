@@ -240,8 +240,28 @@ public class AdminService {
         accessControlService.requireRole(actor, UserRole.ADMIN_REVIEWER);
 
         ResourceEntry entry = accessControlService.getResourceOrThrow(resourceId);
+        if (entry.getStatus() != ResourceStatus.APPROVED) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Only approved resources can be archived");
+        }
         entry.setStatus(ResourceStatus.ARCHIVED);
         entry.setArchivedAt(LocalDateTime.now());
+        return viewMapper.toResourceDetail(resourceEntryRepository.save(entry));
+    }
+
+    public ResourceDetail restore(Long actorId, Long resourceId) {
+        User actor = accessControlService.getUserOrThrow(actorId);
+        accessControlService.requireRole(actor, UserRole.ADMIN_REVIEWER);
+
+        ResourceEntry entry = accessControlService.getResourceOrThrow(resourceId);
+        if (entry.getStatus() != ResourceStatus.ARCHIVED) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Only archived resources can be restored");
+        }
+
+        entry.setStatus(ResourceStatus.APPROVED);
+        entry.setArchivedAt(null);
+        if (entry.getPublishedAt() == null) {
+            entry.setPublishedAt(LocalDateTime.now());
+        }
         return viewMapper.toResourceDetail(resourceEntryRepository.save(entry));
     }
 }

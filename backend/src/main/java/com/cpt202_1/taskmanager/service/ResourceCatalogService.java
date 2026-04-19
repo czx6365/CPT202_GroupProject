@@ -92,6 +92,32 @@ public class ResourceCatalogService {
     }
 
     @Transactional(readOnly = true)
+    public PageResult<ResourceSummary> listResourcesByStatus(
+            Long actorId,
+            String keyword,
+            Long categoryId,
+            String place,
+            String tag,
+            ResourceStatus status,
+            int page,
+            int size,
+            String sortBy,
+            String sortDir) {
+        User actor = accessControlService.getUserOrThrow(actorId);
+        accessControlService.requireRole(actor, UserRole.ADMIN_REVIEWER);
+
+        if (status == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "status is required");
+        }
+
+        Specification<ResourceEntry> specification = buildResourceSpecification(
+                keyword, categoryId, place, tag, status);
+        Pageable pageable = buildResourcePageRequest(page, size, sortBy, sortDir);
+        Page<ResourceEntry> resultPage = resourceEntryRepository.findAll(specification, pageable);
+        return PageResult.from(resultPage, viewMapper::toResourceSummary);
+    }
+
+    @Transactional(readOnly = true)
     public ResourceDetail getApprovedDetail(Long resourceId) {
         ResourceEntry entry = accessControlService.getResourceOrThrow(resourceId);
         if (entry.getStatus() != ResourceStatus.APPROVED) {
@@ -149,9 +175,7 @@ public class ResourceCatalogService {
 
             if (StringUtils.hasText(keyword)) {
                 String normalizedKeyword = "%" + keyword.trim().toLowerCase() + "%";
-                predicates.add(builder.or(
-                        builder.like(builder.lower(root.get("title")), normalizedKeyword),
-                        builder.like(builder.lower(root.get("description")), normalizedKeyword)));
+                predicates.add(builder.like(builder.lower(root.get("title")), normalizedKeyword));
             }
 
             if (categoryId != null) {

@@ -578,9 +578,7 @@ public class PlatformService {
 
             if (StringUtils.hasText(keyword)) {
                 String normalizedKeyword = "%" + keyword.trim().toLowerCase() + "%";
-                predicates.add(builder.or(
-                        builder.like(builder.lower(root.get("title")), normalizedKeyword),
-                        builder.like(builder.lower(root.get("description")), normalizedKeyword)));
+                predicates.add(builder.like(builder.lower(root.get("title")), normalizedKeyword));
             }
 
             if (categoryId != null) {
