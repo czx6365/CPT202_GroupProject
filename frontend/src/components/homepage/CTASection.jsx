@@ -1,9 +1,15 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../Button/Button";
+import { useAuth } from "../../context/AuthContext";
 
 function CTASection() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  const handleBecomeContributor = () => {
+    navigate(isAuthenticated ? "/profile" : "/login");
+  };
 
   return (
     <section className="homepage-section reveal-section">
@@ -17,10 +23,12 @@ function CTASection() {
         </div>
 
         <div className="cta-panel__actions">
-          <Button className="cta-panel__button" onClick={() => navigate("/login")}>
+          <Button className="cta-panel__button" onClick={handleBecomeContributor}>
             Submit Your Heritage
           </Button>
-          <p className="cta-panel__hint">Please login first</p>
+          <p className="cta-panel__hint">
+            {isAuthenticated ? "Continue in your profile to apply as a contributor" : "Please login first"}
+          </p>
         </div>
       </div>
     </section>
