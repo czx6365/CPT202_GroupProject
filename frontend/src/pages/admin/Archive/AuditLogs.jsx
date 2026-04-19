@@ -1,69 +1,107 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Button from "../../../components/Button/Button";
 import Input from "../../../components/Input/Input";
+import { useAuth } from "../../../context/AuthContext";
+import { fetchAuditLogs } from "../../../services/adminService";
 import AdminWorkspace from "../AdminWorkspace";
 import "./AuditLogs.css";
 
-const auditEntries = [
-  {
-    time: "2026-04-09 14:10",
-    operator: "Admin Nancy",
-    module: "Archive",
-    action: "Archived resource",
-    target: "Lantern Festival Route Archive",
-    detail: "Moved a published resource into restricted archive after a rights complaint.",
-    status: "Success",
-  },
-  {
-    time: "2026-04-09 13:42",
-    operator: "Admin Nancy",
-    module: "Master Data",
-    action: "Updated category",
-    target: "Historic Infrastructure",
-    detail: "Refined category description for contributor-side classification clarity.",
-    status: "Success",
-  },
-  {
-    time: "2026-04-09 12:56",
-    operator: "Admin Nancy",
-    module: "Promotion",
-    action: "Approved contributor",
-    target: "Lin Qiao",
-    detail: "Granted contributor access after reviewing profile motivation and content plan.",
-    status: "Success",
-  },
-  {
-    time: "2026-04-09 12:18",
-    operator: "Admin Nancy",
-    module: "Review",
-    action: "Rejected resource",
-    target: "Temple Fair Soundscape Archive",
-    detail: "Returned submission with revision comments for metadata clarification.",
-    status: "Needs Follow-up",
-  },
-  {
-    time: "2026-04-09 11:36",
-    operator: "Admin Review Team",
-    module: "Restore",
-    action: "Restored resource",
-    target: "Harbor Bell Oral Memory Clips",
-    detail: "Returned archived content to the publishing queue after rights verification.",
-    status: "Logged",
-  },
-  {
-    time: "2026-04-09 10:42",
-    operator: "Admin Nancy",
-    module: "Master Data",
-    action: "Created tag",
-    target: "Oral History",
-    detail: "Added a reusable tag for community memory submissions.",
-    status: "Success",
-  },
-];
+function formatDateTime(value) {
+  if (!value) return "-";
 
-const selectedEntry = auditEntries[0];
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+}
 
 function AuditLogs() {
+  const { token, isAuthenticated, user } = useAuth();
+  const [auditEntries, setAuditEntries] = useState([]);
+  const [selectedEntryId, setSelectedEntryId] = useState(null);
+  const [keywordInput, setKeywordInput] = useState("");
+  const [appliedKeyword, setAppliedKeyword] = useState("");
+  const [moduleFilter, setModuleFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const isAdmin = user?.role === "ADMIN_REVIEWER";
+  const showAuthError = !isAuthenticated || !token;
+  const showRoleError = isAuthenticated && Boolean(token) && !isAdmin;
+
+  useEffect(() => {
+    const loadAuditLogs = async () => {
+      if (!token) {
+        setAuditEntries([]);
+        setSelectedEntryId(null);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setErrorMessage("");
+
+      try {
+        const result = await fetchAuditLogs(
+          {
+            keyword: appliedKeyword,
+            module: moduleFilter || undefined,
+            status: statusFilter || undefined,
+          },
+          token
+        );
+        const entries = Array.isArray(result) ? result : [];
+        setAuditEntries(entries);
+        setSelectedEntryId((previous) => (
+          entries.some((entry) => entry.id === previous) ? previous : (entries[0]?.id || null)
+        ));
+      } catch (error) {
+        setAuditEntries([]);
+        setSelectedEntryId(null);
+        setErrorMessage(error.message || "Unable to load audit logs.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (showAuthError || showRoleError) {
+      setAuditEntries([]);
+      setSelectedEntryId(null);
+      setIsLoading(false);
+      return;
+    }
+
+    loadAuditLogs();
+  }, [appliedKeyword, moduleFilter, statusFilter, token, showAuthError, showRoleError]);
+
+  const selectedEntry = useMemo(
+    () => auditEntries.find((entry) => entry.id === selectedEntryId) || auditEntries[0] || null,
+    [auditEntries, selectedEntryId]
+  );
+
+  const summary = useMemo(() => ({
+    total: auditEntries.length,
+    archiveFlow: auditEntries.filter((entry) => entry.module === "Archive" || entry.module === "Restore").length,
+    reviewActions: auditEntries.filter((entry) => entry.module === "Review").length,
+    taxonomyUpdates: auditEntries.filter((entry) => entry.module === "Master Categories" || entry.module === "Master Tags").length,
+  }), [auditEntries]);
+
+  const effectiveErrorMessage = showAuthError
+    ? "Please log in with an administrator account to view audit logs."
+    : showRoleError
+    ? "Your account does not have administrator access to view audit logs."
+    : errorMessage;
+
+  const applyFilters = () => {
+    setAppliedKeyword(keywordInput);
+  };
+
+  const resetFilters = () => {
+    setKeywordInput("");
+    setAppliedKeyword("");
+    setModuleFilter("");
+    setStatusFilter("");
+  };
+
   return (
     <AdminWorkspace
       eyebrow="Audit"
@@ -77,21 +115,29 @@ function AuditLogs() {
             id="audit-keyword"
             label="Keyword"
             placeholder="Search target, operator, or action"
-            value=""
-            onChange={() => {}}
+            value={keywordInput}
+            onChange={(event) => setKeywordInput(event.target.value)}
+            disabled={showAuthError || showRoleError}
           />
 
           <div className="input-group">
             <label className="input-group__label" htmlFor="audit-module">
               Module
             </label>
-            <select id="audit-module" className="input-group__field" defaultValue="all">
-              <option value="all">All Modules</option>
-              <option value="archive">Archive</option>
-              <option value="restore">Restore</option>
-              <option value="review">Review</option>
-              <option value="promotion">Promotion</option>
-              <option value="master-data">Master Data</option>
+            <select
+              id="audit-module"
+              className="input-group__field"
+              value={moduleFilter}
+              onChange={(event) => setModuleFilter(event.target.value)}
+              disabled={showAuthError || showRoleError}
+            >
+              <option value="">All Modules</option>
+              <option value="Archive">Archive</option>
+              <option value="Restore">Restore</option>
+              <option value="Review">Review</option>
+              <option value="Promotion">Promotion</option>
+              <option value="Master Categories">Master Categories</option>
+              <option value="Master Tags">Master Tags</option>
             </select>
           </div>
 
@@ -99,43 +145,55 @@ function AuditLogs() {
             <label className="input-group__label" htmlFor="audit-status">
               Status
             </label>
-            <select id="audit-status" className="input-group__field" defaultValue="all">
-              <option value="all">All Statuses</option>
-              <option value="success">Success</option>
-              <option value="logged">Logged</option>
-              <option value="follow-up">Needs Follow-up</option>
+            <select
+              id="audit-status"
+              className="input-group__field"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+              disabled={showAuthError || showRoleError}
+            >
+              <option value="">All Statuses</option>
+              <option value="Success">Success</option>
+              <option value="Rejected">Rejected</option>
+              <option value="Needs Follow-up">Needs Follow-up</option>
             </select>
           </div>
 
           <div className="audit-toolbar__actions">
-            <Button variant="primary">Apply Filters</Button>
-            <Button variant="secondary">Export</Button>
+            <Button variant="primary" onClick={applyFilters} disabled={showAuthError || showRoleError}>Apply Filters</Button>
+            <Button variant="secondary" onClick={resetFilters} disabled={showAuthError || showRoleError}>Reset</Button>
           </div>
         </div>
 
         <div className="audit-toolbar__summary">
           <div className="audit-summary-card">
             <span className="audit-summary-card__label">Events Today</span>
-            <strong className="audit-summary-card__value">18</strong>
-            <p className="audit-summary-card__hint">Administrative actions captured across the current day.</p>
+            <strong className="audit-summary-card__value">{summary.total}</strong>
+            <p className="audit-summary-card__hint">Administrative actions currently returned by the live audit endpoint.</p>
           </div>
           <div className="audit-summary-card">
             <span className="audit-summary-card__label">Archive Flow</span>
-            <strong className="audit-summary-card__value">6</strong>
-            <p className="audit-summary-card__hint">Archive and restore events recorded in the lifecycle workflow.</p>
+            <strong className="audit-summary-card__value">{summary.archiveFlow}</strong>
+            <p className="audit-summary-card__hint">Archive and restore events recorded in the resource lifecycle workflow.</p>
           </div>
           <div className="audit-summary-card">
             <span className="audit-summary-card__label">Review Actions</span>
-            <strong className="audit-summary-card__value">5</strong>
-            <p className="audit-summary-card__hint">Approvals and rejections logged from the moderation queue.</p>
+            <strong className="audit-summary-card__value">{summary.reviewActions}</strong>
+            <p className="audit-summary-card__hint">Approval and rejection decisions captured from the moderation queue.</p>
           </div>
           <div className="audit-summary-card">
             <span className="audit-summary-card__label">Taxonomy Updates</span>
-            <strong className="audit-summary-card__value">3</strong>
+            <strong className="audit-summary-card__value">{summary.taxonomyUpdates}</strong>
             <p className="audit-summary-card__hint">Category and tag changes tracked for later accountability review.</p>
           </div>
         </div>
       </div>
+
+      {effectiveErrorMessage && <p className="review-feedback-message review-feedback-message--error">{effectiveErrorMessage}</p>}
+      {isLoading && <p className="review-feedback-message">Loading audit logs...</p>}
+      {!isLoading && !effectiveErrorMessage && auditEntries.length === 0 && (
+        <p className="review-feedback-message">No audit log entries matched the current filters.</p>
+      )}
 
       <div className="audit-layout">
         <div className="audit-table-wrap">
@@ -151,20 +209,24 @@ function AuditLogs() {
             </thead>
             <tbody>
               {auditEntries.map((entry) => (
-                <tr key={`${entry.time}-${entry.action}-${entry.target}`}>
-                  <td>{entry.time}</td>
+                <tr
+                  key={entry.id}
+                  onClick={() => setSelectedEntryId(entry.id)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <td>{formatDateTime(entry.createdAt)}</td>
                   <td>
-                    <span className="audit-chip">{entry.operator}</span>
+                    <span className="audit-chip">{entry.operatorName}</span>
                   </td>
-                  <td>{entry.module}</td>
+                  <td>{entry.module || "-"}</td>
                   <td>
                     <div className="audit-table__action">
                       <strong>{entry.action}</strong>
-                      <span>{entry.target}</span>
+                      <span>{entry.targetName || "-"}</span>
                     </div>
                   </td>
                   <td>
-                    <span className="audit-chip--status">{entry.status}</span>
+                    <span className="audit-chip--status">{entry.status || "-"}</span>
                   </td>
                 </tr>
               ))}
@@ -172,65 +234,47 @@ function AuditLogs() {
           </table>
         </div>
 
-        <div className="audit-panel">
-          <section className="audit-panel__card">
-            <h3 className="audit-panel__title">Selected Event</h3>
-            <p className="audit-panel__description">
-              This panel summarizes the currently highlighted action and shows the kind of operational context the backend audit service can later persist in detail.
-            </p>
+        {selectedEntry && (
+          <div className="audit-panel">
+            <section className="audit-panel__card">
+              <h3 className="audit-panel__title">Selected Event</h3>
+              <p className="audit-panel__description">
+                This panel summarizes the currently selected admin action using live audit data from the backend.
+              </p>
 
-            <div className="audit-detail-grid">
-              <div className="audit-detail-item">
-                <span className="audit-detail-item__label">Module</span>
-                <p className="audit-detail-item__value">{selectedEntry.module}</p>
+              <div className="audit-detail-grid">
+                <div className="audit-detail-item">
+                  <span className="audit-detail-item__label">Module</span>
+                  <p className="audit-detail-item__value">{selectedEntry.module || "-"}</p>
+                </div>
+                <div className="audit-detail-item">
+                  <span className="audit-detail-item__label">Operator</span>
+                  <p className="audit-detail-item__value">{selectedEntry.operatorName || "-"}</p>
+                </div>
+                <div className="audit-detail-item">
+                  <span className="audit-detail-item__label">Action</span>
+                  <p className="audit-detail-item__value">{selectedEntry.action || "-"}</p>
+                </div>
+                <div className="audit-detail-item">
+                  <span className="audit-detail-item__label">Target</span>
+                  <p className="audit-detail-item__value">{selectedEntry.targetName || "-"}</p>
+                </div>
+                <div className="audit-detail-item">
+                  <span className="audit-detail-item__label">Timestamp</span>
+                  <p className="audit-detail-item__value">{formatDateTime(selectedEntry.createdAt)}</p>
+                </div>
+                <div className="audit-detail-item">
+                  <span className="audit-detail-item__label">Status</span>
+                  <p className="audit-detail-item__value">{selectedEntry.status || "-"}</p>
+                </div>
+                <div className="audit-detail-item audit-detail-item--wide">
+                  <span className="audit-detail-item__label">Detail</span>
+                  <p className="audit-detail-item__text">{selectedEntry.detail || "No additional detail recorded."}</p>
+                </div>
               </div>
-              <div className="audit-detail-item">
-                <span className="audit-detail-item__label">Operator</span>
-                <p className="audit-detail-item__value">{selectedEntry.operator}</p>
-              </div>
-              <div className="audit-detail-item">
-                <span className="audit-detail-item__label">Action</span>
-                <p className="audit-detail-item__value">{selectedEntry.action}</p>
-              </div>
-              <div className="audit-detail-item">
-                <span className="audit-detail-item__label">Target</span>
-                <p className="audit-detail-item__value">{selectedEntry.target}</p>
-              </div>
-              <div className="audit-detail-item">
-                <span className="audit-detail-item__label">Timestamp</span>
-                <p className="audit-detail-item__value">{selectedEntry.time}</p>
-              </div>
-              <div className="audit-detail-item">
-                <span className="audit-detail-item__label">Status</span>
-                <p className="audit-detail-item__value">{selectedEntry.status}</p>
-              </div>
-              <div className="audit-detail-item audit-detail-item--wide">
-                <span className="audit-detail-item__label">Detail</span>
-                <p className="audit-detail-item__text">{selectedEntry.detail}</p>
-              </div>
-            </div>
-          </section>
-
-          <section className="audit-panel__card">
-            <h3 className="audit-panel__title">Coverage Notes</h3>
-            <div className="audit-checklist">
-              <div className="audit-checklist__item">
-                <h4>Cross-Module Visibility</h4>
-                <p>Audit logs should capture archive, restore, review, promotion, and master data actions in one place.</p>
-              </div>
-
-              <div className="audit-checklist__item">
-                <h4>Traceable Operator History</h4>
-                <p>Every event should preserve who performed it, when it happened, and which target record was affected.</p>
-              </div>
-
-              <div className="audit-checklist__item">
-                <h4>Compliance Readiness</h4>
-                <p>Follow-up statuses help the team identify actions that need another review pass or contributor response.</p>
-              </div>
-            </div>
-          </section>
-        </div>
+            </section>
+          </div>
+        )}
       </div>
     </AdminWorkspace>
   );

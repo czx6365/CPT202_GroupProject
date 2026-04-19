@@ -165,6 +165,20 @@ export async function restoreResource(resourceId, token) {
   });
 }
 
+export async function fetchAuditLogs(params = {}, token) {
+  const query = buildQuery({
+    keyword: params.keyword,
+    module: params.module,
+    status: params.status,
+  });
+
+  return request(`/api/admin/audit-logs${query}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 export async function fetchCategories() {
   return request("/api/admin/categories");
 }

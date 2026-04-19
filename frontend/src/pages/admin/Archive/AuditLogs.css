@@ -120,6 +120,22 @@
   line-height: 1.6;
 }
 
+.review-feedback-message {
+  margin: 18px 0 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(231, 225, 216, 0.86);
+  background: rgba(255, 255, 255, 0.96);
+  color: #6b6358;
+  line-height: 1.6;
+}
+
+.review-feedback-message--error {
+  border-color: rgba(181, 95, 77, 0.22);
+  background: rgba(255, 244, 240, 0.96);
+  color: #8c3f33;
+}
+
 .audit-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.8fr);

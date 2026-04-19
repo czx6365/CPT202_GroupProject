@@ -31,16 +31,19 @@ public class ResourceWorkflowService {
     private final ResourceEntryRepository resourceEntryRepository;
     private final TagRepository tagRepository;
     private final PlatformViewMapper viewMapper;
+    private final AuditLogService auditLogService;
 
     public ResourceWorkflowService(
             AccessControlService accessControlService,
             ResourceEntryRepository resourceEntryRepository,
             TagRepository tagRepository,
-            PlatformViewMapper viewMapper) {
+            PlatformViewMapper viewMapper,
+            AuditLogService auditLogService) {
         this.accessControlService = accessControlService;
         this.resourceEntryRepository = resourceEntryRepository;
         this.tagRepository = tagRepository;
         this.viewMapper = viewMapper;
+        this.auditLogService = auditLogService;
     }
 
     public ResourceDetail createDraft(Long actorId, ResourceUpsertRequest request) {
@@ -150,7 +153,17 @@ public class ResourceWorkflowService {
             entry.setStatus(ResourceStatus.REJECTED);
         }
 
-        return viewMapper.toResourceDetail(resourceEntryRepository.save(entry));
+        ResourceEntry saved = resourceEntryRepository.save(entry);
+        auditLogService.log(
+                actor,
+                "Review",
+                request.decision() == ReviewDecision.APPROVE ? "Approved resource" : "Rejected resource",
+                "Resource",
+                saved.getResourceId(),
+                saved.getTitle(),
+                StringUtils.hasText(request.feedback()) ? request.feedback().trim() : "No feedback recorded",
+                request.decision() == ReviewDecision.APPROVE ? "Success" : "Needs Follow-up");
+        return viewMapper.toResourceDetail(saved);
     }
 
     @Transactional(readOnly = true)

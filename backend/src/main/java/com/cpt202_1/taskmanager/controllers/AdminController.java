@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cpt202_1.taskmanager.dto.request.ContributorDecisionRequest;
 import com.cpt202_1.taskmanager.dto.request.CreateCategoryRequest;
 import com.cpt202_1.taskmanager.dto.request.CreateTagRequest;
+import com.cpt202_1.taskmanager.dto.response.AuditLogView;
 import com.cpt202_1.taskmanager.dto.response.CategoryView;
 import com.cpt202_1.taskmanager.dto.response.PageResult;
 import com.cpt202_1.taskmanager.dto.response.ResourceDetail;
@@ -25,6 +26,7 @@ import com.cpt202_1.taskmanager.pojo.Category;
 import com.cpt202_1.taskmanager.pojo.enums.ResourceStatus;
 import com.cpt202_1.taskmanager.security.AuthenticatedUser;
 import com.cpt202_1.taskmanager.service.AdminService;
+import com.cpt202_1.taskmanager.service.AuditLogService;
 import com.cpt202_1.taskmanager.service.ResourceCatalogService;
 
 @RestController//能接收 HTTP 请求
@@ -35,10 +37,15 @@ import com.cpt202_1.taskmanager.service.ResourceCatalogService;
 @RequestMapping("/api/admin")
 public class AdminController {
     private final AdminService adminService;
+    private final AuditLogService auditLogService;
     private final ResourceCatalogService resourceCatalogService;
 
-    public AdminController(AdminService adminService, ResourceCatalogService resourceCatalogService) {
+    public AdminController(
+            AdminService adminService,
+            AuditLogService auditLogService,
+            ResourceCatalogService resourceCatalogService) {
         this.adminService = adminService;
+        this.auditLogService = auditLogService;
         this.resourceCatalogService = resourceCatalogService;
     }
     // 1. approve contributor
@@ -208,5 +215,14 @@ public class AdminController {
                 size,
                 sortBy,
                 sortDir);
+    }
+
+    @GetMapping("/audit-logs")
+    public List<AuditLogView> listAuditLogs(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String module,
+            @RequestParam(required = false) String status) {
+        return auditLogService.listAuditLogs(currentUser.getUserId(), keyword, module, status);
     }
 }

@@ -37,6 +37,7 @@ public class AdminService {
     private final TagRepository tagRepository;
     private final ResourceEntryRepository resourceEntryRepository;
     private final PlatformViewMapper viewMapper;
+    private final AuditLogService auditLogService;
 
     public AdminService(
             AccessControlService accessControlService,
@@ -44,13 +45,15 @@ public class AdminService {
             CategoryRepository categoryRepository,
             TagRepository tagRepository,
             ResourceEntryRepository resourceEntryRepository,
-            PlatformViewMapper viewMapper) {
+            PlatformViewMapper viewMapper,
+            AuditLogService auditLogService) {
         this.accessControlService = accessControlService;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.tagRepository = tagRepository;
         this.resourceEntryRepository = resourceEntryRepository;
         this.viewMapper = viewMapper;
+        this.auditLogService = auditLogService;
     }
 
     public UserSummary approveContributor(Long actorId, Long contributorId) {
@@ -69,6 +72,15 @@ public class AdminService {
         contributor.setContributorApproved(true);
         contributor.setContributorRejectionReason(null);
         userRepository.save(contributor);
+        auditLogService.log(
+                actor,
+                "Promotion",
+                "Approved contributor",
+                "User",
+                contributor.getUserId(),
+                contributor.getUserName(),
+                "Granted contributor access to " + contributor.getUserName(),
+                "Success");
         return viewMapper.toUserSummary(contributor);
     }
 
@@ -93,6 +105,15 @@ public class AdminService {
         contributor.setContributorRequestedAt(null);
         contributor.setContributorRejectionReason(request.reason().trim());
         userRepository.save(contributor);
+        auditLogService.log(
+                actor,
+                "Promotion",
+                "Rejected contributor",
+                "User",
+                contributor.getUserId(),
+                contributor.getUserName(),
+                request.reason().trim(),
+                "Rejected");
         return viewMapper.toUserSummary(contributor);
     }
 
@@ -109,7 +130,17 @@ public class AdminService {
         }
 
         Category category = new Category(name, request.description());
-        return categoryRepository.save(category);
+        Category saved = categoryRepository.save(category);
+        auditLogService.log(
+                actor,
+                "Master Categories",
+                "Created category",
+                "Category",
+                saved.getCategoryId(),
+                saved.getName(),
+                StringUtils.hasText(saved.getDescription()) ? saved.getDescription() : "Created new category",
+                "Success");
+        return saved;
     }
 
     public Category updateCategory(Long actorId, Long categoryId, CreateCategoryRequest request) {
@@ -129,7 +160,17 @@ public class AdminService {
 
         category.setName(nextName);
         category.setDescription(StringUtils.hasText(request.description()) ? request.description().trim() : null);
-        return categoryRepository.save(category);
+        Category saved = categoryRepository.save(category);
+        auditLogService.log(
+                actor,
+                "Master Categories",
+                "Updated category",
+                "Category",
+                saved.getCategoryId(),
+                saved.getName(),
+                StringUtils.hasText(saved.getDescription()) ? saved.getDescription() : "Updated category metadata",
+                "Success");
+        return saved;
     }
 
     public void deleteCategory(Long actorId, Long categoryId) {
@@ -142,7 +183,17 @@ public class AdminService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Category is in use and cannot be deleted");
         }
 
+        String categoryName = category.getName();
         categoryRepository.delete(category);
+        auditLogService.log(
+                actor,
+                "Master Categories",
+                "Deleted category",
+                "Category",
+                categoryId,
+                categoryName,
+                "Removed category from taxonomy",
+                "Success");
     }
 
     @Transactional(readOnly = true)
@@ -173,6 +224,15 @@ public class AdminService {
         }
 
         Tag tag = tagRepository.save(new Tag(name));
+        auditLogService.log(
+                actor,
+                "Master Tags",
+                "Created tag",
+                "Tag",
+                tag.getTagId(),
+                tag.getName(),
+                "Created reusable tag",
+                "Success");
         return new TagView(tag.getTagId(), tag.getName(), 0, false);
     }
 
@@ -194,6 +254,15 @@ public class AdminService {
 
         tag.setName(nextName);
         Tag saved = tagRepository.save(tag);
+        auditLogService.log(
+                actor,
+                "Master Tags",
+                "Updated tag",
+                "Tag",
+                saved.getTagId(),
+                saved.getName(),
+                "Updated tag label",
+                "Success");
         long usageCount = resourceEntryRepository.countByTagsTagId(saved.getTagId());
         return new TagView(saved.getTagId(), saved.getName(), usageCount, usageCount > 0);
     }
@@ -209,7 +278,17 @@ public class AdminService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Tag is in use and cannot be deleted");
         }
 
+        String tagName = tag.getName();
         tagRepository.delete(tag);
+        auditLogService.log(
+                actor,
+                "Master Tags",
+                "Deleted tag",
+                "Tag",
+                tagId,
+                tagName,
+                "Removed tag from taxonomy",
+                "Success");
     }
 
     @Transactional(readOnly = true)
@@ -245,7 +324,17 @@ public class AdminService {
         }
         entry.setStatus(ResourceStatus.ARCHIVED);
         entry.setArchivedAt(LocalDateTime.now());
-        return viewMapper.toResourceDetail(resourceEntryRepository.save(entry));
+        ResourceEntry saved = resourceEntryRepository.save(entry);
+        auditLogService.log(
+                actor,
+                "Archive",
+                "Archived resource",
+                "Resource",
+                saved.getResourceId(),
+                saved.getTitle(),
+                "Moved resource into archive",
+                "Success");
+        return viewMapper.toResourceDetail(saved);
     }
 
     public ResourceDetail restore(Long actorId, Long resourceId) {
@@ -262,6 +351,16 @@ public class AdminService {
         if (entry.getPublishedAt() == null) {
             entry.setPublishedAt(LocalDateTime.now());
         }
-        return viewMapper.toResourceDetail(resourceEntryRepository.save(entry));
+        ResourceEntry saved = resourceEntryRepository.save(entry);
+        auditLogService.log(
+                actor,
+                "Restore",
+                "Restored resource",
+                "Resource",
+                saved.getResourceId(),
+                saved.getTitle(),
+                "Returned archived resource to approved visibility",
+                "Success");
+        return viewMapper.toResourceDetail(saved);
     }
 }
