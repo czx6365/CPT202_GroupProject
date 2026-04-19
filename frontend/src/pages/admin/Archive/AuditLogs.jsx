@@ -136,6 +136,7 @@ function AuditLogs() {
               <option value="Restore">Restore</option>
               <option value="Review">Review</option>
               <option value="Promotion">Promotion</option>
+              <option value="Announcements">Announcements</option>
               <option value="Master Categories">Master Categories</option>
               <option value="Master Tags">Master Tags</option>
             </select>

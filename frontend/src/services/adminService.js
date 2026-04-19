@@ -244,3 +244,47 @@ export async function deleteTag(tagId, token) {
     },
   });
 }
+
+export async function fetchAnnouncements(params = {}, token) {
+  const query = buildQuery({
+    keyword: params.keyword,
+    audience: params.audience,
+    status: params.status,
+  });
+
+  return request(`/api/admin/announcements${query}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function createAnnouncement(payload, token) {
+  return request("/api/admin/announcements", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateAnnouncement(announcementId, payload, token) {
+  return request(`/api/admin/announcements/${announcementId}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateAnnouncementStatus(announcementId, status, token) {
+  return request(`/api/admin/announcements/${announcementId}/status`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status }),
+  });
+}

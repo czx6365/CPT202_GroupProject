@@ -15,7 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cpt202_1.taskmanager.dto.request.ContributorDecisionRequest;
 import com.cpt202_1.taskmanager.dto.request.CreateCategoryRequest;
 import com.cpt202_1.taskmanager.dto.request.CreateTagRequest;
+import com.cpt202_1.taskmanager.dto.request.AnnouncementStatusRequest;
+import com.cpt202_1.taskmanager.dto.request.AnnouncementUpsertRequest;
 import com.cpt202_1.taskmanager.dto.response.AuditLogView;
+import com.cpt202_1.taskmanager.dto.response.AnnouncementView;
 import com.cpt202_1.taskmanager.dto.response.CategoryView;
 import com.cpt202_1.taskmanager.dto.response.PageResult;
 import com.cpt202_1.taskmanager.dto.response.ResourceDetail;
@@ -23,10 +26,12 @@ import com.cpt202_1.taskmanager.dto.response.ResourceSummary;
 import com.cpt202_1.taskmanager.dto.response.TagView;
 import com.cpt202_1.taskmanager.dto.response.UserSummary;
 import com.cpt202_1.taskmanager.pojo.Category;
+import com.cpt202_1.taskmanager.pojo.enums.AnnouncementStatus;
 import com.cpt202_1.taskmanager.pojo.enums.ResourceStatus;
 import com.cpt202_1.taskmanager.security.AuthenticatedUser;
 import com.cpt202_1.taskmanager.service.AdminService;
 import com.cpt202_1.taskmanager.service.AuditLogService;
+import com.cpt202_1.taskmanager.service.AnnouncementService;
 import com.cpt202_1.taskmanager.service.ResourceCatalogService;
 
 @RestController//能接收 HTTP 请求
@@ -38,14 +43,17 @@ import com.cpt202_1.taskmanager.service.ResourceCatalogService;
 public class AdminController {
     private final AdminService adminService;
     private final AuditLogService auditLogService;
+    private final AnnouncementService announcementService;
     private final ResourceCatalogService resourceCatalogService;
 
     public AdminController(
             AdminService adminService,
             AuditLogService auditLogService,
+            AnnouncementService announcementService,
             ResourceCatalogService resourceCatalogService) {
         this.adminService = adminService;
         this.auditLogService = auditLogService;
+        this.announcementService = announcementService;
         this.resourceCatalogService = resourceCatalogService;
     }
     // 1. approve contributor
@@ -224,5 +232,37 @@ public class AdminController {
             @RequestParam(required = false) String module,
             @RequestParam(required = false) String status) {
         return auditLogService.listAuditLogs(currentUser.getUserId(), keyword, module, status);
+    }
+
+    @GetMapping("/announcements")
+    public List<AnnouncementView> listAnnouncements(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String audience,
+            @RequestParam(required = false) AnnouncementStatus status) {
+        return announcementService.listAnnouncements(currentUser.getUserId(), keyword, audience, status);
+    }
+
+    @PostMapping("/announcements")
+    public AnnouncementView createAnnouncement(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @RequestBody AnnouncementUpsertRequest request) {
+        return announcementService.createAnnouncement(currentUser.getUserId(), request);
+    }
+
+    @PutMapping("/announcements/{announcementId}")
+    public AnnouncementView updateAnnouncement(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @PathVariable Long announcementId,
+            @RequestBody AnnouncementUpsertRequest request) {
+        return announcementService.updateAnnouncement(currentUser.getUserId(), announcementId, request);
+    }
+
+    @PutMapping("/announcements/{announcementId}/status")
+    public AnnouncementView updateAnnouncementStatus(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @PathVariable Long announcementId,
+            @RequestBody AnnouncementStatusRequest request) {
+        return announcementService.updateAnnouncementStatus(currentUser.getUserId(), announcementId, request);
     }
 }
