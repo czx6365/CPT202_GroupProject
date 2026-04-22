@@ -1,4 +1,24 @@
 # HeritageHub: A Community Heritage Resource Sharing and Curation Platform
+## Repository Layout
+
+- `backend/`: Spring Boot backend, Maven wrapper, SQL scripts, and all Java source code under `backend/src`
+- `frontend/`: React + Vite frontend, with UI source code under `frontend/src`
+
+## Quick Start After Restructure
+
+Backend:
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run
+```
+
+Frontend:
+
+```powershell
+cd frontend
+npm run dev
+```
 
 一个基于 Spring Boot 3、Spring Security、JPA 和 MySQL 的资源管理系统。项目面向“社区文化/地方遗产资源”场景，支持用户注册登录、投稿者提交资源、管理员审核发布、公众检索浏览与评论，并附带一个静态前端页面用于演示完整流程。
 
