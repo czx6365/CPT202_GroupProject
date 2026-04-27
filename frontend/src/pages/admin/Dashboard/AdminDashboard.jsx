@@ -1,6 +1,13 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../../../components/Button/Button";
+import { useAuth } from "../../../context/AuthContext";
+import {
+  fetchArchivedResources,
+  fetchAuditLogs,
+  fetchPendingReviews,
+  fetchPendingUsers,
+} from "../../../services/adminService";
 import AdminWorkspace from "../AdminWorkspace";
 import "./AdminDashboard.css";
 
@@ -68,11 +75,62 @@ const adminModules = [
 ];
 
 function AdminDashboard() {
+  const { token, isAuthenticated, user } = useAuth();
+  const [dashboardStats, setDashboardStats] = useState({
+    pendingReviews: 0,
+    pendingPromotions: 0,
+    archivedResources: 0,
+    auditLogs: 0,
+  });
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState("");
+
+  const isAdmin = user?.role === "ADMIN_REVIEWER";
+
+  useEffect(() => {
+    const loadDashboardStats = async () => {
+      if (!isAuthenticated || !token || !isAdmin) {
+        setDashboardStats({
+          pendingReviews: 0,
+          pendingPromotions: 0,
+          archivedResources: 0,
+          auditLogs: 0,
+        });
+        setIsStatsLoading(false);
+        return;
+      }
+
+      setIsStatsLoading(true);
+      setStatsError("");
+
+      try {
+        const [reviewResult, promotionResult, archiveResult, auditResult] = await Promise.all([
+          fetchPendingReviews({ status: "PENDING_REVIEW", page: 0, size: 1 }, token),
+          fetchPendingUsers(token),
+          fetchArchivedResources({ page: 0, size: 1 }, token),
+          fetchAuditLogs({}, token),
+        ]);
+
+        setDashboardStats({
+          pendingReviews: getTotalCount(reviewResult),
+          pendingPromotions: Array.isArray(promotionResult) ? promotionResult.length : 0,
+          archivedResources: getTotalCount(archiveResult),
+          auditLogs: Array.isArray(auditResult) ? auditResult.length : 0,
+        });
+      } catch (error) {
+        setStatsError(error.message || "Unable to load dashboard data.");
+      } finally {
+        setIsStatsLoading(false);
+      }
+    };
+
+    loadDashboardStats();
+  }, [isAdmin, isAuthenticated, token]);
+
   return (
     <AdminWorkspace
       eyebrow="Administrator"
       title="Administrator Dashboard"
-      description="Use the control center below to move directly into moderation, contributor promotion, taxonomy management, archive management, audit review, and announcement control."
       actions={[
         { label: "Open Review Queue", to: "/admin/review", variant: "primary" },
         { label: "Open Promotion Desk", to: "/admin/users", variant: "secondary" },
@@ -84,33 +142,28 @@ function AdminDashboard() {
             <div className="admin-dashboard__summary-copy">
               <span className="admin-dashboard__summary-label">Control Center</span>
               <h2 className="admin-dashboard__summary-title">Moderate, organize, and govern the platform from one place.</h2>
-              <p className="admin-dashboard__summary-text">
-                The administrator dashboard should feel like the first screen after a successful admin
-                login: focused, visual, and ready to branch into each management flow without exposing
-                visitor-only navigation.
-              </p>
             </div>
 
             <div className="admin-dashboard__snapshot">
               <div className="admin-dashboard__snapshot-card admin-dashboard__snapshot-card--review">
                 <span className="admin-dashboard__snapshot-pill">Queue</span>
-                <strong>12 Pending</strong>
-                <span>Ready for moderation</span>
+                <strong>{formatStatValue(dashboardStats.pendingReviews, isStatsLoading, statsError)} Pending</strong>
+                <span>Resources awaiting review</span>
               </div>
               <div className="admin-dashboard__snapshot-card admin-dashboard__snapshot-card--promotion">
                 <span className="admin-dashboard__snapshot-pill">Promotion</span>
-                <strong>4 Requests</strong>
-                <span>Awaiting contributor approval</span>
+                <strong>{formatStatValue(dashboardStats.pendingPromotions, isStatsLoading, statsError)} Requests</strong>
+                <span>Contributor applications</span>
               </div>
               <div className="admin-dashboard__snapshot-card admin-dashboard__snapshot-card--audit">
                 <span className="admin-dashboard__snapshot-pill">Archive</span>
-                <strong>Lifecycle Desk</strong>
-                <span>Archive, restore, and trace resource actions</span>
+                <strong>{formatStatValue(dashboardStats.archivedResources, isStatsLoading, statsError)} Archived</strong>
+                <span>Resources in archive</span>
               </div>
               <div className="admin-dashboard__snapshot-card admin-dashboard__snapshot-card--audit">
                 <span className="admin-dashboard__snapshot-pill">Audit</span>
-                <strong>Live Trace</strong>
-                <span>See review, archive, promotion, and taxonomy history</span>
+                <strong>{formatStatValue(dashboardStats.auditLogs, isStatsLoading, statsError)} Records</strong>
+                <span>Logged admin actions</span>
               </div>
             </div>
           </div>
@@ -147,6 +200,19 @@ function AdminDashboard() {
       </div>
     </AdminWorkspace>
   );
+}
+
+function getTotalCount(response) {
+  if (typeof response?.totalElements === "number") return response.totalElements;
+  if (Array.isArray(response?.content)) return response.content.length;
+  if (Array.isArray(response)) return response.length;
+  return 0;
+}
+
+function formatStatValue(value, isLoading, errorMessage) {
+  if (isLoading) return "...";
+  if (errorMessage) return "-";
+  return value;
 }
 
 export default AdminDashboard;
