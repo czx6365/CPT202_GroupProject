@@ -16,7 +16,8 @@ function HeroSection() {
           muted
           loop
           playsInline
-          poster="https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=1600&q=80"
+          // Home page update: remove initial poster image so users see the flower animation directly.
+          preload="auto"
         >
           <source
             src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
