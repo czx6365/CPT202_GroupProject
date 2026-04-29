@@ -1,0 +1,8 @@
+[2m12:13:57[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31merror while updating dependencies:
+Error: EPERM: operation not permitted, rename 'G:\VScode\CPT202\CPT202_GroupProject\frontend\.vite-homepage-cache\deps_temp_9831d06d' -> 'G:\VScode\CPT202\CPT202_GroupProject\frontend\.vite-homepage-cache\deps'[39m
+[31mfailed to load config from G:\VScode\CPT202\CPT202_GroupProject\frontend\vite.homepage.config.mjs[39m
+[2m12:16:12[22m [31m[1m[vite][22m[39m Build failed with 1 error:
+
+[31m[UNRESOLVED_ENTRY] Error:[0m Cannot resolve entry module vite.homepage.config.mjs.
+
+[2m12:16:12[22m [31m[1m[vite][22m[39m server restart failed

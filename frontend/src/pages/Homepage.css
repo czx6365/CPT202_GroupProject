@@ -1,12 +1,13 @@
 :root {
-  --hh-bg: #f7f5f2;
-  --hh-surface: #ffffff;
-  --hh-primary: #2f3e2f;
-  --hh-accent: #c8a96a;
-  --hh-text: #1f1f1f;
-  --hh-border: #e7e1d8;
-  --hh-shadow: 0 20px 50px rgba(47, 62, 47, 0.08);
-  --hh-radius: 16px;
+  --hh-bg: #f5f0e6;
+  --hh-surface: rgba(255, 252, 244, 0.88);
+  --hh-primary: #24332e;
+  --hh-accent: #b69054;
+  --hh-text: #21241f;
+  --hh-muted: #6f7568;
+  --hh-border: rgba(91, 103, 91, 0.18);
+  --hh-shadow: 0 20px 50px rgba(32, 44, 38, 0.12);
+  --hh-radius: 14px;
   --hh-max-width: 1240px;
 }
 
@@ -24,8 +25,9 @@ body {
 .homepage {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(200, 169, 106, 0.12), transparent 30%),
-    linear-gradient(180deg, #f7f5f2 0%, #f3eee6 100%);
+    linear-gradient(180deg, rgba(255, 252, 244, 0.72), rgba(245, 240, 230, 0.92)),
+    url("../assets/homepage/ink-mountain-hero.png") center top / min(1800px, 130vw) auto no-repeat fixed,
+    #f5f0e6;
 }
 
 .homepage__navbar {
@@ -39,10 +41,10 @@ body {
 .homepage .navbar {
   max-width: calc(var(--hh-max-width) + 48px);
   margin: 18px auto 0;
-  border: 1px solid rgba(231, 225, 216, 0.75);
-  border-bottom: 1px solid rgba(231, 225, 216, 0.9);
-  border-radius: 22px;
-  box-shadow: 0 18px 45px rgba(47, 62, 47, 0.08);
+  border: 1px solid rgba(36, 51, 46, 0.18);
+  border-bottom: 1px solid rgba(36, 51, 46, 0.24);
+  border-radius: 12px;
+  box-shadow: 0 18px 45px rgba(32, 44, 38, 0.12);
 }
 
 .hero-section {
@@ -63,7 +65,7 @@ body {
 }
 
 .hero-section__media {
-  background: #eee9dd;
+  background: #efe8d9;
   isolation: isolate;
 }
 
@@ -75,9 +77,9 @@ body {
 
 .hero-section__overlay {
   background:
-    radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.08), rgba(47, 62, 47, 0.34) 72%),
-    linear-gradient(90deg, rgba(16, 25, 20, 0.42) 0%, rgba(16, 25, 20, 0.08) 48%, rgba(16, 25, 20, 0.32) 100%),
-    linear-gradient(180deg, rgba(31, 31, 31, 0.05) 0%, rgba(31, 31, 31, 0.5) 100%);
+    radial-gradient(circle at 52% 38%, rgba(255, 252, 244, 0.16), rgba(36, 51, 46, 0.24) 70%),
+    linear-gradient(90deg, rgba(18, 28, 24, 0.38) 0%, rgba(18, 28, 24, 0.04) 48%, rgba(18, 28, 24, 0.28) 100%),
+    linear-gradient(180deg, rgba(255, 252, 244, 0.08) 0%, rgba(18, 28, 24, 0.48) 100%);
 }
 
 .hero-section__content {
@@ -95,10 +97,10 @@ body {
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #f5efe5;
+  border-radius: 4px;
+  background: rgba(255, 252, 244, 0.14);
+  border: 1px solid rgba(255, 252, 244, 0.24);
+  color: #f8f1e2;
   font-size: 0.82rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -108,7 +110,8 @@ body {
   margin: 24px 0 14px;
   font-size: clamp(3rem, 6vw, 5.8rem);
   line-height: 0.95;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
+  text-shadow: 0 8px 28px rgba(12, 19, 16, 0.24);
 }
 
 .hero-section__subtitle {
@@ -143,7 +146,7 @@ body {
   width: 2px;
   height: 44px;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), #c8a96a);
+  background: linear-gradient(180deg, rgba(255, 252, 244, 0.2), #b69054);
   animation: scrollPulse 1.8s ease-in-out infinite;
 }
 
@@ -165,9 +168,9 @@ body {
 }
 
 .homepage-section .section-heading__eyebrow {
-  background: rgba(200, 169, 106, 0.14);
-  border: 1px solid rgba(200, 169, 106, 0.24);
-  color: var(--hh-primary);
+  background: rgba(182, 144, 84, 0.14);
+  border: 1px solid rgba(182, 144, 84, 0.28);
+  color: #6f4f22;
 }
 
 .section-heading__title {
@@ -182,7 +185,7 @@ body {
   max-width: 640px;
   font-size: 1rem;
   line-height: 1.75;
-  color: #5f584f;
+  color: var(--hh-muted);
 }
 
 .category-grid {
@@ -219,10 +222,11 @@ body {
   justify-content: space-between;
   gap: 24px;
   padding: 34px;
-  border-radius: 28px;
+  border: 1px solid rgba(36, 51, 46, 0.2);
+  border-radius: 14px;
   background:
-    linear-gradient(135deg, rgba(47, 62, 47, 0.98), rgba(47, 62, 47, 0.84)),
-    linear-gradient(135deg, rgba(200, 169, 106, 0.18), transparent);
+    linear-gradient(135deg, rgba(25, 36, 32, 0.94), rgba(36, 51, 46, 0.74)),
+    url("../assets/homepage/ink-mountain-hero.png") center / cover;
   box-shadow: var(--hh-shadow);
   color: #ffffff;
 }
@@ -240,13 +244,13 @@ body {
 
 .cta-panel__button {
   flex-shrink: 0;
-  background: #c8a96a;
-  color: #1f1f1f;
-  border-color: transparent;
+  background: linear-gradient(135deg, #b38243, #d1b16e);
+  color: #241b10;
+  border-color: rgba(255, 252, 244, 0.22);
 }
 
 .cta-panel__button:hover:not(:disabled) {
-  background: #b99857;
+  background: linear-gradient(135deg, #9f7339, #c7a35f);
 }
 
 .cta-panel__actions {

@@ -1,24 +1,53 @@
 :root {
-    --hh-bg: #f7f5f2;
-    --hh-surface: #ffffff;
-    --hh-primary: #2f3e2f;
-    --hh-accent: #c8a96a;
-    --hh-text: #1f1f1f;
-    --hh-border: #e7e1d8;
-    --hh-shadow: 0 20px 50px rgba(47, 62, 47, 0.08);
-    --hh-radius: 16px;
+    --hh-bg: #f5f0e6;
+    --hh-surface: rgba(255, 252, 244, 0.86);
+    --hh-primary: #24332e;
+    --hh-accent: #b69054;
+    --hh-text: #21241f;
+    --hh-muted: #6f7568;
+    --hh-border: rgba(91, 103, 91, 0.18);
+    --hh-ink-border: rgba(36, 51, 46, 0.22);
+    --hh-shadow: 0 24px 60px rgba(32, 44, 38, 0.12);
+    --hh-radius: 14px;
     --hh-max-width: 1240px;
 }
 
 .auth-page {
+    position: relative;
     min-height: 100vh;
     padding: 130px 24px 48px;
     background:
-            radial-gradient(circle at top left, rgba(200, 169, 106, 0.12), transparent 30%),
-            linear-gradient(180deg, #f7f5f2 0%, #f3eee6 100%);
+            linear-gradient(90deg, rgba(245, 240, 230, 0.72), rgba(245, 240, 230, 0.5)),
+            url("../../../assets/homepage/ink-mountain-hero.png") center / cover fixed,
+            #f5f0e6;
+    overflow: hidden;
+}
+
+.auth-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+            radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.76), transparent 34%),
+            linear-gradient(180deg, rgba(255, 252, 244, 0.18), rgba(236, 229, 214, 0.42));
+}
+
+.auth-page::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.22;
+    background-image:
+            linear-gradient(rgba(52, 61, 52, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(52, 61, 52, 0.035) 1px, transparent 1px);
+    background-size: 46px 46px;
 }
 
 .auth-shell {
+    position: relative;
+    z-index: 1;
     max-width: var(--hh-max-width);
     margin: 0 auto;
     display: grid;
@@ -29,8 +58,8 @@
 
 .auth-showcase,
 .auth-card {
-    border: 1px solid rgba(231, 225, 216, 0.85);
-    border-radius: 28px;
+    border: 1px solid var(--hh-ink-border);
+    border-radius: 18px;
     box-shadow: var(--hh-shadow);
     overflow: hidden;
 }
@@ -42,22 +71,20 @@
     flex-direction: column;
     justify-content: space-between;
     padding: 42px;
-    color: #ffffff;
+    color: #fdf8ee;
     background:
-            linear-gradient(135deg, rgba(47, 62, 47, 0.94), rgba(47, 62, 47, 0.8)),
-            radial-gradient(circle at top left, rgba(200, 169, 106, 0.14), transparent 36%);
+            linear-gradient(135deg, rgba(25, 36, 32, 0.86), rgba(36, 51, 46, 0.58)),
+            url("../../../assets/homepage/ink-mountain-hero.png") 28% center / cover;
 }
 
 .auth-showcase::before {
     content: "";
     position: absolute;
-    right: -80px;
-    bottom: -80px;
-    width: 260px;
-    height: 260px;
-    border-radius: 50%;
-    background: rgba(200, 169, 106, 0.14);
-    filter: blur(6px);
+    inset: 0;
+    background:
+            linear-gradient(180deg, rgba(255, 252, 244, 0.06), rgba(25, 36, 32, 0.32)),
+            radial-gradient(circle at 78% 22%, rgba(182, 144, 84, 0.18), transparent 34%);
+    mix-blend-mode: screen;
 }
 
 .auth-showcase__content,
@@ -71,24 +98,25 @@
     display: inline-flex;
     align-items: center;
     width: fit-content;
-    padding: 8px 14px;
-    border-radius: 999px;
+    padding: 7px 13px;
+    border-radius: 4px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     font-size: 0.8rem;
 }
 
 .auth-showcase__eyebrow {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    color: #f5efe5;
+    background: rgba(255, 252, 244, 0.12);
+    border: 1px solid rgba(255, 252, 244, 0.24);
+    color: #f8f1e2;
 }
 
 .auth-showcase__title {
     margin: 20px 0 14px;
     font-size: clamp(2.8rem, 5vw, 5rem);
     line-height: 0.95;
-    letter-spacing: -0.03em;
+    letter-spacing: 0;
+    text-shadow: 0 6px 24px rgba(12, 19, 16, 0.24);
 }
 
 .auth-showcase__text {
@@ -107,9 +135,10 @@
 
 .auth-feature {
     padding: 18px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    background: rgba(255, 252, 244, 0.12);
+    border: 1px solid rgba(255, 252, 244, 0.2);
+    backdrop-filter: blur(4px);
 }
 
 .auth-feature h4 {
@@ -126,18 +155,29 @@
 }
 
 .auth-card {
-    background: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(8px);
+    position: relative;
+    background:
+            linear-gradient(135deg, rgba(255, 252, 244, 0.94), rgba(244, 238, 226, 0.84));
+    backdrop-filter: blur(12px);
     padding: 38px 34px;
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
 
+.auth-card::before {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    pointer-events: none;
+    border: 1px solid rgba(36, 51, 46, 0.09);
+    border-radius: 12px;
+}
+
 .auth-card__eyebrow {
-    background: rgba(200, 169, 106, 0.14);
-    border: 1px solid rgba(200, 169, 106, 0.24);
-    color: var(--hh-primary);
+    background: rgba(182, 144, 84, 0.14);
+    border: 1px solid rgba(182, 144, 84, 0.28);
+    color: #6f4f22;
 }
 
 .auth-card__title {
@@ -149,7 +189,7 @@
 
 .auth-card__subtitle {
     margin: 0 0 28px;
-    color: #5f584f;
+    color: var(--hh-muted);
     line-height: 1.75;
     font-size: 0.98rem;
 }
@@ -183,9 +223,9 @@
     width: 100%;
     box-sizing: border-box;
     padding: 14px 15px;
-    border-radius: 14px;
+    border-radius: 8px;
     border: 1px solid var(--hh-border);
-    background: #fffdf9;
+    background: rgba(255, 253, 247, 0.82);
     color: var(--hh-text);
     font-size: 0.96rem;
     outline: none;
@@ -241,10 +281,11 @@
 
 .auth-button {
     min-height: 52px;
-    border: none;
-    border-radius: 14px;
-    background: var(--hh-primary);
-    color: #ffffff;
+    border: 1px solid rgba(18, 28, 24, 0.2);
+    border-radius: 8px;
+    background:
+            linear-gradient(135deg, #20312b, #3d4d42);
+    color: #fffaf0;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -254,7 +295,8 @@
 
 .auth-button:hover {
     transform: translateY(-2px);
-    background: #263326;
+    background:
+            linear-gradient(135deg, #17231f, #334139);
 }
 
 .auth-button:disabled {
@@ -264,13 +306,15 @@
 }
 
 .auth-button--accent {
-    background: var(--hh-accent);
-    color: #1f1f1f;
-    box-shadow: 0 14px 30px rgba(200, 169, 106, 0.22);
+    background:
+            linear-gradient(135deg, #b38243, #d1b16e);
+    color: #241b10;
+    box-shadow: 0 14px 30px rgba(118, 86, 41, 0.18);
 }
 
 .auth-button--accent:hover {
-    background: #b99857;
+    background:
+            linear-gradient(135deg, #9f7339, #c7a35f);
 }
 
 .auth-button--link {
@@ -282,7 +326,7 @@
 
 .auth-divider {
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(231, 225, 216, 0.9), transparent);
+    background: linear-gradient(90deg, transparent, rgba(36, 51, 46, 0.24), transparent);
 }
 
 .auth-footer {

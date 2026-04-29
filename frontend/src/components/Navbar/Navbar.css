@@ -1,12 +1,12 @@
 :root {
-  --hh-bg: #f7f5f2;
-  --hh-surface: #ffffff;
-  --hh-primary: #2f3e2f;
-  --hh-accent: #c8a96a;
-  --hh-text: #1f1f1f;
-  --hh-border: #e7e1d8;
-  --hh-shadow: 0 10px 30px rgba(47, 62, 47, 0.08);
-  --hh-radius: 16px;
+  --hh-bg: #f5f0e6;
+  --hh-surface: rgba(255, 252, 244, 0.88);
+  --hh-primary: #24332e;
+  --hh-accent: #b69054;
+  --hh-text: #21241f;
+  --hh-border: rgba(91, 103, 91, 0.18);
+  --hh-shadow: 0 10px 30px rgba(32, 44, 38, 0.12);
+  --hh-radius: 8px;
 }
 
 .navbar {
@@ -15,9 +15,10 @@
   justify-content: space-between;
   gap: 16px;
   padding: 16px 24px;
-  background: rgba(255, 255, 255, 0.92);
+  background:
+    linear-gradient(135deg, rgba(255, 252, 244, 0.92), rgba(244, 238, 226, 0.82));
   border-bottom: 1px solid var(--hh-border);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
 }
 
 .navbar__brand {
@@ -41,18 +42,19 @@
   font: inherit;
   font-weight: 500;
   padding: 10px 14px;
-  border-radius: 999px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .navbar__link:hover {
   color: var(--hh-primary);
-  background: rgba(47, 62, 47, 0.08);
+  background: rgba(36, 51, 46, 0.08);
+  box-shadow: inset 0 -2px 0 rgba(182, 144, 84, 0.56);
 }
 
 .navbar__link:focus-visible {
-  outline: 2px solid rgba(47, 62, 47, 0.22);
+  outline: 2px solid rgba(36, 51, 46, 0.22);
   outline-offset: 2px;
 }
 

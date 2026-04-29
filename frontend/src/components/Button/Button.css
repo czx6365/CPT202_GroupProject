@@ -1,13 +1,13 @@
 :root {
-  --hh-bg: #f7f5f2;
-  --hh-surface: #ffffff;
-  --hh-primary: #2f3e2f;
-  --hh-accent: #c8a96a;
-  --hh-text: #1f1f1f;
-  --hh-border: #e7e1d8;
+  --hh-bg: #f5f0e6;
+  --hh-surface: rgba(255, 252, 244, 0.88);
+  --hh-primary: #24332e;
+  --hh-accent: #b69054;
+  --hh-text: #21241f;
+  --hh-border: rgba(91, 103, 91, 0.18);
   --hh-danger: #9f5b52;
-  --hh-shadow: 0 10px 24px rgba(47, 62, 47, 0.08);
-  --hh-radius: 16px;
+  --hh-shadow: 0 10px 24px rgba(32, 44, 38, 0.12);
+  --hh-radius: 8px;
 }
 
 .button {
@@ -18,7 +18,7 @@
   min-height: 44px;
   padding: 12px 18px;
   border-radius: var(--hh-radius);
-  border: 1px solid transparent;
+  border: 1px solid rgba(36, 51, 46, 0.18);
   box-shadow: var(--hh-shadow);
   font: inherit;
   font-weight: 600;
@@ -31,7 +31,7 @@
 }
 
 .button:focus-visible {
-  outline: 2px solid rgba(200, 169, 106, 0.4);
+  outline: 2px solid rgba(182, 144, 84, 0.45);
   outline-offset: 2px;
 }
 
@@ -42,22 +42,23 @@
 }
 
 .button--primary {
-  background: var(--hh-primary);
-  color: #ffffff;
+  background: linear-gradient(135deg, #20312b, #3d4d42);
+  color: #fffaf0;
 }
 
 .button--primary:hover:not(:disabled) {
-  background: #263326;
+  background: linear-gradient(135deg, #17231f, #334139);
 }
 
 .button--secondary {
   background: var(--hh-surface);
   color: var(--hh-text);
   border-color: var(--hh-border);
+  backdrop-filter: blur(8px);
 }
 
 .button--secondary:hover:not(:disabled) {
-  background: #f3eee8;
+  background: rgba(247, 241, 229, 0.96);
 }
 
 .button--danger {

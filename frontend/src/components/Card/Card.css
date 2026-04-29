@@ -1,22 +1,23 @@
 :root {
-  --hh-bg: #f7f5f2;
-  --hh-surface: #ffffff;
-  --hh-primary: #2f3e2f;
-  --hh-accent: #c8a96a;
-  --hh-text: #1f1f1f;
-  --hh-border: #e7e1d8;
-  --hh-shadow: 0 12px 32px rgba(47, 62, 47, 0.08);
-  --hh-shadow-hover: 0 18px 40px rgba(47, 62, 47, 0.12);
-  --hh-radius: 16px;
+  --hh-bg: #f5f0e6;
+  --hh-surface: rgba(255, 252, 244, 0.88);
+  --hh-primary: #24332e;
+  --hh-accent: #b69054;
+  --hh-text: #21241f;
+  --hh-border: rgba(91, 103, 91, 0.18);
+  --hh-shadow: 0 12px 32px rgba(32, 44, 38, 0.12);
+  --hh-shadow-hover: 0 18px 42px rgba(32, 44, 38, 0.16);
+  --hh-radius: 10px;
 }
 
 .card {
   width: 100%;
   overflow: hidden;
   text-align: left;
-  background: var(--hh-surface);
-  border: 1px solid rgba(231, 225, 216, 0.8);
-  border-radius: calc(var(--hh-radius) + 2px);
+  background:
+    linear-gradient(135deg, rgba(255, 252, 244, 0.94), rgba(244, 238, 226, 0.86));
+  border: 1px solid rgba(36, 51, 46, 0.16);
+  border-radius: var(--hh-radius);
   box-shadow: var(--hh-shadow);
   padding: 0;
   color: var(--hh-text);
@@ -35,7 +36,8 @@
 .card__media {
   position: relative;
   height: 180px;
-  background: linear-gradient(135deg, rgba(200, 169, 106, 0.34), rgba(47, 62, 47, 0.16));
+  background:
+    linear-gradient(135deg, rgba(182, 144, 84, 0.28), rgba(36, 51, 46, 0.16));
 }
 
 .card__image {
@@ -55,8 +57,8 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.28)),
-    linear-gradient(135deg, #d8c19a, #cdd7cb);
+    linear-gradient(rgba(255, 252, 244, 0.34), rgba(255, 252, 244, 0.34)),
+    linear-gradient(135deg, #d6c19d, #c6d3c8);
 }
 
 .card__content {
@@ -80,16 +82,16 @@
   align-items: flex-start;
   gap: 8px;
   padding: 20px;
-  background: linear-gradient(180deg, rgba(31, 31, 31, 0.04) 0%, rgba(31, 31, 31, 0.68) 100%);
+  background: linear-gradient(180deg, rgba(18, 28, 24, 0.04) 0%, rgba(18, 28, 24, 0.68) 100%);
 }
 
 .card__eyebrow {
   display: inline-flex;
   align-items: center;
   padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: rgba(255, 252, 244, 0.14);
+  border: 1px solid rgba(255, 252, 244, 0.22);
   color: #f8f5ef;
   font-size: 0.76rem;
   font-weight: 600;
@@ -122,13 +124,13 @@
 
 .card__subtitle {
   margin: 6px 0 0;
-  color: #6f695f;
+  color: #6f7568;
   font-size: 0.95rem;
 }
 
 .card__description {
   margin: 0;
-  color: #4d4a43;
+  color: #4d554b;
   line-height: 1.6;
 }
 
