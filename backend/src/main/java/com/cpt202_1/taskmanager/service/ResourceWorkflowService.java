@@ -71,6 +71,19 @@ public class ResourceWorkflowService {
         return viewMapper.toResourceDetail(resourceEntryRepository.save(entry));
     }
 
+    public void deleteDraft(Long actorId, Long resourceId) {
+        User actor = accessControlService.getUserOrThrow(actorId);
+        ResourceEntry entry = accessControlService.getResourceOrThrow(resourceId);
+
+        accessControlService.requireOwner(actor, entry);
+        if (entry.getStatus() != ResourceStatus.DRAFT) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Only draft resources can be deleted");
+        }
+
+        entry.getTags().clear();
+        resourceEntryRepository.delete(entry);
+    }
+
     @Transactional(readOnly = true)
     public ResourceDetail getResourceDetail(Long actorId, Long resourceId) {
         User actor = accessControlService.getUserOrThrow(actorId);

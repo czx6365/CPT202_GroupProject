@@ -85,7 +85,7 @@ export function removeTag(currentValue, tagToRemove) {
 }
 
 export function hasMediaReference(form) {
-  return Boolean(form.file || form.selectedFileName || form.fileUrl.trim() || form.externalLink.trim());
+  return Boolean(form.fileUrl.trim() || form.externalLink.trim());
 }
 
 export function validateDraftForm(form) {
@@ -110,7 +110,7 @@ export function validateSubmissionForm(form) {
     nextErrors.copyrightDeclaration = "Usage declaration is required.";
   }
   if (!hasMediaReference(form)) {
-    nextErrors.media = "Provide at least one media reference: upload, file URL, or external link.";
+    nextErrors.media = "Provide at least one media reference: file URL or external link.";
   }
 
   return nextErrors;

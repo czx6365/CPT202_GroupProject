@@ -46,6 +46,7 @@ function AppRouter() {
           <Route path="/contributor/resubmit/:id" element={<Resubmit />} />
           <Route path="/dashboard" element={<Navigate to="/contributor" replace />} />
           <Route path="/submit" element={<Navigate to="/contributor/createdraft" replace />} />
+          <Route path="/drafts" element={<Navigate to="/contributor/drafts" replace />} />
           <Route path="/resubmit/:id" element={<Navigate to="/contributor/submissions" replace />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />

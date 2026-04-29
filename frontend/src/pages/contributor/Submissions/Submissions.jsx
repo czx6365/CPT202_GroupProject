@@ -42,7 +42,7 @@ function Submissions() {
         setResources(allResources.filter((item) => item.status !== "DRAFT"));
       } catch (error) {
         setResources([]);
-        setErrorMessage(error.message || "Unable to load your live submissions right now.");
+        setErrorMessage(error.message || "Unable to load your submissions right now.");
       } finally {
         setIsLoading(false);
       }
@@ -190,7 +190,7 @@ function Submissions() {
               label="Reviewer Feedback"
               value={
                 selectedResource.reviewerFeedback ||
-                "Detailed reviewer notes are not returned by the current list response."
+                "No reviewer feedback has been provided for this resource."
               }
               full
             />

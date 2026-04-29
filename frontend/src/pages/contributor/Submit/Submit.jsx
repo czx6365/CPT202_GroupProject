@@ -498,7 +498,7 @@ function Submit() {
                 <p className="submit-help-text">
                   {form.selectedFileName
                     ? `Selected file: ${form.selectedFileName}.`
-                    : "Frontend file selection is prepared here for future upload support. Current draft APIs continue to rely on URL-based metadata."}
+                    : "Add a hosted file URL or external reference link so reviewers can access the resource material."}
                 </p>
                 {(filePreviewUrl || form.selectedFileName || form.fileUrl) && (
                   <FilePreview

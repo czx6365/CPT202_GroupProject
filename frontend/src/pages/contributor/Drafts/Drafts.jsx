@@ -52,7 +52,7 @@ function Drafts() {
         setResources(allResources.filter((item) => item.status === "DRAFT"));
       } catch (error) {
         setResources([]);
-        setErrorMessage(error.message || "Unable to load your live drafts right now.");
+        setErrorMessage(error.message || "Unable to load your drafts right now.");
       } finally {
         setIsLoading(false);
       }

@@ -29,7 +29,7 @@ function Profile() {
         setResources(Array.isArray(result) ? result : []);
       } catch (error) {
         setResources([]);
-        setErrorMessage(error.message || "Unable to load your live contributor activity right now.");
+        setErrorMessage(error.message || "Unable to load your contributor activity right now.");
       } finally {
         setIsLoading(false);
       }

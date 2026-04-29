@@ -3,6 +3,7 @@ package com.cpt202_1.taskmanager.controllers;
 import java.util.List;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,6 +47,13 @@ public class ResourceWorkflowController {
             @PathVariable Long resourceId,
             @RequestBody ResourceUpsertRequest request) {
         return resourceWorkflowService.updateDraft(currentUser.getUserId(), resourceId, request);
+    }
+
+    @DeleteMapping("/{resourceId}")
+    public void deleteDraft(
+            @AuthenticationPrincipal AuthenticatedUser currentUser,
+            @PathVariable Long resourceId) {
+        resourceWorkflowService.deleteDraft(currentUser.getUserId(), resourceId);
     }
 
     @GetMapping("/{resourceId}")

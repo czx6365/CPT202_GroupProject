@@ -325,7 +325,7 @@ function Resubmit() {
 
               <p className="resubmit-feedback-panel__text">
                 {resource.reviewerFeedback ||
-                  "The current contributor summary API does not expose reviewer notes. Revise the draft based on the latest moderation guidance available to you."}
+                  "Review the resource details carefully, update any incomplete information, and resubmit when the record is ready."}
               </p>
             </section>
 
@@ -480,7 +480,7 @@ function Resubmit() {
                     <p className="resubmit-help-text">
                       {form.selectedFileName
                         ? `Selected file: ${form.selectedFileName}.`
-                        : "File selection is prepared for future upload support. Current contributor APIs still rely on metadata and URL submission."}
+                        : "Add a hosted file URL or external reference link so reviewers can access the revised material."}
                     </p>
                     {(filePreviewUrl || form.selectedFileName || form.fileUrl) && (
                       <FilePreview

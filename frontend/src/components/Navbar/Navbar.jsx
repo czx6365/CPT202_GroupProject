@@ -10,8 +10,12 @@ function Navbar({ user, onNavigate, links }) {
 
   const resolvedLinks = Array.isArray(links) && links.length > 0 ? [...links] : [...defaultLinks];
 
-  if (user?.role === "contributor" && !resolvedLinks.some((link) => link.key === "drafts")) {
-    resolvedLinks.push({ label: "Drafts", key: "drafts" });
+  const hasContributorDraftsLink = resolvedLinks.some(
+    (link) => link.key === "drafts" || link.key === "/contributor/drafts"
+  );
+
+  if (user?.role === "contributor" && !hasContributorDraftsLink) {
+    resolvedLinks.push({ label: "Drafts", key: "/contributor/drafts" });
   }
 
   return (
