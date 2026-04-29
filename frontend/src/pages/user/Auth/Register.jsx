@@ -101,31 +101,26 @@ function Register() {
             <div className="auth-showcase__eyebrow">Create an Account</div>
             <h1 className="auth-showcase__title">Start your journey with HeritageHub.</h1>
             <p className="auth-showcase__text">
-              Register through the real backend API so your account is written to the database and can log in immediately.
+              Create an account to save discoveries, follow cultural resources, and take part in the HeritageHub community.
             </p>
-            <div className="auth-badge-list">
-              <span className="auth-badge">Database-backed</span>
-              <span className="auth-badge">Email validation</span>
-              <span className="auth-badge">Password strength</span>
-            </div>
           </div>
 
           <div className="auth-showcase__grid">
             <div className="auth-feature">
-              <h4>Create a real account</h4>
-              <p>The register form now submits to `/api/auth/register` instead of storing demo data in localStorage.</p>
+              <h4>Build your profile</h4>
+              <p>Set up a personal account for exploring heritage resources and keeping track of your activity.</p>
             </div>
             <div className="auth-feature">
-              <h4>Start as viewer</h4>
-              <p>Every new account starts as a registered viewer and can apply for contributor access after login.</p>
+              <h4>Explore as a member</h4>
+              <p>Browse stories, collections, and cultural materials with a space that belongs to you.</p>
             </div>
             <div className="auth-feature">
-              <h4>Strong validation</h4>
-              <p>Email format, password length, confirmation, and agreement checks all run before the request is sent.</p>
+              <h4>Join the community</h4>
+              <p>Connect with a platform designed for sharing, preserving, and discovering living heritage.</p>
             </div>
             <div className="auth-feature">
-              <h4>Ready for login</h4>
-              <p>Successful registration redirects to the sign-in page so the user can get a live JWT token next.</p>
+              <h4>Contribute later</h4>
+              <p>After joining, you can request contributor access when you are ready to share resources.</p>
             </div>
           </div>
         </div>
@@ -134,7 +129,7 @@ function Register() {
           <div className="auth-card__eyebrow">Register</div>
           <h2 className="auth-card__title">Create your HeritageHub account</h2>
           <p className="auth-card__subtitle">
-            Complete the form below to store a new account in the backend database.
+            Complete the form below to create your personal HeritageHub account.
           </p>
 
           <form className="auth-form" onSubmit={handleSubmit}>
@@ -149,7 +144,7 @@ function Register() {
                 onChange={handleChange}
                 className={errors.userName ? "is-invalid" : ""}
               />
-              <small>This must be unique because the backend login uses `userName`.</small>
+              <small>Choose a unique username for signing in.</small>
               {errors.userName && <div className="auth-error">{errors.userName}</div>}
             </div>
 
@@ -164,7 +159,7 @@ function Register() {
                 onChange={handleChange}
                 className={errors.email ? "is-invalid" : ""}
               />
-              <small>This email will be stored in the database and validated before submission.</small>
+              <small>Use an email address you can access.</small>
               {errors.email && <div className="auth-error">{errors.email}</div>}
             </div>
 

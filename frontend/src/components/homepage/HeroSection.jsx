@@ -1,5 +1,7 @@
 import React from "react";
 import Button from "../Button/Button";
+import inkMountainHero from "../../assets/homepage/ink-mountain-hero.png";
+import homepageVideo from "../../assets/homepage/wechat-homepage-background.mp4";
 
 function HeroSection() {
   const scrollToCategories = () => {
@@ -12,18 +14,15 @@ function HeroSection() {
       <div className="hero-section__media">
         <video
           className="hero-section__video"
+          src={homepageVideo}
+          poster={inkMountainHero}
           autoPlay
           muted
           loop
           playsInline
-          // Home page update: remove initial poster image so users see the flower animation directly.
-          preload="auto"
-        >
-          <source
-            src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
-            type="video/mp4"
-          />
-        </video>
+          preload="metadata"
+          aria-hidden="true"
+        />
         <div className="hero-section__overlay" />
       </div>
 

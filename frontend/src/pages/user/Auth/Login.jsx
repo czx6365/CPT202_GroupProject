@@ -86,34 +86,29 @@ function Login() {
         <div className="auth-showcase">
           <div className="auth-showcase__content">
             <div className="auth-showcase__eyebrow">HeritageHub Access</div>
-            <h1 className="auth-showcase__title">Welcome back to your cultural archive.</h1>
+            <h1 className="auth-showcase__title">Welcome back to HeritageHub.</h1>
             <p className="auth-showcase__text">
-              Sign in with your real backend account to access saved discovery, role-based navigation, and protected features.
+              Continue exploring cultural stories, saved resources, and community contributions from one personal space.
             </p>
 
-            <div className="auth-badge-list">
-              <span className="auth-badge">Spring Boot API</span>
-              <span className="auth-badge">JWT token</span>
-              <span className="auth-badge">Remember me</span>
-            </div>
           </div>
 
           <div className="auth-showcase__grid">
             <div className="auth-feature">
-              <h4>Live authentication</h4>
-              <p>The login form now uses the backend response instead of creating a fake token in the browser.</p>
+              <h4>Your saved discoveries</h4>
+              <p>Return to the heritage resources, stories, and collections you have explored before.</p>
             </div>
             <div className="auth-feature">
-              <h4>Persistent session</h4>
-              <p>Choose whether the JWT should stay in localStorage or only survive this browser session.</p>
+              <h4>Personal workspace</h4>
+              <p>Manage your profile, saved items, and contribution activity in one place.</p>
             </div>
             <div className="auth-feature">
-              <h4>Role-based landing</h4>
-              <p>After sign-in, viewers, contributors, and admins can be routed to different workspace pages.</p>
+              <h4>Contributor access</h4>
+              <p>Approved contributors can create and update cultural heritage submissions.</p>
             </div>
             <div className="auth-feature">
-              <h4>Consistent navbar state</h4>
-              <p>The auth context updates immediately so the navbar can switch from guest actions to the user profile chip.</p>
+              <h4>Secure account</h4>
+              <p>Your account keeps your activity connected while helping protect community content.</p>
             </div>
           </div>
         </div>
@@ -122,7 +117,7 @@ function Login() {
           <div className="auth-card__eyebrow">Login</div>
           <h2 className="auth-card__title">Sign in to HeritageHub</h2>
           <p className="auth-card__subtitle">
-            Use the same username and password stored in your backend database account.
+            Use your username and password to access your HeritageHub account.
           </p>
 
           <form className="auth-form" onSubmit={handleSubmit}>
@@ -137,7 +132,7 @@ function Login() {
                 onChange={handleChange}
                 className={errors.userName ? "is-invalid" : ""}
               />
-              <small>Backend login uses `userName`, not email.</small>
+              <small>Enter the username you used when creating your account.</small>
               {errors.userName && <div className="auth-error">{errors.userName}</div>}
             </div>
 
