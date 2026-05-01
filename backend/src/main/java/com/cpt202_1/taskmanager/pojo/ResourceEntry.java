@@ -41,7 +41,7 @@ public class ResourceEntry {
     private String placeName;
 
     @Lob
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "file_url")
@@ -50,7 +50,8 @@ public class ResourceEntry {
     @Column(name = "external_link")
     private String externalLink;
 
-    @Column(name = "copyright_declaration")
+    @Lob
+    @Column(name = "copyright_declaration", columnDefinition = "TEXT")
     private String copyrightDeclaration;
 
     @Enumerated(EnumType.STRING)
@@ -58,7 +59,7 @@ public class ResourceEntry {
     private ResourceStatus status = ResourceStatus.DRAFT;
 
     @Lob
-    @Column(name = "reviewer_feedback")
+    @Column(name = "reviewer_feedback", columnDefinition = "TEXT")
     private String reviewerFeedback;
 
     @ManyToOne(fetch = FetchType.LAZY)

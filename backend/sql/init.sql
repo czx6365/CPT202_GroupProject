@@ -11,8 +11,9 @@ CREATE TABLE IF NOT EXISTS `tb_user` (
   `email` VARCHAR(255) NOT NULL,
   `role_type` VARCHAR(50) NOT NULL,
   `contributor_approved` TINYINT(1) NOT NULL DEFAULT 0,
-  `contributor_application` VARCHAR(2000) DEFAULT NULL,
+  `contributor_application` TEXT DEFAULT NULL,
   `contributor_requested_at` DATETIME(6) DEFAULT NULL,
+  `contributor_rejection_reason` TEXT DEFAULT NULL,
   `enabled` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` DATETIME(6) NOT NULL,
   `updated_at` DATETIME(6) NOT NULL,
@@ -24,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `tb_user` (
 CREATE TABLE IF NOT EXISTS `tb_category` (
   `category_id` BIGINT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) NOT NULL,
-  `description` VARCHAR(500) DEFAULT NULL,
+  `description` TEXT DEFAULT NULL,
   PRIMARY KEY (`category_id`),
   UNIQUE KEY `uk_tb_category_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -44,7 +45,7 @@ CREATE TABLE IF NOT EXISTS `tb_resource` (
   `description` TEXT DEFAULT NULL,
   `file_url` VARCHAR(255) DEFAULT NULL,
   `external_link` VARCHAR(255) DEFAULT NULL,
-  `copyright_declaration` VARCHAR(255) DEFAULT NULL,
+  `copyright_declaration` TEXT DEFAULT NULL,
   `status` VARCHAR(50) NOT NULL,
   `reviewer_feedback` TEXT DEFAULT NULL,
   `contributor_id` BIGINT NOT NULL,
@@ -91,6 +92,36 @@ CREATE TABLE IF NOT EXISTS `tb_resource_comment` (
     FOREIGN KEY (`resource_id`) REFERENCES `tb_resource` (`resource_id`),
   CONSTRAINT `fk_tb_resource_comment_author`
     FOREIGN KEY (`author_id`) REFERENCES `tb_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `tb_announcement` (
+  `announcement_id` BIGINT NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(255) NOT NULL,
+  `content` TEXT NOT NULL,
+  `audience` VARCHAR(255) NOT NULL,
+  `status` VARCHAR(50) NOT NULL,
+  `created_by` BIGINT NOT NULL,
+  `created_at` DATETIME(6) NOT NULL,
+  `updated_at` DATETIME(6) NOT NULL,
+  PRIMARY KEY (`announcement_id`),
+  KEY `idx_tb_announcement_created_by` (`created_by`),
+  CONSTRAINT `fk_tb_announcement_created_by`
+    FOREIGN KEY (`created_by`) REFERENCES `tb_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `tb_audit_log` (
+  `audit_log_id` BIGINT NOT NULL AUTO_INCREMENT,
+  `operator_id` BIGINT DEFAULT NULL,
+  `operator_name` VARCHAR(255) NOT NULL,
+  `module` VARCHAR(255) NOT NULL,
+  `action` VARCHAR(255) NOT NULL,
+  `target_type` VARCHAR(255) NOT NULL,
+  `target_id` BIGINT DEFAULT NULL,
+  `target_name` VARCHAR(255) DEFAULT NULL,
+  `detail` TEXT DEFAULT NULL,
+  `status` VARCHAR(255) NOT NULL,
+  `created_at` DATETIME(6) NOT NULL,
+  PRIMARY KEY (`audit_log_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO `tb_category` (`name`, `description`) VALUES

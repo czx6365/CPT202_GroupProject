@@ -11,6 +11,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -39,13 +40,15 @@ public class User {
     @Column(name = "contributor_approved", nullable = false)
     private boolean contributorApproved = false;
 
-    @Column(name = "contributor_application", length = 2000)
+    @Lob
+    @Column(name = "contributor_application", columnDefinition = "TEXT")
     private String contributorApplication;
 
     @Column(name = "contributor_requested_at")
     private LocalDateTime contributorRequestedAt;
 
-    @Column(name = "contributor_rejection_reason", length = 2000)
+    @Lob
+    @Column(name = "contributor_rejection_reason", columnDefinition = "TEXT")
     private String contributorRejectionReason;
 
     @Column(nullable = false)
