@@ -51,7 +51,11 @@ public class SecurityConfig {
                                 "/error",
                                 "/favicon.ico")
                         .permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/auth/register",
+                                "/api/auth/login",
+                                "/api/auth/send-verification-code")
+                        .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/resources/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/admin/categories", "/api/admin/tags").permitAll()
                         .requestMatchers("/api/db/**").permitAll()

@@ -24,16 +24,19 @@ public class AccountService {
     private final PasswordEncoder passwordEncoder;
     private final AccessControlService accessControlService;
     private final PlatformViewMapper viewMapper;
+    private final EmailVerificationService emailVerificationService;
 
     public AccountService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             AccessControlService accessControlService,
-            PlatformViewMapper viewMapper) {
+            PlatformViewMapper viewMapper,
+            EmailVerificationService emailVerificationService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.accessControlService = accessControlService;
         this.viewMapper = viewMapper;
+        this.emailVerificationService = emailVerificationService;
     }
 
     public UserSummary register(RegisterRequest request) {
@@ -50,6 +53,7 @@ public class AccountService {
         if (userRepository.existsByEmail(email)) {
             throw new ApiException(HttpStatus.CONFLICT, "Email already exists");
         }
+        emailVerificationService.verifyRegistrationCode(email, request.verificationCode());
 
         User user = new User();
         user.setUserName(userName);

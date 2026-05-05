@@ -7,22 +7,29 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cpt202_1.taskmanager.dto.request.EmailVerificationRequest;
 import com.cpt202_1.taskmanager.dto.request.LoginRequest;
 import com.cpt202_1.taskmanager.dto.request.RegisterRequest;
 import com.cpt202_1.taskmanager.dto.response.AuthResponse;
 import com.cpt202_1.taskmanager.dto.response.UserSummary;
 import com.cpt202_1.taskmanager.security.JwtService;
 import com.cpt202_1.taskmanager.service.AccountService;
+import com.cpt202_1.taskmanager.service.EmailVerificationService;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
     private final AccountService accountService;
     private final JwtService jwtService;
+    private final EmailVerificationService emailVerificationService;
 
-    public AuthController(AccountService accountService, JwtService jwtService) {
+    public AuthController(
+            AccountService accountService,
+            JwtService jwtService,
+            EmailVerificationService emailVerificationService) {
         this.accountService = accountService;
         this.jwtService = jwtService;
+        this.emailVerificationService = emailVerificationService;
     }
 
     // 1. register user
@@ -31,6 +38,12 @@ public class AuthController {
     @PostMapping("/register")
     public UserSummary register(@RequestBody RegisterRequest request) {
         return accountService.register(request);
+    }
+
+    @PostMapping("/send-verification-code")
+    public Map<String, String> sendVerificationCode(@RequestBody EmailVerificationRequest request) {
+        emailVerificationService.sendRegistrationCode(request.email());
+        return Map.of("message", "Verification code sent");
     }
 
     @PostMapping("/login")

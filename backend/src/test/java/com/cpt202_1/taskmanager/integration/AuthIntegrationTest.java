@@ -17,9 +17,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.cpt202_1.taskmanager.pojo.User;
+import com.cpt202_1.taskmanager.pojo.EmailVerificationCode;
 import com.cpt202_1.taskmanager.pojo.enums.UserRole;
+import com.cpt202_1.taskmanager.repository.EmailVerificationCodeRepository;
 import com.cpt202_1.taskmanager.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.time.LocalDateTime;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -36,10 +40,14 @@ class AuthIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private EmailVerificationCodeRepository verificationCodeRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void setUp() {
+        verificationCodeRepository.deleteAll();
         userRepository.deleteAll();
         saveUser("admin", "admin123", "admin@taskmanager.local", UserRole.ADMIN_REVIEWER);
         saveUser("viewer1", "viewer123", "viewer1@test.com", UserRole.REGISTERED_VIEWER);
@@ -47,7 +55,8 @@ class AuthIntegrationTest {
 
     @Test
     void registerShouldSucceed() throws Exception {
-        RegisterPayload payload = new RegisterPayload("newuser", "123456", "newuser@test.com", null);
+        saveVerificationCode("newuser@test.com", "654321");
+        RegisterPayload payload = new RegisterPayload("newuser", "123456", "newuser@test.com", "654321", null);
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -104,6 +113,14 @@ class AuthIntegrationTest {
         userRepository.save(user);
     }
 
+    private void saveVerificationCode(String email, String code) {
+        EmailVerificationCode verificationCode = new EmailVerificationCode();
+        verificationCode.setEmail(email);
+        verificationCode.setCode(code);
+        verificationCode.setExpiresAt(LocalDateTime.now().plusMinutes(5));
+        verificationCodeRepository.save(verificationCode);
+    }
+
     private String loginAndExtractToken(String userName, String password) throws Exception {
         String response = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -116,7 +133,7 @@ class AuthIntegrationTest {
         return objectMapper.readTree(response).get("token").asText();
     }
 
-    private record RegisterPayload(String userName, String password, String email, String role) {
+    private record RegisterPayload(String userName, String password, String email, String verificationCode, String role) {
     }
 
     private record LoginPayload(String userName, String password) {

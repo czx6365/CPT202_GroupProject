@@ -206,6 +206,12 @@
     gap: 16px;
 }
 
+.auth-code-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 124px;
+    gap: 10px;
+}
+
 .auth-field {
     display: flex;
     flex-direction: column;
@@ -317,6 +323,14 @@
             linear-gradient(135deg, #9f7339, #c7a35f);
 }
 
+.auth-button--compact {
+    min-height: 48px;
+    padding: 0 14px;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    box-shadow: 0 10px 22px rgba(47, 62, 47, 0.12);
+}
+
 .auth-button--link {
     display: inline-flex;
     align-items: center;
@@ -424,6 +438,7 @@
     }
 
     .auth-form__row,
+    .auth-code-row,
     .auth-showcase__grid {
         grid-template-columns: 1fr;
     }

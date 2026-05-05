@@ -46,6 +46,16 @@ export async function register(payload) {
       userName: payload.userName,
       password: payload.password,
       email: payload.email,
+      verificationCode: payload.verificationCode,
+    }),
+  });
+}
+
+export async function sendVerificationCode(email) {
+  return request("/api/auth/send-verification-code", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
     }),
   });
 }

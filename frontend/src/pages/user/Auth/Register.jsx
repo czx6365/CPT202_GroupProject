@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { register as registerRequest } from "../../../services/authService";
+import { register as registerRequest, sendVerificationCode } from "../../../services/authService";
 import "./Auth.css";
 
 function Register() {
@@ -8,6 +8,7 @@ function Register() {
   const [formData, setFormData] = useState({
     userName: "",
     email: "",
+    verificationCode: "",
     password: "",
     confirmPassword: "",
     agree: false,
@@ -16,6 +17,18 @@ function Register() {
   const [submitError, setSubmitError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [resendSeconds, setResendSeconds] = useState(0);
+
+  useEffect(() => {
+    if (resendSeconds <= 0) return undefined;
+
+    const timerId = window.setInterval(() => {
+      setResendSeconds((seconds) => Math.max(seconds - 1, 0));
+    }, 1000);
+
+    return () => window.clearInterval(timerId);
+  }, [resendSeconds]);
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -40,6 +53,10 @@ function Register() {
     if (!formData.userName.trim()) nextErrors.userName = "Username is required.";
     if (!formData.email.trim()) nextErrors.email = "Email is required.";
     else if (!validateEmail(formData.email)) nextErrors.email = "Please enter a valid email address.";
+    if (!formData.verificationCode.trim()) nextErrors.verificationCode = "Verification code is required.";
+    else if (!/^\d{6}$/.test(formData.verificationCode.trim())) {
+      nextErrors.verificationCode = "Enter the 6-digit code sent to your email.";
+    }
     if (!formData.password) nextErrors.password = "Password is required.";
     else if (formData.password.length < 6) nextErrors.password = "Password must contain at least 6 characters.";
     if (!formData.confirmPassword) nextErrors.confirmPassword = "Please confirm your password.";
@@ -55,13 +72,46 @@ function Register() {
     setFormData((previous) => ({
       ...previous,
       [name]: type === "checkbox" ? checked : value,
+      ...(name === "email" ? { verificationCode: "" } : {}),
     }));
+    if (name === "email") {
+      setResendSeconds(0);
+    }
     setErrors((previous) => ({
       ...previous,
       [name]: "",
+      ...(name === "email" ? { verificationCode: "" } : {}),
     }));
     setSubmitError("");
     setSuccessMessage("");
+  };
+
+  const handleSendCode = async () => {
+    const email = formData.email.trim().toLowerCase();
+    if (!email) {
+      setErrors((previous) => ({ ...previous, email: "Email is required." }));
+      return;
+    }
+    if (!validateEmail(email)) {
+      setErrors((previous) => ({ ...previous, email: "Please enter a valid email address." }));
+      return;
+    }
+
+    setIsSendingCode(true);
+    setSubmitError("");
+    setSuccessMessage("");
+    setErrors((previous) => ({ ...previous, email: "", verificationCode: "" }));
+
+    try {
+      await sendVerificationCode(email);
+      setFormData((previous) => ({ ...previous, email }));
+      setSuccessMessage("Verification code sent. Please check your email.");
+      setResendSeconds(60);
+    } catch (error) {
+      setSubmitError(error.message || "Unable to send verification code.");
+    } finally {
+      setIsSendingCode(false);
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -81,6 +131,7 @@ function Register() {
       await registerRequest({
         userName: formData.userName.trim(),
         email: formData.email.trim().toLowerCase(),
+        verificationCode: formData.verificationCode.trim(),
         password: formData.password,
       });
 
@@ -150,17 +201,45 @@ function Register() {
 
             <div className="auth-field">
               <label htmlFor="email">Email address</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleChange}
-                className={errors.email ? "is-invalid" : ""}
-              />
+              <div className="auth-code-row">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={errors.email ? "is-invalid" : ""}
+                />
+                <button
+                  type="button"
+                  className="auth-button auth-button--compact"
+                  onClick={handleSendCode}
+                  disabled={isSendingCode || resendSeconds > 0}
+                >
+                  {isSendingCode ? "Sending..." : resendSeconds > 0 ? `${resendSeconds}s` : "Send code"}
+                </button>
+              </div>
               <small>Use an email address you can access.</small>
               {errors.email && <div className="auth-error">{errors.email}</div>}
+            </div>
+
+            <div className="auth-field">
+              <label htmlFor="verificationCode">Email verification code</label>
+              <input
+                id="verificationCode"
+                name="verificationCode"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="Enter 6-digit code"
+                maxLength={6}
+                value={formData.verificationCode}
+                onChange={handleChange}
+                className={errors.verificationCode ? "is-invalid" : ""}
+              />
+              <small>The code is valid for 5 minutes. You can resend it after the 60-second countdown.</small>
+              {errors.verificationCode && <div className="auth-error">{errors.verificationCode}</div>}
             </div>
 
             <div className="auth-form__row">

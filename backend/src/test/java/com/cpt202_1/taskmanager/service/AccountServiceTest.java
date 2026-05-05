@@ -44,6 +44,9 @@ class AccountServiceTest {
     @Mock
     private PlatformViewMapper viewMapper;
 
+    @Mock
+    private EmailVerificationService emailVerificationService;
+
     @InjectMocks
     private AccountService accountService;
 
@@ -59,7 +62,12 @@ class AccountServiceTest {
 
     @Test
     void registerShouldTrimFieldsEncodePasswordAndSaveDefaultRole() {
-        RegisterRequest request = new RegisterRequest("  alice  ", "  secret123  ", "  ALICE@EXAMPLE.COM  ", UserRole.ADMIN_REVIEWER);
+        RegisterRequest request = new RegisterRequest(
+                "  alice  ",
+                "  secret123  ",
+                "  ALICE@EXAMPLE.COM  ",
+                "123456",
+                UserRole.ADMIN_REVIEWER);
 
         when(userRepository.existsByUserName("alice")).thenReturn(false);
         when(userRepository.existsByEmail("alice@example.com")).thenReturn(false);
@@ -77,11 +85,12 @@ class AccountServiceTest {
         assertThat(savedUser.getPassword()).isEqualTo("encoded-secret");
         assertThat(savedUser.getRole()).isEqualTo(UserRole.REGISTERED_VIEWER);
         assertThat(savedUser.isContributorApproved()).isFalse();
+        verify(emailVerificationService).verifyRegistrationCode("alice@example.com", "123456");
     }
 
     @Test
     void registerShouldRejectDuplicateEmail() {
-        RegisterRequest request = new RegisterRequest("alice", "secret123", "alice@example.com", null);
+        RegisterRequest request = new RegisterRequest("alice", "secret123", "alice@example.com", "123456", null);
 
         when(userRepository.existsByUserName("alice")).thenReturn(false);
         when(userRepository.existsByEmail("alice@example.com")).thenReturn(true);
