@@ -181,6 +181,24 @@ class AccountServiceTest {
         assertThat(savedUser.getPassword()).isEqualTo("new-bcrypt-hash");
     }
 
+    @Test
+    void applyContributorShouldRejectAdminAccount() {
+        User admin = buildUser(2L, "admin", "encoded", "admin@example.com");
+        admin.setRole(UserRole.ADMIN_REVIEWER);
+
+        when(accessControlService.getUserOrThrow(2L)).thenReturn(admin);
+
+        assertThatThrownBy(() -> accountService.applyContributor(2L, "I want contributor access"))
+                .isInstanceOf(ApiException.class)
+                .satisfies(error -> {
+                    ApiException apiException = (ApiException) error;
+                    assertThat(apiException.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(apiException.getMessage()).isEqualTo("Admin account cannot apply as contributor");
+                });
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
     private User buildUser(Long id, String userName, String password, String email) {
         User user = new User();
         user.setUserId(id);

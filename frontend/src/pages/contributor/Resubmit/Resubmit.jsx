@@ -7,7 +7,6 @@ import { useAuth } from "../../../context/AuthContext";
 import {
   fetchCategories,
   fetchContributorResourceById,
-  fetchMyResources,
   fetchTags,
   resubmitResource,
   updateDraft,
@@ -17,6 +16,7 @@ import {
   addTag,
   buildResourcePayload,
   createResourceFormState,
+  isValidExternalUrl,
   removeTag,
   splitTags,
   validateDraftForm,
@@ -28,12 +28,6 @@ import {
   consumeContributorNotice,
   storeContributorNotice,
 } from "../actionNotice";
-import {
-  getMockContributorResourceById,
-  getMockContributorResources,
-  resubmitMockContributorResource,
-  updateMockContributorResource,
-} from "../mockContributorData";
 import "./Resubmit.css";
 
 function Resubmit() {
@@ -59,9 +53,8 @@ function Resubmit() {
   useEffect(() => {
     const loadResource = async () => {
       if (!token) {
-        const mockResource = getMockContributorResourceById(id);
-        setResource(mockResource);
-        setForm(createResourceFormState(mockResource));
+        setResource(null);
+        setForm(createResourceFormState(null));
         setIsLoading(false);
         return;
       }
@@ -73,20 +66,13 @@ function Resubmit() {
         const [categoryResult, tagResult, listResult] = await Promise.all([
           fetchCategories(),
           fetchTags(),
-          fetchMyResources(token),
+          fetchContributorResourceById(id, token, location.state?.resource || null),
         ]);
 
         setCategories(Array.isArray(categoryResult) ? categoryResult : []);
         setTagOptions(Array.isArray(tagResult) ? tagResult : []);
 
-        const list = Array.isArray(listResult) ? listResult : [];
-        const summaryRecord =
-          list.find((item) => String(item.resourceId) === String(id)) || location.state?.resource || null;
-        const detailed = summaryRecord
-          ? await fetchContributorResourceById(summaryRecord.resourceId, token, summaryRecord)
-          : null;
-
-        const resolved = summaryRecord || detailed ? { ...summaryRecord, ...detailed } : null;
+        const resolved = listResult || null;
         setResource(resolved);
         setForm(createResourceFormState(resolved));
         setTagInput("");
@@ -216,9 +202,11 @@ function Resubmit() {
     setStatusMessage("");
 
     try {
-      const saved = token
-        ? await updateDraft(resource.resourceId, buildResourcePayload(form), token)
-        : updateMockContributorResource(resource.resourceId, form, categories);
+      if (!token) {
+        throw new Error("Please log in with an approved contributor account.");
+      }
+
+      const saved = await updateDraft(resource.resourceId, buildResourcePayload(form), token);
 
       if (!saved) {
         throw new Error("Unable to save the revised draft.");
@@ -274,15 +262,12 @@ function Resubmit() {
     setStatusMessage("");
 
     try {
-      if (token) {
-        await updateDraft(resource.resourceId, buildResourcePayload(form), token);
-        await resubmitResource(resource.resourceId, token);
-      } else {
-        const resubmitted = resubmitMockContributorResource(resource.resourceId, form, categories);
-        if (!resubmitted) {
-          throw new Error("Unable to resubmit this resource.");
-        }
+      if (!token) {
+        throw new Error("Please log in with an approved contributor account.");
       }
+
+      await updateDraft(resource.resourceId, buildResourcePayload(form), token);
+      await resubmitResource(resource.resourceId, token);
       storeContributorNotice("success", `"${form.title}" was resubmitted for review.`);
       setIsConfirmOpen(false);
       navigate("/contributor/submissions");
@@ -460,16 +445,18 @@ function Resubmit() {
                       label="File URL"
                       value={form.fileUrl}
                       onChange={updateField("fileUrl")}
-                      placeholder="Optional hosted file URL"
+                      placeholder="https://example.com/file.pdf"
                     />
+                    {errors.fileUrl && <p className="resubmit-field-error">{errors.fileUrl}</p>}
 
                     <Input
                       id="resubmit-external-link"
                       label="External Link"
                       value={form.externalLink}
                       onChange={updateField("externalLink")}
-                      placeholder="Optional external reference link"
+                      placeholder="https://example.com/reference"
                     />
+                    {errors.externalLink && <p className="resubmit-field-error">{errors.externalLink}</p>}
                   </div>
 
                   <div className="input-group">
@@ -599,6 +586,8 @@ function FilePreview({ file, previewUrl, fallbackUrl, selectedFileName }) {
   const fileType = file?.type || "";
   const isImage = fileType.startsWith("image/");
   const isVideo = fileType.startsWith("video/");
+  const hasFallbackUrl = Boolean(String(fallbackUrl || "").trim());
+  const canOpenFallbackUrl = isValidExternalUrl(fallbackUrl);
 
   return (
     <div className="resubmit-file-preview">
@@ -619,10 +608,14 @@ function FilePreview({ file, previewUrl, fallbackUrl, selectedFileName }) {
         </div>
       )}
 
-      {!file && fallbackUrl && (
+      {!file && canOpenFallbackUrl && (
         <a className="resubmit-file-preview__link" href={fallbackUrl} target="_blank" rel="noreferrer">
           Open current file URL
         </a>
+      )}
+
+      {!file && hasFallbackUrl && !canOpenFallbackUrl && (
+        <span className="resubmit-file-preview__hint">Enter a full http:// or https:// URL before opening it.</span>
       )}
     </div>
   );

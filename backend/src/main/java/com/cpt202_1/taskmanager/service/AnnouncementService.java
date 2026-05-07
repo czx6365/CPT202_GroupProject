@@ -70,6 +70,37 @@ public class AnnouncementService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<AnnouncementView> listPublishedAnnouncementsForUser(Long actorId) {
+        User actor = accessControlService.getUserOrThrow(actorId);
+
+        Specification<Announcement> specification = (root, query, builder) -> {
+            Predicate published = builder.equal(root.get("status"), AnnouncementStatus.PUBLISHED);
+            Predicate sharedAudience = root.get("audience").in("PUBLIC", "ALL_USERS");
+
+            if (actor.getRole() == UserRole.CONTRIBUTOR && actor.isContributorApproved()) {
+                return builder.and(published, builder.or(sharedAudience, builder.equal(root.get("audience"), "CONTRIBUTORS")));
+            }
+
+            return builder.and(published, sharedAudience);
+        };
+
+        return announcementRepository.findAll(specification, Sort.by(Sort.Direction.DESC, "updatedAt")).stream()
+                .map(this::toView)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AnnouncementView> listPublicAnnouncements() {
+        Specification<Announcement> specification = (root, query, builder) -> builder.and(
+                builder.equal(root.get("status"), AnnouncementStatus.PUBLISHED),
+                builder.equal(root.get("audience"), "PUBLIC"));
+
+        return announcementRepository.findAll(specification, Sort.by(Sort.Direction.DESC, "updatedAt")).stream()
+                .map(this::toView)
+                .toList();
+    }
+
     public AnnouncementView createAnnouncement(Long actorId, AnnouncementUpsertRequest request) {
         User actor = accessControlService.getUserOrThrow(actorId);
         accessControlService.requireRole(actor, UserRole.ADMIN_REVIEWER);

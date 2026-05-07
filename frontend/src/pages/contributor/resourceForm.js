@@ -88,12 +88,36 @@ export function hasMediaReference(form) {
   return Boolean(form.fileUrl.trim() || form.externalLink.trim());
 }
 
+export function isValidExternalUrl(value) {
+  const normalizedValue = String(value || "").trim();
+  if (!normalizedValue) return false;
+
+  try {
+    const url = new URL(normalizedValue);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function addUrlErrors(form, nextErrors) {
+  if (form.fileUrl.trim() && !isValidExternalUrl(form.fileUrl)) {
+    nextErrors.fileUrl = "Enter a full file URL starting with http:// or https://.";
+  }
+
+  if (form.externalLink.trim() && !isValidExternalUrl(form.externalLink)) {
+    nextErrors.externalLink = "Enter a full external link starting with http:// or https://.";
+  }
+}
+
 export function validateDraftForm(form) {
   const nextErrors = {};
 
   if (!form.title.trim()) {
     nextErrors.title = "Title is required to save a draft.";
   }
+
+  addUrlErrors(form, nextErrors);
 
   return nextErrors;
 }
@@ -112,6 +136,7 @@ export function validateSubmissionForm(form) {
   if (!hasMediaReference(form)) {
     nextErrors.media = "Provide at least one media reference: file URL or external link.";
   }
+  addUrlErrors(form, nextErrors);
 
   return nextErrors;
 }

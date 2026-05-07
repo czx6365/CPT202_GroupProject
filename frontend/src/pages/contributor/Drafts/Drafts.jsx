@@ -4,11 +4,6 @@ import Button from "../../../components/Button/Button";
 import Modal from "../../../components/Modal/Modal";
 import { useAuth } from "../../../context/AuthContext";
 import { deleteDraft, fetchMyResources, submitResourceForReview } from "../../../services/resourceService";
-import {
-  deleteMockContributorDraft,
-  getMockContributorResources,
-  submitMockContributorResource,
-} from "../mockContributorData";
 import { formatContributorStatus, getDraftReadiness } from "../resourceStatus";
 import {
   applyContributorNotice,
@@ -38,7 +33,7 @@ function Drafts() {
   useEffect(() => {
     const loadDrafts = async () => {
       if (!token) {
-        setResources(getMockContributorResources().filter((item) => item.status === "DRAFT"));
+        setResources([]);
         setIsLoading(false);
         return;
       }
@@ -86,14 +81,11 @@ function Drafts() {
     setErrorMessage("");
 
     try {
-      if (token) {
-        await submitResourceForReview(selectedDraft.resourceId, token);
-      } else {
-        const submitted = submitMockContributorResource(selectedDraft.resourceId);
-        if (!submitted) {
-          throw new Error("Unable to submit this draft.");
-        }
+      if (!token) {
+        throw new Error("Please log in with an approved contributor account.");
       }
+
+      await submitResourceForReview(selectedDraft.resourceId, token);
       setResources((previous) => previous.filter((item) => item.resourceId !== selectedDraft.resourceId));
       applyContributorNotice(
         "success",
@@ -130,15 +122,11 @@ function Drafts() {
     setErrorMessage("");
 
     try {
-      if (token) {
-        await deleteDraft(draftToDelete.resourceId, token);
-      } else {
-        const deleted = deleteMockContributorDraft(draftToDelete.resourceId);
-        if (!deleted) {
-          throw new Error("Unable to delete this draft.");
-        }
+      if (!token) {
+        throw new Error("Please log in with an approved contributor account.");
       }
 
+      await deleteDraft(draftToDelete.resourceId, token);
       setResources((previous) => previous.filter((item) => item.resourceId !== draftToDelete.resourceId));
       applyContributorNotice(
         "success",

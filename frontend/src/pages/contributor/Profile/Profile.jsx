@@ -4,7 +4,6 @@ import Button from "../../../components/Button/Button";
 import { useAuth } from "../../../context/AuthContext";
 import { fetchMyResources } from "../../../services/resourceService";
 import ContributorWorkspace from "../ContributorWorkspace";
-import { getMockContributorResources } from "../mockContributorData";
 import "./Profile.css";
 
 function Profile() {
@@ -16,7 +15,7 @@ function Profile() {
   useEffect(() => {
     const loadResources = async () => {
       if (!token) {
-        setResources(getMockContributorResources());
+        setResources([]);
         setIsLoading(false);
         return;
       }

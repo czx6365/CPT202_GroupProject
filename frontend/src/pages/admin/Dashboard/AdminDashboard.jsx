@@ -49,7 +49,7 @@ const adminModules = [
       "Manage archive decisions, restoration workflows, and resource lifecycle control from one operations center.",
     meta: "Archive",
     to: "/admin/archive",
-    accent: "audit",
+    accent: "archive",
     preview: ["Archive", "Restore", "Lifecycle Control"],
   },
   {
@@ -66,7 +66,7 @@ const adminModules = [
     title: "Announcements",
     subtitle: "Manage platform notices",
     description:
-      "Prepare system announcements with draft, published, and archived states so communication workflows are ready for later public wiring.",
+      "Prepare system announcements with draft, published, and archived states using the live announcement endpoints.",
     meta: "Notice",
     to: "/admin/announcements",
     accent: "announcement",
@@ -188,7 +188,7 @@ function AdminDashboard() {
                   <p className="admin-module-card__description">{module.description}</p>
 
                   <Link to={module.to} className="admin-feature-card__link">
-                    <Button variant={module.accent === "review" ? "primary" : "secondary"}>
+                    <Button className={`admin-module-card__button admin-module-card__button--${module.accent}`} variant="secondary">
                       Enter Section
                     </Button>
                   </Link>

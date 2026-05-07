@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 import { useAuth } from "../context/AuthContext";
 import "./AppShell.css";
@@ -28,6 +28,25 @@ function AppShell() {
     }
   }, [isAdminRoute, isAuthenticated, location.pathname, navigate]);
 
+  useEffect(() => {
+    if (!isContributorRoute) return;
+
+    if (!isAuthenticated) {
+      navigate("/login", { replace: true, state: { from: location.pathname } });
+      return;
+    }
+
+    if (!isApprovedContributor) {
+      navigate("/profile", { replace: true, state: { from: location.pathname } });
+    }
+  }, [
+    isApprovedContributor,
+    isAuthenticated,
+    isContributorRoute,
+    location.pathname,
+    navigate,
+  ]);
+
   const navLinks = useMemo(() => {
     const guestLinks = [
       { label: "Home", key: "/" },
@@ -48,11 +67,13 @@ function AppShell() {
         { label: "Review", key: "/admin/review" },
         { label: "Promotion", key: "/admin/users" },
         { label: "Master Data", key: "/admin/master-data/categories" },
+        { label: "Archive", key: "/admin/archive" },
         { label: "Audit", key: "/admin/audit" },
+        { label: "Announcements", key: "/admin/announcements" },
       ];
     }
 
-    if (isApprovedContributor || isContributorRoute) {
+    if (isApprovedContributor) {
       return [
         { label: "Home", key: "/contributor" },
         { label: "Explore", key: "/contributor/explore" },
@@ -76,7 +97,9 @@ function AppShell() {
         { label: "Review", key: "/admin/review" },
         { label: "Users", key: "/admin/users" },
         { label: "Categories", key: "/admin/master-data/categories" },
+        { label: "Archive", key: "/admin/archive" },
         { label: "Audit", key: "/admin/audit" },
+        { label: "Announcements", key: "/admin/announcements" },
       ];
     }
 
@@ -106,8 +129,7 @@ function AppShell() {
           <div className="app-shell__account">
             {isAuthenticated ? (
               <>
-                <Link
-                  to={getProfilePath(location.pathname, isAdminRoute, role, user?.contributorApproved)}
+                <div
                   className={`app-shell__profile-chip ${isAdminRoute ? "app-shell__profile-chip--admin" : ""}`}
                 >
                   <span className="app-shell__avatar">{avatarLabel}</span>
@@ -115,7 +137,7 @@ function AppShell() {
                     {user?.userName || (isAdminRoute ? "Admin Profile" : "Profile")}
                   </span>
                   <span className="app-shell__role-text">{formatRoleLabel(role, user?.contributorApproved)}</span>
-                </Link>
+                </div>
                 <button type="button" className="app-shell__logout" onClick={handleLogout}>
                   Logout
                 </button>
@@ -158,20 +180,6 @@ function formatRoleLabel(role, contributorApproved) {
     return contributorApproved ? "Contributor" : "Pending Contributor";
   }
   return "Registered Viewer";
-}
-
-function getProfilePath(pathname, isAdminRoute, role, contributorApproved) {
-  if (isAdminRoute) return "/profile";
-
-  if (pathname.startsWith("/contributor")) {
-    return "/contributor/profile";
-  }
-
-  if ((role === "CONTRIBUTOR" || role === "contributor") && contributorApproved) {
-    return "/contributor/profile";
-  }
-
-  return "/profile";
 }
 
 export default AppShell;

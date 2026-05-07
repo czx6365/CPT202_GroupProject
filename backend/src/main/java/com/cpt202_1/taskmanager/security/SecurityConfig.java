@@ -56,7 +56,7 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/send-verification-code")
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/public/resources/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/public/resources/**", "/api/public/announcements").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/admin/categories", "/api/admin/tags").permitAll()
                         .requestMatchers("/api/db/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN_REVIEWER")

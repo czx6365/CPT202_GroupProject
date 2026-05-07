@@ -1,29 +1,30 @@
 .approval-toolbar {
   display: grid;
-  gap: 16px;
+  gap: 22px;
+  margin-bottom: 18px;
 }
 
 .approval-toolbar__filters {
   display: grid;
   grid-template-columns: 1.7fr 1fr auto;
-  gap: 14px;
+  gap: 18px;
   align-items: end;
 }
 
 .approval-toolbar__actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .approval-toolbar__summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
 }
 
 .approval-summary-card {
-  padding: 18px;
+  padding: 22px;
   border-radius: 18px;
   border: 1px solid rgba(231, 225, 216, 0.86);
   background: rgba(255, 255, 255, 0.96);
@@ -59,7 +60,7 @@
 .approval-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
-  gap: 22px;
+  gap: 32px;
 }
 
 .approval-feedback {
@@ -84,14 +85,14 @@
 
 .approval-list {
   display: grid;
-  gap: 18px;
+  gap: 26px;
 }
 
 .approval-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(240px, 0.8fr);
-  gap: 18px;
-  padding: 20px;
+  gap: 22px;
+  padding: 24px;
   border-radius: 22px;
   border: 1px solid rgba(231, 225, 216, 0.86);
   background: rgba(255, 255, 255, 0.98);
@@ -118,12 +119,13 @@
 
 .approval-card__content {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .approval-card__meta {
   display: flex;
-  gap: 10px;
+  column-gap: 16px;
+  row-gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -131,7 +133,7 @@
 .approval-chip--status {
   display: inline-flex;
   align-items: center;
-  padding: 7px 12px;
+  padding: 8px 14px;
   border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 700;
@@ -201,6 +203,19 @@
   box-shadow: 0 16px 36px rgba(47, 62, 47, 0.08);
 }
 
+.approval-panel--empty {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: min(920px, 100%);
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  align-content: center;
+  margin-top: 54px;
+  padding: 42px;
+}
+
 .approval-profile {
   display: flex;
   align-items: center;
@@ -236,7 +251,7 @@
 .approval-data-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
 }
 
 .approval-data-item {

@@ -6,7 +6,7 @@ import "../../Homepage.css";
 import "./Profile.css";
 
 function Profile() {
-  const { isAuthenticated, token, user, setUser } = useAuth();
+  const { isAuthenticated, token, user, setUser, logout } = useAuth();
   const [profile, setProfile] = useState(user || null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -60,6 +60,10 @@ function Profile() {
         setUser(profileData);
         setApplicationText(profileData?.contributorApplication || "");
       } catch (error) {
+        if (error.status === 401) {
+          logout();
+          return;
+        }
         setErrorMessage(error.message || "Unable to load profile.");
       } finally {
         setIsLoading(false);
@@ -67,20 +71,18 @@ function Profile() {
     };
 
     fetchProfile();
-  }, [setUser, token, user?.userId]);
+  }, [logout, setUser, token, user?.userId]);
 
   const roleLabel = useMemo(() => {
-    const role =
-      profile?.role === "CONTRIBUTOR" && profile?.contributorApproved
-        ? "CONTRIBUTOR"
-        : "REGISTERED_VIEWER";
-    if (role === "ADMIN_REVIEWER") return "Admin";
-    if (role === "CONTRIBUTOR") return "Contributor";
+    if (profile?.role === "ADMIN_REVIEWER") return "Admin";
+    if (profile?.role === "CONTRIBUTOR" && profile?.contributorApproved) return "Contributor";
     return "Registered Viewer";
   }, [profile?.contributorApproved, profile?.role]);
 
+  const isAdmin = profile?.role === "ADMIN_REVIEWER";
   const contributorStatus = useMemo(() => {
     if (!profile) return "";
+    if (profile.role === "ADMIN_REVIEWER") return "Not applicable";
     if (profile.role === "CONTRIBUTOR" && profile.contributorApproved) return "Approved";
     if (profile.contributorRequestedAt) return "Pending review";
     if (profile.contributorRejectionReason) return "Rejected";
@@ -168,6 +170,11 @@ function Profile() {
 
   const handleContributorSubmit = async (event) => {
     event.preventDefault();
+
+    if (isAdmin) {
+      setApplicationFeedback("Admin accounts cannot apply for contributor access.");
+      return;
+    }
 
     if (!applicationText.trim()) {
       setApplicationFeedback("Please enter your contributor application.");
@@ -287,71 +294,73 @@ function Profile() {
         </div>
       </section>
 
-      <section className="homepage-section reveal-section">
-        <div className="section-heading">
-          <div className="section-heading__eyebrow">Contributor</div>
-          <h2 className="section-heading__title">{contributorHeading}</h2>
-          <p className="section-heading__text">{contributorDescription}</p>
-        </div>
-
-        <div className="profile-bubble">
-          <div className="profile-application-status">
-            <span className="profile-application-status__label">Application Status</span>
-            <strong className="profile-application-status__value">{contributorStatus || "Not applied"}</strong>
-            <p className="profile-application-status__text">
-              {isApprovedContributor
-                ? "Contributor access is active on this account."
-                : isContributorPending
-                ? "An administrator will review your request before your role changes."
-                : isContributorRejected
-                ? "Your last contributor application was rejected. You can revise your application and submit it again."
-                : "Submit an application below if you want to contribute heritage resources."}
-            </p>
+      {!isAdmin && (
+        <section className="homepage-section reveal-section">
+          <div className="section-heading">
+            <div className="section-heading__eyebrow">Contributor</div>
+            <h2 className="section-heading__title">{contributorHeading}</h2>
+            <p className="section-heading__text">{contributorDescription}</p>
           </div>
 
-          {isContributorRejected && (
-            <div className="profile-application-status profile-application-status--rejected">
-              <span className="profile-application-status__label">Administrator Feedback</span>
-              <p className="profile-application-status__text">{profile.contributorRejectionReason}</p>
+          <div className="profile-bubble">
+            <div className="profile-application-status">
+              <span className="profile-application-status__label">Application Status</span>
+              <strong className="profile-application-status__value">{contributorStatus || "Not applied"}</strong>
+              <p className="profile-application-status__text">
+                {isApprovedContributor
+                  ? "Contributor access is active on this account."
+                  : isContributorPending
+                  ? "An administrator will review your request before your role changes."
+                  : isContributorRejected
+                  ? "Your last contributor application was rejected. You can revise your application and submit it again."
+                  : "Submit an application below if you want to contribute heritage resources."}
+              </p>
             </div>
-          )}
 
-          <form className="profile-form" onSubmit={handleContributorSubmit}>
-            <textarea
-              placeholder="Explain why you want contributor access and what kind of heritage content you plan to submit."
-              rows="5"
-              value={applicationText}
-              onChange={(event) => {
-                setApplicationText(event.target.value);
-                setApplicationFeedback("");
-              }}
-              disabled={isSubmittingApplication || isApprovedContributor}
-            />
+            {isContributorRejected && (
+              <div className="profile-application-status profile-application-status--rejected">
+                <span className="profile-application-status__label">Administrator Feedback</span>
+                <p className="profile-application-status__text">{profile.contributorRejectionReason}</p>
+              </div>
+            )}
 
-            <button
-              className="profile-button profile-button--accent"
-              type="submit"
-              disabled={isSubmittingApplication || isLoading || isApprovedContributor}
-            >
-              {isApprovedContributor
-                ? "Contributor Approved"
-                : isSubmittingApplication
-                ? "Submitting..."
-                : isContributorPending
-                ? "Update Pending Application"
-                : isContributorRejected
-                ? "Resubmit Application"
-                : "Submit Application"}
-            </button>
-          </form>
+            <form className="profile-form" onSubmit={handleContributorSubmit}>
+              <textarea
+                placeholder="Explain why you want contributor access and what kind of heritage content you plan to submit."
+                rows="5"
+                value={applicationText}
+                onChange={(event) => {
+                  setApplicationText(event.target.value);
+                  setApplicationFeedback("");
+                }}
+                disabled={isSubmittingApplication || isApprovedContributor}
+              />
 
-          {applicationFeedback && (
-            <p className={`profile-feedback ${applicationFeedback.includes("submitted") ? "profile-feedback--ok" : "profile-feedback--error"}`}>
-              {applicationFeedback}
-            </p>
-          )}
-        </div>
-      </section>
+              <button
+                className="profile-button profile-button--accent"
+                type="submit"
+                disabled={isSubmittingApplication || isLoading || isApprovedContributor}
+              >
+                {isApprovedContributor
+                  ? "Contributor Approved"
+                  : isSubmittingApplication
+                  ? "Submitting..."
+                  : isContributorPending
+                  ? "Update Pending Application"
+                  : isContributorRejected
+                  ? "Resubmit Application"
+                  : "Submit Application"}
+              </button>
+            </form>
+
+            {applicationFeedback && (
+              <p className={`profile-feedback ${applicationFeedback.includes("submitted") ? "profile-feedback--ok" : "profile-feedback--error"}`}>
+                {applicationFeedback}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

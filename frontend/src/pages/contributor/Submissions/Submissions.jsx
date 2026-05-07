@@ -4,7 +4,6 @@ import Button from "../../../components/Button/Button";
 import Modal from "../../../components/Modal/Modal";
 import { useAuth } from "../../../context/AuthContext";
 import { fetchMyResources } from "../../../services/resourceService";
-import { getMockContributorResources } from "../mockContributorData";
 import { formatContributorStatus, getContributorStatusHint, getContributorStatusTone } from "../resourceStatus";
 import { applyStoredContributorNotice, consumeContributorNotice } from "../actionNotice";
 import ContributorWorkspace from "../ContributorWorkspace";
@@ -28,7 +27,7 @@ function Submissions() {
   useEffect(() => {
     const loadResources = async () => {
       if (!token) {
-        setResources(getMockContributorResources().filter((item) => item.status !== "DRAFT"));
+        setResources([]);
         setIsLoading(false);
         return;
       }

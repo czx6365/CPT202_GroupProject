@@ -155,7 +155,8 @@
 
 .submit-tag-hints {
   display: flex;
-  gap: 10px;
+  column-gap: 16px;
+  row-gap: 12px;
   flex-wrap: wrap;
   margin-top: 16px;
 }
@@ -167,7 +168,8 @@
 
 .submit-tags-list {
   display: flex;
-  gap: 10px;
+  column-gap: 16px;
+  row-gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -244,6 +246,11 @@
   color: var(--hh-primary);
   font-weight: 600;
   text-decoration: none;
+}
+
+.submit-file-preview__hint {
+  color: #7b746a;
+  font-size: 0.9rem;
 }
 
 .submit-field-error {

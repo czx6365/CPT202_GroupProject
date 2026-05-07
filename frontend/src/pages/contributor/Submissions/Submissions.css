@@ -6,7 +6,7 @@
 .submissions-page__summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 28px;
 }
 
 .submissions-summary-card,
@@ -84,8 +84,8 @@
 .submission-card {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
-  gap: 18px;
-  padding: 20px;
+  gap: 22px;
+  padding: 24px;
 }
 
 .submission-card__content {
@@ -95,14 +95,15 @@
 
 .submission-card__meta {
   display: flex;
-  gap: 10px;
+  column-gap: 16px;
+  row-gap: 12px;
   flex-wrap: wrap;
 }
 
 .submission-chip {
   display: inline-flex;
   align-items: center;
-  padding: 7px 12px;
+  padding: 8px 14px;
   border-radius: 999px;
   background: rgba(47, 62, 47, 0.08);
   color: #556251;
@@ -167,7 +168,7 @@
 
 .submission-card__actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
   margin-top: 8px;
 }

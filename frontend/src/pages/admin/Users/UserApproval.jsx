@@ -14,11 +14,13 @@ function formatRequestedAt(value) {
 }
 
 function UserApproval() {
-  const { token, isAuthenticated, user } = useAuth();
+  const { token, isAuthenticated, user, logout } = useAuth();
   const [pendingApplicants, setPendingApplicants] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [keywordInput, setKeywordInput] = useState("");
   const [appliedKeyword, setAppliedKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [appliedStatusFilter, setAppliedStatusFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -46,6 +48,10 @@ function UserApproval() {
         applicantList.some((item) => item.userId === previous) ? previous : (applicantList[0]?.userId || null)
       ));
     } catch (error) {
+      if (error.status === 401) {
+        logout();
+        return;
+      }
       setPendingApplicants([]);
       setSelectedUserId(null);
       setErrorMessage(error.message || "Unable to load pending applicants.");
@@ -60,9 +66,8 @@ function UserApproval() {
 
   const filteredApplicants = useMemo(() => {
     const normalizedKeyword = appliedKeyword.trim().toLowerCase();
-    if (!normalizedKeyword) return pendingApplicants;
-
-    return pendingApplicants.filter((applicant) => {
+    const keywordMatchedApplicants = normalizedKeyword
+      ? pendingApplicants.filter((applicant) => {
       const name = applicant.userName?.toLowerCase() || "";
       const email = applicant.email?.toLowerCase() || "";
       const application = applicant.contributorApplication?.toLowerCase() || "";
@@ -71,13 +76,21 @@ function UserApproval() {
         email.includes(normalizedKeyword) ||
         application.includes(normalizedKeyword)
       );
-    });
-  }, [appliedKeyword, pendingApplicants]);
+    })
+      : pendingApplicants;
+
+    if (appliedStatusFilter === "selected") {
+      return keywordMatchedApplicants.filter((applicant) => applicant.userId === selectedUserId);
+    }
+
+    return keywordMatchedApplicants;
+  }, [appliedKeyword, appliedStatusFilter, pendingApplicants, selectedUserId]);
 
   const selectedApplicant = useMemo(
     () => filteredApplicants.find((applicant) => applicant.userId === selectedUserId) || null,
     [filteredApplicants, selectedUserId]
   );
+  const decisionApplicant = selectedApplicant || filteredApplicants[0] || null;
 
   useEffect(() => {
     if (!filteredApplicants.length) {
@@ -85,34 +98,41 @@ function UserApproval() {
       return;
     }
 
-    if (!filteredApplicants.some((applicant) => applicant.userId === selectedUserId)) {
+    if (appliedStatusFilter !== "selected" && !filteredApplicants.some((applicant) => applicant.userId === selectedUserId)) {
       setSelectedUserId(filteredApplicants[0].userId);
     }
-  }, [filteredApplicants, selectedUserId]);
+  }, [appliedStatusFilter, filteredApplicants, selectedUserId]);
 
-  const applyKeyword = () => {
+  const applyFilters = () => {
     setAppliedKeyword(keywordInput);
+    setAppliedStatusFilter(statusFilter);
   };
 
-  const resetKeyword = () => {
+  const resetFilters = () => {
     setKeywordInput("");
     setAppliedKeyword("");
+    setStatusFilter("all");
+    setAppliedStatusFilter("all");
     setSuccessMessage("");
   };
 
   const handleApprove = async () => {
-    if (!selectedApplicant || !token) return;
+    if (!decisionApplicant || !token) return;
 
     setIsApproving(true);
     setErrorMessage("");
     setSuccessMessage("");
 
     try {
-      await approveContributor(selectedApplicant.userId, token);
-      setSuccessMessage(`Approved ${selectedApplicant.userName} as contributor.`);
+      await approveContributor(decisionApplicant.userId, token);
+      setSuccessMessage(`Approved ${decisionApplicant.userName} as contributor.`);
       setRejectionReason("");
       await loadPendingUsers();
     } catch (error) {
+      if (error.status === 401) {
+        logout();
+        return;
+      }
       setErrorMessage(error.message || "Unable to approve this applicant.");
     } finally {
       setIsApproving(false);
@@ -120,7 +140,7 @@ function UserApproval() {
   };
 
   const handleReject = async () => {
-    if (!selectedApplicant || !token) return;
+    if (!decisionApplicant || !token) return;
     if (!rejectionReason.trim()) {
       setErrorMessage("Please enter a rejection reason before rejecting this application.");
       setSuccessMessage("");
@@ -132,11 +152,15 @@ function UserApproval() {
     setSuccessMessage("");
 
     try {
-      await rejectContributor(selectedApplicant.userId, rejectionReason.trim(), token);
-      setSuccessMessage(`Rejected ${selectedApplicant.userName}'s contributor application.`);
+      await rejectContributor(decisionApplicant.userId, rejectionReason.trim(), token);
+      setSuccessMessage(`Rejected ${decisionApplicant.userName}'s contributor application.`);
       setRejectionReason("");
       await loadPendingUsers();
     } catch (error) {
+      if (error.status === 401) {
+        logout();
+        return;
+      }
       setErrorMessage(error.message || "Unable to reject this applicant.");
     } finally {
       setIsRejecting(false);
@@ -147,7 +171,8 @@ function UserApproval() {
     setRejectionReason("");
   }, [selectedUserId]);
 
-  const isAdmin = user?.role === "ADMIN_REVIEWER";
+  const normalizedRole = String(user?.role || "").toUpperCase();
+  const isAdmin = normalizedRole === "ADMIN_REVIEWER" || normalizedRole === "ADMIN";
   const showAuthError = !isAuthenticated || !token;
   const showRoleError = isAuthenticated && Boolean(token) && !isAdmin;
   const effectiveErrorMessage = showAuthError
@@ -178,14 +203,22 @@ function UserApproval() {
             <label className="input-group__label" htmlFor="approval-status">
               Status
             </label>
-            <select id="approval-status" className="input-group__field" value="pending" disabled>
-              <option value="pending">Awaiting Approval</option>
+            <select
+              id="approval-status"
+              className="input-group__field"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+              disabled={showAuthError || showRoleError}
+            >
+              <option value="all">All pending applications</option>
+              <option value="awaiting">Awaiting Approval</option>
+              <option value="selected">Selected Applicant</option>
             </select>
           </div>
 
           <div className="approval-toolbar__actions">
-            <Button variant="primary" onClick={applyKeyword} disabled={showAuthError || showRoleError}>Apply Filters</Button>
-            <Button variant="secondary" onClick={resetKeyword} disabled={showAuthError || showRoleError}>Reset</Button>
+            <Button variant="primary" onClick={applyFilters} disabled={showAuthError || showRoleError}>Apply Filters</Button>
+            <Button variant="secondary" onClick={resetFilters} disabled={showAuthError || showRoleError}>Reset</Button>
           </div>
         </div>
 
@@ -197,18 +230,8 @@ function UserApproval() {
           </div>
           <div className="approval-summary-card">
             <span className="approval-summary-card__label">Selected</span>
-            <strong className="approval-summary-card__value">{selectedApplicant ? "1" : "0"}</strong>
+            <strong className="approval-summary-card__value">{decisionApplicant ? "1" : "0"}</strong>
             <p className="approval-summary-card__hint">Current application shown in the decision panel.</p>
-          </div>
-          <div className="approval-summary-card">
-            <span className="approval-summary-card__label">Filter</span>
-            <strong className="approval-summary-card__value">{appliedKeyword.trim() ? "ON" : "OFF"}</strong>
-            <p className="approval-summary-card__hint">Keyword filter for applicant name, email, or application text.</p>
-          </div>
-          <div className="approval-summary-card">
-            <span className="approval-summary-card__label">Data Source</span>
-            <strong className="approval-summary-card__value">Live API</strong>
-            <p className="approval-summary-card__hint">Pending applicants now come from backend `/api/admin/contributors/pending`.</p>
           </div>
         </div>
       </div>
@@ -219,14 +242,11 @@ function UserApproval() {
       <div className="approval-layout">
         <div className="approval-list">
           {isLoading && <p className="approval-panel__note">Loading pending applicants...</p>}
-          {!isLoading && !effectiveErrorMessage && filteredApplicants.length === 0 && (
-            <p className="approval-panel__note">No pending contributor applications.</p>
-          )}
 
           {!isLoading && !effectiveErrorMessage && filteredApplicants.map((applicant) => (
             <article
               key={applicant.userId}
-              className={`approval-card ${selectedApplicant?.userId === applicant.userId ? "approval-card--active" : ""}`}
+              className={`approval-card ${decisionApplicant?.userId === applicant.userId ? "approval-card--active" : ""}`}
               role="button"
               tabIndex={0}
               onClick={() => setSelectedUserId(applicant.userId)}
@@ -262,84 +282,89 @@ function UserApproval() {
           ))}
         </div>
 
-        <div className="approval-detail">
-          <section className="approval-panel">
-            <div className="approval-profile">
-              <span className="approval-profile__avatar">
-                {(selectedApplicant?.userName || "U").charAt(0).toUpperCase()}
-              </span>
+        {decisionApplicant ? (
+          <div className="approval-detail">
+              <section className="approval-panel">
+                <div className="approval-profile">
+                  <span className="approval-profile__avatar">
+                    {decisionApplicant.userName.charAt(0).toUpperCase()}
+                  </span>
 
-              <div>
-                <h3 className="approval-profile__name">{selectedApplicant?.userName || "No applicant selected"}</h3>
-                <p className="approval-profile__role">
-                  {selectedApplicant ? "Registered Viewer requesting promotion to Contributor" : "Select an applicant to review details."}
-                </p>
-              </div>
-            </div>
+                  <div>
+                    <h3 className="approval-profile__name">{decisionApplicant.userName}</h3>
+                    <p className="approval-profile__role">Registered Viewer requesting promotion to Contributor</p>
+                  </div>
+                </div>
 
-            {selectedApplicant && (
               <div className="approval-data-grid">
                 <div className="approval-data-item">
                   <span className="approval-data-item__label">Email</span>
-                  <p className="approval-data-item__value">{selectedApplicant.email}</p>
+                  <p className="approval-data-item__value">{decisionApplicant.email}</p>
                 </div>
 
                 <div className="approval-data-item">
                   <span className="approval-data-item__label">Requested At</span>
                   <p className="approval-data-item__value">
-                    {formatRequestedAt(selectedApplicant.contributorRequestedAt)}
+                    {formatRequestedAt(decisionApplicant.contributorRequestedAt)}
                   </p>
                 </div>
 
                 <div className="approval-data-item approval-data-item--full">
                   <span className="approval-data-item__label">Application Text</span>
-                  <p className="approval-data-item__text">{selectedApplicant.contributorApplication || "No application text submitted."}</p>
+                  <p className="approval-data-item__text">{decisionApplicant.contributorApplication || "No application text submitted."}</p>
                 </div>
               </div>
-            )}
-          </section>
+              </section>
 
-          <section className="approval-panel">
-            <h3 className="approval-panel__title">Decision Panel</h3>
+              <section className="approval-panel">
+                <h3 className="approval-panel__title">Decision Panel</h3>
+                <p className="approval-panel__description">
+                  Approve this request to unlock contributor submission access, or reject it to clear the pending promotion request.
+                </p>
+
+                <div className="approval-panel__section">
+                  <label className="approval-panel__section-label" htmlFor="approval-rejection-reason">
+                    Rejection Reason
+                  </label>
+                  <textarea
+                    id="approval-rejection-reason"
+                    className="approval-note"
+                    placeholder="Explain why this contributor application was not approved."
+                    value={rejectionReason}
+                    onChange={(event) => {
+                      setRejectionReason(event.target.value);
+                      setErrorMessage("");
+                    }}
+                    disabled={isApproving || isRejecting || showAuthError || showRoleError}
+                  />
+                </div>
+
+                <div className="approval-panel__actions">
+                  <Button
+                    variant="primary"
+                    onClick={handleApprove}
+                    disabled={isApproving || isRejecting || showAuthError || showRoleError}
+                  >
+                    {isApproving ? "Approving..." : "Approve Contributor"}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={handleReject}
+                    disabled={isApproving || isRejecting || showAuthError || showRoleError}
+                  >
+                    {isRejecting ? "Rejecting..." : "Reject Application"}
+                  </Button>
+                </div>
+              </section>
+          </div>
+        ) : (
+          <section className="approval-panel approval-panel--empty">
+            <h3 className="approval-panel__title">No pending applications</h3>
             <p className="approval-panel__description">
-              Approve this request to unlock contributor submission access, or reject it to clear the pending promotion request.
+              Contributor requests will appear here after registered viewers submit an application from their profile.
             </p>
-
-            <div className="approval-panel__section">
-              <label className="approval-panel__section-label" htmlFor="approval-rejection-reason">
-                Rejection Reason
-              </label>
-              <textarea
-                id="approval-rejection-reason"
-                className="approval-note"
-                placeholder="Explain why this contributor application was not approved."
-                value={rejectionReason}
-                onChange={(event) => {
-                  setRejectionReason(event.target.value);
-                  setErrorMessage("");
-                }}
-                disabled={!selectedApplicant || isApproving || isRejecting || showAuthError || showRoleError}
-              />
-            </div>
-
-            <div className="approval-panel__actions">
-              <Button
-                variant="primary"
-                onClick={handleApprove}
-                disabled={!selectedApplicant || isApproving || isRejecting || showAuthError || showRoleError}
-              >
-                {isApproving ? "Approving..." : "Approve Contributor"}
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={handleReject}
-                disabled={!selectedApplicant || isApproving || isRejecting || showAuthError || showRoleError}
-              >
-                {isRejecting ? "Rejecting..." : "Reject Application"}
-              </Button>
-            </div>
           </section>
-        </div>
+        )}
       </div>
     </AdminWorkspace>
   );

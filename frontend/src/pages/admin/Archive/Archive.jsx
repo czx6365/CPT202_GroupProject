@@ -302,8 +302,10 @@ function Archive() {
               id="resource-state"
               className="input-group__field"
               value={activeView === "restoration" ? "archived" : "published"}
-              disabled
-              onChange={() => {}}
+              onChange={(event) => {
+                setActiveView(event.target.value === "archived" ? "restoration" : "unpublishing");
+              }}
+              disabled={showAuthError || showRoleError}
             >
               <option value="published">Published</option>
               <option value="archived">Archived</option>
@@ -330,16 +332,6 @@ function Archive() {
             <span className="audit-summary-card__label">Archived</span>
             <strong className="audit-summary-card__value">{archivedResources.length}</strong>
             <p className="audit-summary-card__hint">Resources currently hidden from public discovery and available for restoration.</p>
-          </div>
-          <div className="audit-summary-card">
-            <span className="audit-summary-card__label">Filter</span>
-            <strong className="audit-summary-card__value">{appliedKeyword || categoryFilter ? "ON" : "OFF"}</strong>
-            <p className="audit-summary-card__hint">Keyword and category filters help narrow the operational queue for archive work.</p>
-          </div>
-          <div className="audit-summary-card">
-            <span className="audit-summary-card__label">Audit Sync</span>
-            <strong className="audit-summary-card__value">Live</strong>
-            <p className="audit-summary-card__hint">Archive and restore actions now run against live admin endpoints instead of static demo data.</p>
           </div>
         </div>
       </div>

@@ -152,7 +152,8 @@
 
 .resubmit-tag-hints {
   display: flex;
-  gap: 10px;
+  column-gap: 16px;
+  row-gap: 12px;
   flex-wrap: wrap;
   margin-top: 16px;
 }
@@ -164,7 +165,8 @@
 
 .resubmit-tags-list {
   display: flex;
-  gap: 10px;
+  column-gap: 16px;
+  row-gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -241,6 +243,11 @@
   color: var(--hh-primary);
   font-weight: 600;
   text-decoration: none;
+}
+
+.resubmit-file-preview__hint {
+  color: #7b746a;
+  font-size: 0.9rem;
 }
 
 .resubmit-field-error {

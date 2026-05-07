@@ -7,22 +7,17 @@ import { useAuth } from "../../../context/AuthContext";
 import {
   createDraft,
   fetchCategories,
-  fetchMyResources,
+  fetchContributorResourceById,
   fetchTags,
   submitResourceForReview,
   updateDraft,
 } from "../../../services/resourceService";
 import ContributorWorkspace from "../ContributorWorkspace";
 import {
-  getMockContributorResourceById,
-  saveMockContributorDraft,
-  submitMockContributorResource,
-  updateMockContributorResource,
-} from "../mockContributorData";
-import {
   addTag,
   buildResourcePayload,
   createResourceFormState,
+  isValidExternalUrl,
   removeTag,
   requiredMetadataStatus,
   splitTags,
@@ -79,16 +74,13 @@ function Submit() {
       }
 
       if (!token) {
-        setEditingResource(getMockContributorResourceById(id));
+        setEditingResource(null);
         return;
       }
 
       try {
-        const myResources = await fetchMyResources(token);
-        const matched = (Array.isArray(myResources) ? myResources : []).find(
-          (resource) => String(resource.resourceId) === String(id)
-        );
-        setEditingResource(matched || null);
+        const detailed = await fetchContributorResourceById(id, token);
+        setEditingResource(detailed || null);
       } catch {
         setEditingResource(null);
       }
@@ -220,13 +212,13 @@ function Submit() {
     setErrorMessage("");
 
     try {
+      if (!token) {
+        throw new Error("Please log in with an approved contributor account.");
+      }
+
       const saved = isEditMode
-        ? token
-          ? await updateDraft(editingResource?.resourceId || id, buildResourcePayload(form), token)
-          : updateMockContributorResource(editingResource?.resourceId || id, form, categories)
-        : token
-          ? await createDraft(buildResourcePayload(form), token)
-          : saveMockContributorDraft(form, categories);
+        ? await updateDraft(editingResource?.resourceId || id, buildResourcePayload(form), token)
+        : await createDraft(buildResourcePayload(form), token);
 
       if (!saved) {
         throw new Error("Unable to save this draft.");
@@ -284,20 +276,12 @@ function Submit() {
       }
 
       const resourceId = editingResource?.resourceId || id;
-      if (token) {
-        await updateDraft(resourceId, buildResourcePayload(form), token);
-        await submitResourceForReview(resourceId, token);
-      } else {
-        const updated = updateMockContributorResource(resourceId, form, categories);
-        if (!updated) {
-          throw new Error("Unable to update this draft before submission.");
-        }
-
-        const submitted = submitMockContributorResource(resourceId);
-        if (!submitted) {
-          throw new Error("Unable to submit this draft for review.");
-        }
+      if (!token) {
+        throw new Error("Please log in with an approved contributor account.");
       }
+
+      await updateDraft(resourceId, buildResourcePayload(form), token);
+      await submitResourceForReview(resourceId, token);
       storeContributorNotice("success", `"${form.title}" was submitted for review.`);
       setIsSubmitModalOpen(false);
       navigate("/contributor/submissions");
@@ -478,16 +462,18 @@ function Submit() {
                   label="File URL"
                   value={form.fileUrl}
                   onChange={updateField("fileUrl")}
-                  placeholder="Optional hosted file URL"
+                  placeholder="https://example.com/file.pdf"
                 />
+                {errors.fileUrl && <p className="submit-field-error">{errors.fileUrl}</p>}
 
                 <Input
                   id="resource-external-link"
                   label="External Link"
                   value={form.externalLink}
                   onChange={updateField("externalLink")}
-                  placeholder="Optional external reference link"
+                  placeholder="https://example.com/reference"
                 />
+                {errors.externalLink && <p className="submit-field-error">{errors.externalLink}</p>}
               </div>
 
               <div className="input-group">
@@ -622,6 +608,8 @@ function FilePreview({ file, previewUrl, fallbackUrl, selectedFileName }) {
   const fileType = file?.type || "";
   const isImage = fileType.startsWith("image/");
   const isVideo = fileType.startsWith("video/");
+  const hasFallbackUrl = Boolean(String(fallbackUrl || "").trim());
+  const canOpenFallbackUrl = isValidExternalUrl(fallbackUrl);
 
   return (
     <div className="submit-file-preview">
@@ -642,10 +630,14 @@ function FilePreview({ file, previewUrl, fallbackUrl, selectedFileName }) {
         </div>
       )}
 
-      {!file && fallbackUrl && (
+      {!file && canOpenFallbackUrl && (
         <a className="submit-file-preview__link" href={fallbackUrl} target="_blank" rel="noreferrer">
           Open current file URL
         </a>
+      )}
+
+      {!file && hasFallbackUrl && !canOpenFallbackUrl && (
+        <span className="submit-file-preview__hint">Enter a full http:// or https:// URL before opening it.</span>
       )}
     </div>
   );
