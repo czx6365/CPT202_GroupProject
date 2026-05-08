@@ -568,6 +568,112 @@
   line-height: 1.45;
 }
 
+.resource-detail__comments {
+  border: 1px solid rgba(231, 225, 216, 0.88);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 16px 40px rgba(47, 62, 47, 0.08);
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.resource-detail__comments h2 {
+  margin: 0;
+  color: #2f3e2f;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.resource-detail__comments-hint {
+  margin: 0;
+  color: #6f695f;
+}
+
+.resource-detail__comments-hint a {
+  color: #2f3e2f;
+  font-weight: 700;
+}
+
+.resource-detail__comment-form {
+  display: grid;
+  gap: 10px;
+}
+
+.resource-detail__comment-label {
+  color: #3f4f3f;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.resource-detail__comment-input {
+  width: 100%;
+  min-height: 110px;
+  border-radius: 12px;
+  border: 1px solid #ddd4c8;
+  background: #fffcf8;
+  padding: 12px;
+  color: #2c2c2c;
+  font-size: 0.95rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.resource-detail__comment-input:focus {
+  outline: none;
+  border-color: rgba(200, 169, 106, 0.82);
+  box-shadow: 0 0 0 4px rgba(200, 169, 106, 0.18);
+}
+
+.resource-detail__comment-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.resource-detail__comment-error {
+  margin: 0;
+  color: #7f1f17;
+}
+
+.resource-detail__comment-list {
+  display: grid;
+  gap: 12px;
+}
+
+.resource-detail__comment-item {
+  border: 1px solid #e3dbcf;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbf8f2 100%);
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.resource-detail__comment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.resource-detail__comment-head strong {
+  color: #233323;
+}
+
+.resource-detail__comment-head span {
+  color: #6f695f;
+  font-size: 0.86rem;
+}
+
+.resource-detail__comment-item p {
+  margin: 0;
+  color: #4e4b43;
+  line-height: 1.68;
+}
+
 @media (max-width: 900px) {
   .resource-detail__layout {
     grid-template-columns: 1fr;
@@ -575,7 +681,13 @@
 
   .resource-detail__hero,
   .resource-detail__main,
-  .resource-detail__section {
+  .resource-detail__section,
+  .resource-detail__comments {
     border-radius: 16px;
+  }
+
+  .resource-detail__comment-actions {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
