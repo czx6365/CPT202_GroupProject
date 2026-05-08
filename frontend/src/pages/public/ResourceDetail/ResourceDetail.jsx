@@ -93,6 +93,7 @@ function ResourceDetail() {
 
   const tagList = useMemo(() => getTagList(resource?.tags), [resource?.tags]);
   const isApproved = (resource?.status || "APPROVED").toUpperCase() === "APPROVED";
+  const fileLinkUrl = getFileLinkUrl(resource);
 
   async function handleSubmitComment(event) {
     event.preventDefault();
@@ -157,12 +158,12 @@ function ResourceDetail() {
                 {resource.fileUrl && <ResourceMedia url={resource.fileUrl} title={resource.title} />}
 
                 <div className="resource-detail__links">
-                  {resource.fileUrl && !isDatabaseFileUrl(resource.fileUrl) && (
-                    <a href={resource.fileUrl} target="_blank" rel="noreferrer">
+                  {fileLinkUrl && (
+                    <a href={fileLinkUrl} target="_blank" rel="noreferrer">
                       Open file
                     </a>
                   )}
-                  {resource.externalLink && (
+                  {resource.externalLink && resource.externalLink !== fileLinkUrl && (
                     <a href={resource.externalLink} target="_blank" rel="noreferrer">
                       External source
                     </a>
@@ -340,6 +341,13 @@ function getMediaType(url) {
 
 function isDatabaseFileUrl(url) {
   return String(url || "").toLowerCase().includes("/api/public/resource-files/");
+}
+
+function getFileLinkUrl(resource) {
+  if (!resource) return "";
+  if (resource.externalLink) return resource.externalLink;
+  if (resource.fileUrl && !isDatabaseFileUrl(resource.fileUrl)) return resource.fileUrl;
+  return "";
 }
 
 export default ResourceDetail;
