@@ -704,6 +704,7 @@ public class PlatformService {
         entry.setPlaceName(normalizeText(request.placeName()));
         entry.setDescription(normalizeText(request.description()));
         entry.setFileUrl(normalizeText(request.fileUrl()));
+        entry.setFileLinkUrl(normalizeText(request.fileLinkUrl()));
         entry.setExternalLink(normalizeText(request.externalLink()));
         entry.setCopyrightDeclaration(normalizeText(request.copyrightDeclaration()));
         entry.setCategory(request.categoryId() == null ? null : getCategoryOrThrow(request.categoryId()));
@@ -723,7 +724,9 @@ public class PlatformService {
         if (entry.getCategory() == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "categoryId is required before submission");
         }
-        if (!StringUtils.hasText(entry.getFileUrl()) && !StringUtils.hasText(entry.getExternalLink())) {
+        if (!StringUtils.hasText(entry.getFileUrl())
+                && !StringUtils.hasText(entry.getFileLinkUrl())
+                && !StringUtils.hasText(entry.getExternalLink())) {
             throw new ApiException(
                     HttpStatus.BAD_REQUEST,
                     "Provide at least one media reference before submission");
@@ -807,6 +810,7 @@ public class PlatformService {
                 entry.getDescription(),
                 entry.getPlaceName(),
                 entry.getFileUrl(),
+                entry.getFileLinkUrl(),
                 entry.getExternalLink(),
                 entry.getCopyrightDeclaration(),
                 entry.getStatus(),
@@ -831,6 +835,7 @@ public class PlatformService {
                 entry.getPlaceName(),
                 entry.getDescription(),
                 entry.getFileUrl(),
+                entry.getFileLinkUrl(),
                 entry.getExternalLink(),
                 entry.getCopyrightDeclaration(),
                 entry.getStatus(),

@@ -173,7 +173,7 @@ function ReviewDetail() {
               <div className="review-artifact-list">
                 <div className="review-artifact">
                   <h4 className="review-artifact__title">File URL</h4>
-                  <p className="review-artifact__text">{resource.fileUrl || "No file URL provided."}</p>
+                  <p className="review-artifact__text">{resource.fileLinkUrl || "No file URL provided."}</p>
                 </div>
 
                 <div className="review-artifact">

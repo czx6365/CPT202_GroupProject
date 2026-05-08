@@ -472,11 +472,11 @@ function Resubmit() {
                     <Input
                       id="resubmit-file-url"
                       label="File URL"
-                      value={form.fileUrl}
-                      onChange={updateField("fileUrl")}
+                      value={form.fileLinkUrl}
+                      onChange={updateField("fileLinkUrl")}
                       placeholder="https://example.com/file.pdf"
                     />
-                    {errors.fileUrl && <p className="resubmit-field-error">{errors.fileUrl}</p>}
+                    {errors.fileLinkUrl && <p className="resubmit-field-error">{errors.fileLinkUrl}</p>}
 
                     <Input
                       id="resubmit-external-link"

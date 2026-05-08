@@ -10,6 +10,7 @@ public record ResourceUpsertRequest(
         Long categoryId,
         Set<String> tags,
         String fileUrl,
+        String fileLinkUrl,
         String externalLink,
         String copyrightDeclaration) {
 }

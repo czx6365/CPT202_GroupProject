@@ -489,11 +489,11 @@ function Submit() {
                 <Input
                   id="resource-file-url"
                   label="File URL"
-                  value={form.fileUrl}
-                  onChange={updateField("fileUrl")}
+                  value={form.fileLinkUrl}
+                  onChange={updateField("fileLinkUrl")}
                   placeholder="https://example.com/file.pdf"
                 />
-                {errors.fileUrl && <p className="submit-field-error">{errors.fileUrl}</p>}
+                {errors.fileLinkUrl && <p className="submit-field-error">{errors.fileLinkUrl}</p>}
 
                 <Input
                   id="resource-external-link"
@@ -554,7 +554,7 @@ function Submit() {
                 <ReadinessItem label="Tag Coverage" value={parsedTags.length > 0 ? `${parsedTags.length} tags` : "Optional"} />
                 <ReadinessItem
                   label="Media Reference"
-                  value={form.file || form.fileUrl || form.externalLink || form.selectedFileName ? "Provided" : "Required for submission"}
+                  value={form.file || form.fileUrl || form.fileLinkUrl || form.externalLink || form.selectedFileName ? "Provided" : "Required for submission"}
                 />
               </div>
             </section>

@@ -12,6 +12,7 @@ public record ResourceDetail(
         String placeName,
         String description,
         String fileUrl,
+        String fileLinkUrl,
         String externalLink,
         String copyrightDeclaration,
         ResourceStatus status,

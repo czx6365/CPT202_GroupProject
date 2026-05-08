@@ -199,6 +199,7 @@ public class ResourceWorkflowService {
         entry.setPlaceName(normalizeText(request.placeName()));
         entry.setDescription(normalizeText(request.description()));
         entry.setFileUrl(normalizeText(request.fileUrl()));
+        entry.setFileLinkUrl(normalizeText(request.fileLinkUrl()));
         entry.setExternalLink(normalizeText(request.externalLink()));
         entry.setCopyrightDeclaration(normalizeText(request.copyrightDeclaration()));
         entry.setCategory(request.categoryId() == null ? null : accessControlService.getCategoryOrThrow(request.categoryId()));
@@ -218,7 +219,9 @@ public class ResourceWorkflowService {
         if (entry.getCategory() == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "categoryId is required before submission");
         }
-        if (!StringUtils.hasText(entry.getFileUrl()) && !StringUtils.hasText(entry.getExternalLink())) {
+        if (!StringUtils.hasText(entry.getFileUrl())
+                && !StringUtils.hasText(entry.getFileLinkUrl())
+                && !StringUtils.hasText(entry.getExternalLink())) {
             throw new ApiException(
                     HttpStatus.BAD_REQUEST,
                     "Provide at least one media reference before submission");

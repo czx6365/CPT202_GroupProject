@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS `tb_resource` (
   `place_name` VARCHAR(255) DEFAULT NULL,
   `description` TEXT DEFAULT NULL,
   `file_url` VARCHAR(1000) DEFAULT NULL,
+  `file_link_url` VARCHAR(1000) DEFAULT NULL,
   `external_link` VARCHAR(255) DEFAULT NULL,
   `copyright_declaration` TEXT DEFAULT NULL,
   `status` VARCHAR(50) NOT NULL,
@@ -142,6 +143,24 @@ ALTER TABLE `tb_resource_file`
 
 ALTER TABLE `tb_resource`
   MODIFY `file_url` VARCHAR(1000) DEFAULT NULL;
+
+SET @file_link_url_column_count := (
+  SELECT COUNT(*)
+  FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'tb_resource'
+    AND COLUMN_NAME = 'file_link_url'
+);
+
+SET @add_file_link_url_column := IF(
+  @file_link_url_column_count = 0,
+  'ALTER TABLE `tb_resource` ADD COLUMN `file_link_url` VARCHAR(1000) DEFAULT NULL AFTER `file_url`',
+  'SELECT 1'
+);
+
+PREPARE add_file_link_url_column_stmt FROM @add_file_link_url_column;
+EXECUTE add_file_link_url_column_stmt;
+DEALLOCATE PREPARE add_file_link_url_column_stmt;
 
 INSERT IGNORE INTO `tb_category` (`name`, `description`) VALUES
   ('Historic Site', 'Places or landmarks with local historical value.'),

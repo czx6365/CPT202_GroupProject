@@ -173,7 +173,7 @@ class AdminServiceTest {
         entry.setTitle("Guide");
         entry.setStatus(ResourceStatus.APPROVED);
         ResourceDetail mappedDetail = new ResourceDetail(
-                55L, "Guide", "History", "Suzhou", "desc", "file", null, "copyright",
+                55L, "Guide", "History", "Suzhou", "desc", "file", null, null, "copyright",
                 ResourceStatus.ARCHIVED, null, 1L, "alice", 2L, "History", Set.of(),
                 null, null, null, null, LocalDateTime.now());
 

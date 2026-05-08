@@ -92,7 +92,8 @@ class ResourceWorkflowServiceTest {
         assertThat(savedEntry.getStatus()).isEqualTo(ResourceStatus.DRAFT);
         assertThat(savedEntry.getTitle()).isEqualTo("Suzhou Museum Guide");
         assertThat(savedEntry.getTopic()).isEqualTo("Local history");
-        assertThat(savedEntry.getFileUrl()).isEqualTo("https://files.example.com/guide.pdf");
+        assertThat(savedEntry.getFileUrl()).isEqualTo("https://files.example.com/upload.png");
+        assertThat(savedEntry.getFileLinkUrl()).isEqualTo("https://files.example.com/guide.pdf");
         assertThat(savedEntry.getCategory()).isEqualTo(category);
         assertThat(savedEntry.getTags()).containsExactly(tag);
     }
@@ -224,6 +225,7 @@ class ResourceWorkflowServiceTest {
                 "  A curated guide  ",
                 2L,
                 Set.of(" museum "),
+                "  https://files.example.com/upload.png  ",
                 "  https://files.example.com/guide.pdf  ",
                 null,
                 "  Original work  ");
@@ -255,6 +257,7 @@ class ResourceWorkflowServiceTest {
                 "Suzhou",
                 "A curated guide",
                 "https://files.example.com/guide.pdf",
+                null,
                 null,
                 "Original work",
                 status,

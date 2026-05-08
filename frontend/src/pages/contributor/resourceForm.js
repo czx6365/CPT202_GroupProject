@@ -8,6 +8,7 @@ export const EMPTY_RESOURCE_FORM = {
   description: "",
   file: null,
   fileUrl: "",
+  fileLinkUrl: "",
   externalLink: "",
   copyrightDeclaration: "",
   selectedFileName: "",
@@ -34,6 +35,7 @@ export function createResourceFormState(resource) {
     description: resource.description || "",
     file: null,
     fileUrl: resource.fileUrl || "",
+    fileLinkUrl: resource.fileLinkUrl || (!isDatabaseResourceFileUrl(resource.fileUrl) ? resource.fileUrl || "" : ""),
     externalLink: resource.externalLink || "",
     copyrightDeclaration: resource.copyrightDeclaration || "",
     selectedFileName: resource.selectedFileName || "",
@@ -52,6 +54,7 @@ export function buildResourcePayload(form) {
     categoryId: form.categoryId ? Number(form.categoryId) : null,
     tags: splitTags(form.tags),
     fileUrl: form.fileUrl.trim() || null,
+    fileLinkUrl: form.fileLinkUrl.trim() || null,
     externalLink: form.externalLink.trim() || null,
     copyrightDeclaration: form.copyrightDeclaration.trim(),
   };
@@ -92,7 +95,7 @@ export function removeTag(currentValue, tagToRemove) {
 }
 
 export function hasMediaReference(form) {
-  return Boolean(form.file || form.fileUrl.trim() || form.externalLink.trim());
+  return Boolean(form.file || form.fileUrl.trim() || form.fileLinkUrl.trim() || form.externalLink.trim());
 }
 
 export function isValidExternalUrl(value) {
@@ -107,9 +110,17 @@ export function isValidExternalUrl(value) {
   }
 }
 
+function isDatabaseResourceFileUrl(value) {
+  return String(value || "").toLowerCase().includes("/api/public/resource-files/");
+}
+
 function addUrlErrors(form, nextErrors) {
-  if (form.fileUrl.trim() && !isValidExternalUrl(form.fileUrl)) {
+  if (form.fileUrl.trim() && !isDatabaseResourceFileUrl(form.fileUrl) && !isValidExternalUrl(form.fileUrl)) {
     nextErrors.fileUrl = "Enter a full file URL starting with http:// or https://.";
+  }
+
+  if (form.fileLinkUrl.trim() && !isValidExternalUrl(form.fileLinkUrl)) {
+    nextErrors.fileLinkUrl = "Enter a full file URL starting with http:// or https://.";
   }
 
   if (form.externalLink.trim() && !isValidExternalUrl(form.externalLink)) {

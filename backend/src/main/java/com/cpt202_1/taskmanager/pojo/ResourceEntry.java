@@ -47,6 +47,9 @@ public class ResourceEntry {
     @Column(name = "file_url")
     private String fileUrl;
 
+    @Column(name = "file_link_url")
+    private String fileLinkUrl;
+
     @Column(name = "external_link")
     private String externalLink;
 
@@ -154,6 +157,14 @@ public class ResourceEntry {
 
     public void setFileUrl(String fileUrl) {
         this.fileUrl = fileUrl;
+    }
+
+    public String getFileLinkUrl() {
+        return fileLinkUrl;
+    }
+
+    public void setFileLinkUrl(String fileLinkUrl) {
+        this.fileLinkUrl = fileLinkUrl;
     }
 
     public String getExternalLink() {

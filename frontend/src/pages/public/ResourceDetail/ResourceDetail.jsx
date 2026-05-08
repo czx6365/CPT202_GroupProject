@@ -160,6 +160,7 @@ function ResourceDetail() {
                 <div className="resource-detail__links">
                   {fileLinkUrl && (
                     <a href={fileLinkUrl} target="_blank" rel="noreferrer">
+                      <span className="resource-detail__file-icon" aria-hidden="true" />
                       Open file
                     </a>
                   )}
@@ -168,7 +169,7 @@ function ResourceDetail() {
                       External source
                     </a>
                   )}
-                  {!resource.fileUrl && !resource.externalLink && (
+                  {!resource.fileUrl && !fileLinkUrl && !resource.externalLink && (
                     <span>No file or external source linked.</span>
                   )}
                 </div>
@@ -345,9 +346,7 @@ function isDatabaseFileUrl(url) {
 
 function getFileLinkUrl(resource) {
   if (!resource) return "";
-  if (resource.externalLink) return resource.externalLink;
-  if (resource.fileUrl && !isDatabaseFileUrl(resource.fileUrl)) return resource.fileUrl;
-  return "";
+  return resource.fileLinkUrl || "";
 }
 
 export default ResourceDetail;

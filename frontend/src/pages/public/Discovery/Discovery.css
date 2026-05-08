@@ -515,6 +515,7 @@
   min-height: 40px;
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   border-radius: 999px;
   padding: 0 14px;
   background: #2f3e2f;
@@ -524,6 +525,31 @@
 }
 
 .resource-detail__links a:hover {
+  background: #223022;
+}
+
+.resource-detail__file-icon {
+  width: 14px;
+  height: 16px;
+  display: inline-block;
+  position: relative;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+}
+
+.resource-detail__file-icon::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: -2px;
+  width: 6px;
+  height: 6px;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  background: #2f3e2f;
+}
+
+.resource-detail__links a:hover .resource-detail__file-icon::after {
   background: #223022;
 }
 

@@ -39,7 +39,7 @@ export function getDraftReadiness(resource) {
     resource?.categoryId || resource?.categoryName,
     resource?.description,
     resource?.copyrightDeclaration,
-    resource?.fileUrl || resource?.externalLink,
+    resource?.fileUrl || resource?.fileLinkUrl || resource?.externalLink,
   ];
 
   const completed = checklist.filter((value) => Boolean(String(value || "").trim())).length;
