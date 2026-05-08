@@ -151,13 +151,13 @@ function ResourceDetail() {
 
             <main className="resource-detail__layout">
               <section className="resource-detail__main">
-                {resource.fileUrl && <ResourceMedia url={resource.fileUrl} title={resource.title} />}
-
                 <h2>Description</h2>
                 <p>{resource.description || "No description has been provided for this resource."}</p>
 
+                {resource.fileUrl && <ResourceMedia url={resource.fileUrl} title={resource.title} />}
+
                 <div className="resource-detail__links">
-                  {resource.fileUrl && (
+                  {resource.fileUrl && !isDatabaseFileUrl(resource.fileUrl) && (
                     <a href={resource.fileUrl} target="_blank" rel="noreferrer">
                       Open file
                     </a>
@@ -334,8 +334,12 @@ function getMediaType(url) {
   const path = String(url || "").split("?")[0].toLowerCase();
   if (/\.(png|jpe?g|gif|webp)$/.test(path)) return "image";
   if (/\.(mp4|mov|webm)$/.test(path)) return "video";
-  if (path.includes("/api/public/resource-files/")) return "database-file";
+  if (isDatabaseFileUrl(path)) return "database-file";
   return "file";
+}
+
+function isDatabaseFileUrl(url) {
+  return String(url || "").toLowerCase().includes("/api/public/resource-files/");
 }
 
 export default ResourceDetail;
