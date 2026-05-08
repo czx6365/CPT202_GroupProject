@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `tb_resource` (
   `topic` VARCHAR(255) DEFAULT NULL,
   `place_name` VARCHAR(255) DEFAULT NULL,
   `description` TEXT DEFAULT NULL,
-  `file_url` VARCHAR(255) DEFAULT NULL,
+  `file_url` VARCHAR(1000) DEFAULT NULL,
   `external_link` VARCHAR(255) DEFAULT NULL,
   `copyright_declaration` TEXT DEFAULT NULL,
   `status` VARCHAR(50) NOT NULL,
@@ -66,6 +66,19 @@ CREATE TABLE IF NOT EXISTS `tb_resource` (
     FOREIGN KEY (`reviewer_id`) REFERENCES `tb_user` (`user_id`),
   CONSTRAINT `fk_tb_resource_category`
     FOREIGN KEY (`category_id`) REFERENCES `tb_category` (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `tb_resource_file` (
+  `file_id` VARCHAR(36) NOT NULL,
+  `file_name` VARCHAR(255) NOT NULL,
+  `content_type` VARCHAR(255) NOT NULL,
+  `data` LONGBLOB NOT NULL,
+  `uploaded_by_user_id` BIGINT DEFAULT NULL,
+  `created_at` DATETIME(6) NOT NULL,
+  PRIMARY KEY (`file_id`),
+  KEY `idx_tb_resource_file_uploaded_by` (`uploaded_by_user_id`),
+  CONSTRAINT `fk_tb_resource_file_uploaded_by`
+    FOREIGN KEY (`uploaded_by_user_id`) REFERENCES `tb_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `tb_resource_tag_rel` (
@@ -123,6 +136,12 @@ CREATE TABLE IF NOT EXISTS `tb_audit_log` (
   `created_at` DATETIME(6) NOT NULL,
   PRIMARY KEY (`audit_log_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `tb_resource_file`
+  MODIFY `data` LONGBLOB NOT NULL;
+
+ALTER TABLE `tb_resource`
+  MODIFY `file_url` VARCHAR(1000) DEFAULT NULL;
 
 INSERT IGNORE INTO `tb_category` (`name`, `description`) VALUES
   ('Historic Site', 'Places or landmarks with local historical value.'),
