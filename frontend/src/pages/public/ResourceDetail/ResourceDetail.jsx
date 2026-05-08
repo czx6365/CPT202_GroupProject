@@ -1,13 +1,21 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { fetchResourceDetail } from "../../../services/resourceService";
+import { useAuth } from "../../../context/AuthContext";
+import { createResourceComment, fetchResourceComments, fetchResourceDetail } from "../../../services/resourceService";
 import "../Discovery/Discovery.css";
 
 function ResourceDetail() {
   const { id } = useParams();
+  const { token, isAuthenticated } = useAuth();
   const [resource, setResource] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [comments, setComments] = useState([]);
+  const [isCommentsLoading, setIsCommentsLoading] = useState(true);
+  const [commentError, setCommentError] = useState("");
+  const [commentContent, setCommentContent] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   useEffect(() => {
     let isUnmounted = false;
@@ -47,7 +55,70 @@ function ResourceDetail() {
     };
   }, [id]);
 
+  useEffect(() => {
+    let isUnmounted = false;
+
+    async function loadComments() {
+      if (!isNumericId(id)) {
+        setComments([]);
+        setCommentError("");
+        setIsCommentsLoading(false);
+        return;
+      }
+
+      setIsCommentsLoading(true);
+      setCommentError("");
+      try {
+        const data = await fetchResourceComments(id);
+        if (!isUnmounted) {
+          setComments(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        if (!isUnmounted) {
+          setComments([]);
+          setCommentError(error.message || "Failed to load comments.");
+        }
+      } finally {
+        if (!isUnmounted) {
+          setIsCommentsLoading(false);
+        }
+      }
+    }
+
+    loadComments();
+    return () => {
+      isUnmounted = true;
+    };
+  }, [id]);
+
   const tagList = useMemo(() => getTagList(resource?.tags), [resource?.tags]);
+  const isApproved = (resource?.status || "APPROVED").toUpperCase() === "APPROVED";
+
+  async function handleSubmitComment(event) {
+    event.preventDefault();
+    const content = commentContent.trim();
+
+    if (!content) {
+      setSubmitError("Please enter a comment before submitting.");
+      return;
+    }
+    if (!token) {
+      setSubmitError("Please log in to leave a comment.");
+      return;
+    }
+
+    setSubmitError("");
+    setIsSubmittingComment(true);
+    try {
+      const created = await createResourceComment(id, content, token);
+      setComments((previous) => [created, ...previous]);
+      setCommentContent("");
+    } catch (error) {
+      setSubmitError(error.message || "Failed to submit comment.");
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  }
 
   return (
     <section className="discovery-page resource-detail-page">
@@ -141,6 +212,67 @@ function ResourceDetail() {
                 </section>
               </aside>
             </main>
+
+            <section className="resource-detail__comments">
+              <h2>Comments & Feedback</h2>
+
+              {!isApproved && (
+                <p className="resource-detail__comments-hint">
+                  Comments are available only on approved resources.
+                </p>
+              )}
+
+              {isApproved && (
+                <>
+                  <form className="resource-detail__comment-form" onSubmit={handleSubmitComment}>
+                    <label htmlFor="comment-content" className="resource-detail__comment-label">
+                      Share your feedback
+                    </label>
+                    <textarea
+                      id="comment-content"
+                      className="resource-detail__comment-input"
+                      value={commentContent}
+                      onChange={(event) => setCommentContent(event.target.value)}
+                      placeholder="Write a constructive comment..."
+                      maxLength={1000}
+                      disabled={isSubmittingComment || !isAuthenticated}
+                    />
+                    <div className="resource-detail__comment-actions">
+                      {!isAuthenticated && (
+                        <p className="resource-detail__comments-hint">
+                          Please <Link to="/login">log in</Link> to post comments.
+                        </p>
+                      )}
+                      <button
+                        className="discovery-btn discovery-btn--primary"
+                        type="submit"
+                        disabled={isSubmittingComment || !isAuthenticated}
+                      >
+                        {isSubmittingComment ? "Posting..." : "Post Comment"}
+                      </button>
+                    </div>
+                    {submitError && <p className="resource-detail__comment-error">{submitError}</p>}
+                  </form>
+
+                  <div className="resource-detail__comment-list">
+                    {isCommentsLoading && <div className="discovery-state resource-detail__state">Loading comments...</div>}
+                    {!isCommentsLoading && commentError && <div className="discovery-alert">{commentError}</div>}
+                    {!isCommentsLoading && !commentError && comments.length === 0 && (
+                      <div className="discovery-state resource-detail__state">No comments yet. Be the first to share feedback.</div>
+                    )}
+                    {!isCommentsLoading && !commentError && comments.length > 0 && comments.map((comment) => (
+                      <article className="resource-detail__comment-item" key={comment.commentId}>
+                        <div className="resource-detail__comment-head">
+                          <strong>{comment.userName || "Anonymous"}</strong>
+                          <span>{formatDateTime(comment.createdAt)}</span>
+                        </div>
+                        <p>{comment.content}</p>
+                      </article>
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
           </>
         )}
       </div>

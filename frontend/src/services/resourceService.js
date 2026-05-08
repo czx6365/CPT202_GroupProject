@@ -60,6 +60,21 @@ export async function fetchResourceDetail(resourceId) {
   return request(`/api/public/resources/${resourceId}`);
 }
 
+export async function fetchResourceComments(resourceId) {
+  return request(`/api/public/resources/${resourceId}/comments`);
+}
+
+export async function createResourceComment(resourceId, content, token) {
+  return request(`/api/public/resources/${resourceId}/comments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ content }),
+  });
+}
+
 export async function fetchMyResources(token) {
   return request("/api/resources/mine", {
     headers: {
