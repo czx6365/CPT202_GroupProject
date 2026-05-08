@@ -470,6 +470,23 @@
   padding: 28px;
 }
 
+.resource-detail__media {
+  margin: 0 0 24px;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(231, 225, 216, 0.82);
+  background: rgba(247, 245, 242, 0.92);
+}
+
+.resource-detail__media img,
+.resource-detail__media video {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+  background: #ffffff;
+}
+
 .resource-detail__main h2,
 .resource-detail__section h2 {
   margin: 0 0 12px;

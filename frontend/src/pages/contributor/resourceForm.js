@@ -57,6 +57,13 @@ export function buildResourcePayload(form) {
   };
 }
 
+export function buildResourcePayloadWithFileUrl(form, fileUrl) {
+  return {
+    ...buildResourcePayload(form),
+    fileUrl: String(fileUrl || "").trim() || null,
+  };
+}
+
 export function splitTags(value) {
   if (!value) return [];
 
@@ -85,7 +92,7 @@ export function removeTag(currentValue, tagToRemove) {
 }
 
 export function hasMediaReference(form) {
-  return Boolean(form.fileUrl.trim() || form.externalLink.trim());
+  return Boolean(form.file || form.fileUrl.trim() || form.externalLink.trim());
 }
 
 export function isValidExternalUrl(value) {

@@ -10,11 +10,13 @@ import {
   fetchTags,
   resubmitResource,
   updateDraft,
+  uploadResourceFile,
 } from "../../../services/resourceService";
 import ContributorWorkspace from "../ContributorWorkspace";
 import {
   addTag,
   buildResourcePayload,
+  buildResourcePayloadWithFileUrl,
   createResourceFormState,
   isValidExternalUrl,
   removeTag,
@@ -174,6 +176,31 @@ function Resubmit() {
     setErrors((previous) => ({ ...previous, media: "" }));
   };
 
+  const buildPayloadForSave = async () => {
+    if (!form.file) {
+      return buildResourcePayload(form);
+    }
+
+    if (!token) {
+      throw new Error("Please log in before uploading a file.");
+    }
+
+    const uploaded = await uploadResourceFile(form.file, token);
+    const uploadedUrl = uploaded?.url;
+    if (!uploadedUrl) {
+      throw new Error("Unable to upload the selected file.");
+    }
+
+    setForm((previous) => ({
+      ...previous,
+      file: null,
+      fileUrl: uploadedUrl,
+      selectedFileName: uploaded.fileName || previous.selectedFileName,
+    }));
+
+    return buildResourcePayloadWithFileUrl(form, uploadedUrl);
+  };
+
   const handleSaveChanges = async () => {
     if (!resource?.resourceId) {
       applyContributorNotice(
@@ -206,7 +233,8 @@ function Resubmit() {
         throw new Error("Please log in with an approved contributor account.");
       }
 
-      const saved = await updateDraft(resource.resourceId, buildResourcePayload(form), token);
+      const payload = await buildPayloadForSave();
+      const saved = await updateDraft(resource.resourceId, payload, token);
 
       if (!saved) {
         throw new Error("Unable to save the revised draft.");
@@ -266,7 +294,8 @@ function Resubmit() {
         throw new Error("Please log in with an approved contributor account.");
       }
 
-      await updateDraft(resource.resourceId, buildResourcePayload(form), token);
+      const payload = await buildPayloadForSave();
+      await updateDraft(resource.resourceId, payload, token);
       await resubmitResource(resource.resourceId, token);
       storeContributorNotice("success", `"${form.title}" was resubmitted for review.`);
       setIsConfirmOpen(false);

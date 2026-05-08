@@ -2,6 +2,7 @@ package com.cpt202_1.taskmanager.integration;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -183,6 +184,102 @@ class AuthIntegrationTest {
                 .andExpect(jsonPath("$[?(@.title == 'Public notice')]").exists())
                 .andExpect(jsonPath("$[?(@.title == 'All users notice')]").exists())
                 .andExpect(jsonPath("$[?(@.title == 'Contributor notice')]").doesNotExist());
+    }
+
+    @Test
+    void adminCanCreatePublishPublicAnnouncementAndPublicVisitorCanReadIt() throws Exception {
+        String adminToken = loginAndExtractToken("admin", "admin123");
+
+        String createResponse = mockMvc.perform(post("/api/admin/announcements")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": " Public launch ",
+                                  "content": " Visitors should see this notice. ",
+                                  "audience": "PUBLIC"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Public launch"))
+                .andExpect(jsonPath("$.content").value("Visitors should see this notice."))
+                .andExpect(jsonPath("$.status").value("DRAFT"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        long announcementId = objectMapper.readTree(createResponse).get("announcementId").asLong();
+
+        mockMvc.perform(put("/api/admin/announcements/{announcementId}/status", announcementId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "status": "PUBLISHED"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PUBLISHED"));
+
+        mockMvc.perform(get("/api/public/announcements"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.title == 'Public launch')]").exists())
+                .andExpect(jsonPath("$[?(@.content == 'Visitors should see this notice.')]").exists());
+    }
+
+    @Test
+    void viewerCanApplyAndAdminApprovalUnlocksContributorAnnouncements() throws Exception {
+        User admin = userRepository.findByUserName("admin").orElseThrow();
+        User viewer = userRepository.findByUserName("viewer1").orElseThrow();
+        saveAnnouncement(admin, "Contributor onboarding", "Only contributors should see this", "CONTRIBUTORS", AnnouncementStatus.PUBLISHED);
+
+        String viewerToken = loginAndExtractToken("viewer1", "viewer123");
+        mockMvc.perform(post("/api/users/{userId}/contributor-application", viewer.getUserId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + viewerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "application": "I can contribute verified heritage resources."
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contributorApproved").value(false))
+                .andExpect(jsonPath("$.contributorApplication").value("I can contribute verified heritage resources."));
+
+        String adminToken = loginAndExtractToken("admin", "admin123");
+        mockMvc.perform(get("/api/admin/contributors/pending")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.userName == 'viewer1')]").exists());
+
+        mockMvc.perform(put("/api/admin/contributors/{userId}/approve", viewer.getUserId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("CONTRIBUTOR"))
+                .andExpect(jsonPath("$.contributorApproved").value(true));
+
+        String upgradedViewerToken = loginAndExtractToken("viewer1", "viewer123");
+        mockMvc.perform(get("/api/announcements")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + upgradedViewerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.title == 'Contributor onboarding')]").exists());
+    }
+
+    @Test
+    void adminApplyingForContributorShouldReturn400() throws Exception {
+        User admin = userRepository.findByUserName("admin").orElseThrow();
+        String adminToken = loginAndExtractToken("admin", "admin123");
+
+        mockMvc.perform(post("/api/users/{userId}/contributor-application", admin.getUserId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "application": "Admin should not need contributor access."
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Admin account cannot apply as contributor"));
     }
 
     @Test

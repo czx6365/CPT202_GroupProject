@@ -85,6 +85,19 @@ export async function fetchContributorResourceById(resourceId, token, fallbackRe
   }
 }
 
+export async function uploadResourceFile(file, token) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return request("/api/resources/uploads", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+}
+
 export async function createDraft(payload, token) {
   return request("/api/resources", {
     method: "POST",

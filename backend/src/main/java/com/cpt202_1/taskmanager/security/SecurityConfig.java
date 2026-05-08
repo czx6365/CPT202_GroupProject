@@ -49,7 +49,8 @@ public class SecurityConfig {
                                 "/app.js",
                                 "/styles.css",
                                 "/error",
-                                "/favicon.ico")
+                                "/favicon.ico",
+                                "/uploads/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/register",

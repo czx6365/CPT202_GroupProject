@@ -11,11 +11,13 @@ import {
   fetchTags,
   submitResourceForReview,
   updateDraft,
+  uploadResourceFile,
 } from "../../../services/resourceService";
 import ContributorWorkspace from "../ContributorWorkspace";
 import {
   addTag,
   buildResourcePayload,
+  buildResourcePayloadWithFileUrl,
   createResourceFormState,
   isValidExternalUrl,
   removeTag,
@@ -194,6 +196,31 @@ function Submit() {
     setErrors((previous) => ({ ...previous, media: "" }));
   };
 
+  const buildPayloadForSave = async () => {
+    if (!form.file) {
+      return buildResourcePayload(form);
+    }
+
+    if (!token) {
+      throw new Error("Please log in before uploading a file.");
+    }
+
+    const uploaded = await uploadResourceFile(form.file, token);
+    const uploadedUrl = uploaded?.url;
+    if (!uploadedUrl) {
+      throw new Error("Unable to upload the selected file.");
+    }
+
+    setForm((previous) => ({
+      ...previous,
+      file: null,
+      fileUrl: uploadedUrl,
+      selectedFileName: uploaded.fileName || previous.selectedFileName,
+    }));
+
+    return buildResourcePayloadWithFileUrl(form, uploadedUrl);
+  };
+
   const handleDraftSave = async () => {
     const validationErrors = validateDraftForm(form);
     if (Object.keys(validationErrors).length > 0) {
@@ -216,9 +243,10 @@ function Submit() {
         throw new Error("Please log in with an approved contributor account.");
       }
 
+      const payload = await buildPayloadForSave();
       const saved = isEditMode
-        ? await updateDraft(editingResource?.resourceId || id, buildResourcePayload(form), token)
-        : await createDraft(buildResourcePayload(form), token);
+        ? await updateDraft(editingResource?.resourceId || id, payload, token)
+        : await createDraft(payload, token);
 
       if (!saved) {
         throw new Error("Unable to save this draft.");
@@ -280,7 +308,8 @@ function Submit() {
         throw new Error("Please log in with an approved contributor account.");
       }
 
-      await updateDraft(resourceId, buildResourcePayload(form), token);
+      const payload = await buildPayloadForSave();
+      await updateDraft(resourceId, payload, token);
       await submitResourceForReview(resourceId, token);
       storeContributorNotice("success", `"${form.title}" was submitted for review.`);
       setIsSubmitModalOpen(false);

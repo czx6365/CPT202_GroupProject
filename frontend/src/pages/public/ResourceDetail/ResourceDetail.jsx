@@ -80,6 +80,8 @@ function ResourceDetail() {
 
             <main className="resource-detail__layout">
               <section className="resource-detail__main">
+                {resource.fileUrl && <ResourceMedia url={resource.fileUrl} title={resource.title} />}
+
                 <h2>Description</h2>
                 <p>{resource.description || "No description has been provided for this resource."}</p>
 
@@ -166,6 +168,35 @@ function formatDateTime(value) {
   }
 
   return date.toLocaleString();
+}
+
+function ResourceMedia({ url, title }) {
+  const mediaType = getMediaType(url);
+
+  if (mediaType === "image") {
+    return (
+      <figure className="resource-detail__media">
+        <img src={url} alt={title || "Resource media"} />
+      </figure>
+    );
+  }
+
+  if (mediaType === "video") {
+    return (
+      <figure className="resource-detail__media">
+        <video src={url} controls />
+      </figure>
+    );
+  }
+
+  return null;
+}
+
+function getMediaType(url) {
+  const path = String(url || "").split("?")[0].toLowerCase();
+  if (/\.(png|jpe?g|gif|webp)$/.test(path)) return "image";
+  if (/\.(mp4|mov|webm)$/.test(path)) return "video";
+  return "file";
 }
 
 export default ResourceDetail;
