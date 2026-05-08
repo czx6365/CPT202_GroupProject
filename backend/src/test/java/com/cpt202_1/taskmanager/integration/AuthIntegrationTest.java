@@ -1,9 +1,13 @@
 package com.cpt202_1.taskmanager.integration;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.mock.web.MockMultipartFile;
 
 import com.cpt202_1.taskmanager.pojo.User;
 import com.cpt202_1.taskmanager.pojo.Announcement;
@@ -25,6 +30,7 @@ import com.cpt202_1.taskmanager.pojo.enums.UserRole;
 import com.cpt202_1.taskmanager.repository.AnnouncementRepository;
 import com.cpt202_1.taskmanager.repository.AuditLogRepository;
 import com.cpt202_1.taskmanager.repository.EmailVerificationCodeRepository;
+import com.cpt202_1.taskmanager.repository.ResourceFileRepository;
 import com.cpt202_1.taskmanager.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -54,12 +60,16 @@ class AuthIntegrationTest {
     private EmailVerificationCodeRepository verificationCodeRepository;
 
     @Autowired
+    private ResourceFileRepository resourceFileRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void setUp() {
         auditLogRepository.deleteAll();
         announcementRepository.deleteAll();
+        resourceFileRepository.deleteAll();
         verificationCodeRepository.deleteAll();
         userRepository.deleteAll();
         saveUser("admin", "admin123", "admin@taskmanager.local", UserRole.ADMIN_REVIEWER);
@@ -111,6 +121,35 @@ class AuthIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.message").value("Invalid value for resourceId"));
+    }
+
+    @Test
+    void contributorUploadShouldStoreFileInDatabaseAndServePublicBytes() throws Exception {
+        String token = loginAndExtractToken("contributor", "contrib123");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "artifact.png",
+                MediaType.IMAGE_PNG_VALUE,
+                new byte[] {1, 2, 3, 4});
+
+        String uploadResponse = mockMvc.perform(multipart("/api/resources/uploads")
+                        .file(file)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fileName").value("artifact.png"))
+                .andExpect(jsonPath("$.url").value(org.hamcrest.Matchers.containsString("/api/public/resource-files/")))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String publicUrl = objectMapper.readTree(uploadResponse).get("url").asText();
+        String publicPath = java.net.URI.create(publicUrl).getPath();
+
+        assertThat(resourceFileRepository.count()).isEqualTo(1);
+        mockMvc.perform(get(publicPath))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_PNG_VALUE))
+                .andExpect(content().bytes(new byte[] {1, 2, 3, 4}));
     }
 
     @Test
