@@ -303,12 +303,18 @@ function formatDateTime(value) {
 }
 
 function ResourceMedia({ url, title }) {
+  const [imageFailed, setImageFailed] = useState(false);
   const mediaType = getMediaType(url);
+  const shouldTryImage = mediaType === "image" || (mediaType === "database-file" && !imageFailed);
 
-  if (mediaType === "image") {
+  if (shouldTryImage) {
     return (
       <figure className="resource-detail__media">
-        <img src={url} alt={title || "Resource media"} />
+        <img
+          src={url}
+          alt={title || "Resource media"}
+          onError={() => setImageFailed(true)}
+        />
       </figure>
     );
   }
@@ -328,6 +334,7 @@ function getMediaType(url) {
   const path = String(url || "").split("?")[0].toLowerCase();
   if (/\.(png|jpe?g|gif|webp)$/.test(path)) return "image";
   if (/\.(mp4|mov|webm)$/.test(path)) return "video";
+  if (path.includes("/api/public/resource-files/")) return "database-file";
   return "file";
 }
 
