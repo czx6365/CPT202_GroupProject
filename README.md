@@ -4,7 +4,7 @@
 
 HeritageHub is a university software-engineering team project that models the complete lifecycle of community heritage resources: drafting, submission, review, publication, search, commenting, correction, and archiving.
 
-The repository is presented here as an engineering portfolio project, with particular emphasis on **workflow design, role-based access control, backend state transitions, and auditability**.
+The repository is presented here as an engineering portfolio project, with particular emphasis on **workflow design, role-based access control, backend state transitions, auditability, and safe runtime configuration**.
 
 ## Project at a Glance
 
@@ -64,8 +64,6 @@ PENDING_REVIEW
 APPROVED ──→ ARCHIVED
 ```
 
-Main states:
-
 | State | Meaning |
 | --- | --- |
 | `DRAFT` | Contributor is still editing the resource |
@@ -73,8 +71,6 @@ Main states:
 | `APPROVED` | Published and visible to public discovery |
 | `REJECTED` | Returned with reviewer feedback |
 | `ARCHIVED` | Removed from normal public discovery |
-
-This state model helps keep submission, review, resubmission, and archival behavior explicit and auditable.
 
 ## Core Platform Features
 
@@ -119,8 +115,6 @@ This state model helps keep submission, review, resubmission, and archival behav
 
 ## Backend Design
 
-The backend follows a conventional layered structure:
-
 ```text
 HTTP Request
     ↓
@@ -141,25 +135,13 @@ Key responsibilities:
 - **DTOs** — request / response boundaries instead of exposing persistence entities directly;
 - **Security** — JWT validation and role-aware access control.
 
-Representative backend components include:
-
-```text
-AuthController
-ProfileController
-PublicResourceController
-ResourceWorkflowController
-AdminController
-PlatformService
-Repository layer
-Security / JWT components
-DTOs and enums
-```
-
 ## Repository Layout
 
 ```text
 CPT202_GroupProject/
+├── SECURITY.md
 ├── backend/
+│   ├── .env.example
 │   ├── pom.xml
 │   └── src/
 │       ├── main/
@@ -178,6 +160,8 @@ Requirements:
 
 - JDK 17
 - MySQL 8+
+
+First provide runtime configuration through your shell, IDE, container platform, or secret manager. [`backend/.env.example`](backend/.env.example) documents the expected variable names; it is a template only and does not contain real credentials.
 
 ```bash
 cd backend
@@ -199,21 +183,46 @@ npm install
 npm run dev
 ```
 
-## Configuration
+## Secure Configuration
 
-Database and JWT configuration should be supplied through local configuration / environment-specific settings rather than committed production secrets.
+Production credentials are **not supposed to live in Git**. The backend reads secrets and environment-specific values from runtime configuration.
 
-Typical backend configuration includes:
+Main variables:
 
 ```text
 DB_URL
 DB_USER
 DB_PASSWORD
+
 JWT_SECRET
 JWT_EXPIRATION_MS
+
+MAIL_HOST
+MAIL_PORT
+MAIL_USERNAME
+MAIL_PASSWORD
+MAIL_SMTP_AUTH
+MAIL_SMTP_SSL
 ```
 
-For a local MySQL database, create the project database before starting the backend.
+`JWT_SECRET` is required and the application fails fast when the supplied key material is too short for HMAC-SHA signing.
+
+### Administrator bootstrap
+
+Predictable automatic administrator creation is disabled by default. Initial bootstrap is explicitly opt-in:
+
+```text
+BOOTSTRAP_ADMIN_ENABLED=false
+BOOTSTRAP_ADMIN_USERNAME=
+BOOTSTRAP_ADMIN_PASSWORD=
+BOOTSTRAP_ADMIN_EMAIL=
+```
+
+If bootstrap is intentionally enabled, the application requires an explicit username/email and a non-trivial password, encodes the password through the configured `PasswordEncoder`, and creates the account only when it does not already exist. Bootstrap should be disabled again after initialization.
+
+See [`SECURITY.md`](SECURITY.md) for the security checklist and credential-rotation guidance.
+
+For a local MySQL database, create the project database before starting the backend:
 
 ```sql
 CREATE DATABASE CPT202_Project_DB
@@ -222,8 +231,6 @@ COLLATE utf8mb4_unicode_ci;
 ```
 
 ## Engineering Concepts Demonstrated
-
-This project is useful as evidence of practical software-engineering work across several areas:
 
 - REST API design;
 - Spring Boot backend development;
@@ -234,6 +241,7 @@ This project is useful as evidence of practical software-engineering work across
 - validation and exception handling;
 - frontend-backend integration;
 - auditability and content lifecycle management;
+- runtime-secret management and secure bootstrap defaults;
 - collaborative development in a multi-member team.
 
 ## Scope Note
