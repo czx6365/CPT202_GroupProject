@@ -16,11 +16,28 @@ import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
+    private static final int MIN_SECRET_BYTES = 32;
+
     private final SecretKey signingKey;
     private final long expirationMs;
 
     public JwtService(JwtProperties jwtProperties) {
-        this.signingKey = Keys.hmacShaKeyFor(jwtProperties.secret().getBytes(StandardCharsets.UTF_8));
+        String jwtSecret = jwtProperties.secret();
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException(
+                    "JWT_SECRET is required. Configure app.jwt.secret through the runtime environment.");
+        }
+
+        byte[] secretBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        if (secretBytes.length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "JWT_SECRET must be at least 32 bytes for HMAC-SHA signing.");
+        }
+        if (jwtProperties.expirationMs() <= 0) {
+            throw new IllegalStateException("JWT_EXPIRATION_MS must be greater than zero.");
+        }
+
+        this.signingKey = Keys.hmacShaKeyFor(secretBytes);
         this.expirationMs = jwtProperties.expirationMs();
     }
 
