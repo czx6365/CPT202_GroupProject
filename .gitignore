@@ -12,6 +12,14 @@ backend/.mvn/wrapper/maven-wrapper.jar
 .DS_Store
 *.log
 
+# Local credentials and runtime configuration
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
 ### STS ###
 .apt_generated
 .classpath
